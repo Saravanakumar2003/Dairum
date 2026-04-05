@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Basic Colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    
+    <!-- Launcher Icon Background -->
+    <color name="ic_launcher_background">#FFFFFF</color>
+    
+    <!-- Widget Colors -->
+    <color name="widget_background">#F3EDF7</color>
+    <color name="widget_text_primary">#1C1B1F</color>
+    <color name="widget_text_secondary">#49454F</color>
+    <color name="widget_text_hint">#79747E</color>
+    <color name="widget_accent">#6750A4</color>
+    <color name="widget_streak">#FF6B35</color>
+    <color name="widget_button_text">#6750A4</color>
+    
+    <!-- Splash Screen Colors -->
+    <color name="splash_background">#F3EDF7</color>
+    <color name="splash_background_dark">#1C1B1F</color>
+    <color name="splash_icon_background">#6750A4</color>
+</resources>

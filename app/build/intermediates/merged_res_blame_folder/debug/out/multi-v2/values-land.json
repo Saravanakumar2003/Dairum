@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.dairum.app-mergeDebugResources-81:/values-land/values-land.xml",
+            "map": [
+                {
+                    "source": "/Users/saravan-zpt0121/.gradle/caches/transforms-3/1d5e81d9e8b4c31862ae756c7465c006/transformed/appcompat-1.6.1/res/values-land/values-land.xml",
+                    "from": {
+                        "startLines": "2,3,4",
+                        "startColumns": "4,4,4",
+                        "startOffsets": "55,125,196",
+                        "endColumns": "69,70,67",
+                        "endOffsets": "120,191,259"
+                    }
+                }
+            ]
+        }
+    ]
+}

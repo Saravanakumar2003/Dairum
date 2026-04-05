@@ -1,0 +1,1122 @@
+-- Merging decision tree log ---
+provider#androidx.core.content.FileProvider
+INJECTED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:69:9-77:20
+	android:grantUriPermissions
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:73:13-47
+	android:authorities
+		INJECTED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:71:13-64
+	android:exported
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:72:13-37
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:70:13-62
+provider#androidx.startup.InitializationProvider
+INJECTED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:80:9-89:20
+MERGED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:29:9-37:20
+MERGED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:29:9-37:20
+MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/dfeba6defa6e192b1c6607a4d1f03287/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/dfeba6defa6e192b1c6607a4d1f03287/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.lifecycle:lifecycle-process:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/1dbdb8a9b52c23809dc696e6e5fec9d1/transformed/lifecycle-process-2.7.0/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.lifecycle:lifecycle-process:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/1dbdb8a9b52c23809dc696e6e5fec9d1/transformed/lifecycle-process-2.7.0/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/5d7514f5e52a5d0d517b0f0fb988ab49/transformed/startup-runtime-1.1.1/AndroidManifest.xml:26:9-30:34
+MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/5d7514f5e52a5d0d517b0f0fb988ab49/transformed/startup-runtime-1.1.1/AndroidManifest.xml:26:9-30:34
+	tools:node
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:84:13-31
+	android:authorities
+		INJECTED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:82:13-68
+	android:exported
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:83:13-37
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:81:13-67
+manifest
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:2:1-207:12
+INJECTED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:2:1-207:12
+INJECTED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:2:1-207:12
+INJECTED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:2:1-207:12
+MERGED from [io.coil-kt:coil-video:2.5.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d094cc4c156fb36eb0515854105ad77b/transformed/coil-video-2.5.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.google.maps.android:maps-compose:4.3.2] /Users/saravan-zpt0121/.gradle/caches/transforms-3/48d509134e5205e37673c4d272717644/transformed/maps-compose-4.3.2/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-ui:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/ce38e29c2013be0b53418352db66e4eb/transformed/media3-ui-1.2.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-extractor:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/57c755941601e6ccfde9e25807c26421/transformed/media3-extractor-1.2.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-container:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/0e0814f6302bb1e16cf357cacb5e504b/transformed/media3-container-1.2.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-datasource:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f8e7d4e3fa69654567a678717f7ae52d/transformed/media3-datasource-1.2.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-decoder:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/92ff7e70f28c67f020bee6cb17e601cb/transformed/media3-decoder-1.2.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-database:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/b305c3f1b11ec8a3844250f851f60184/transformed/media3-database-1.2.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-common:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e830544df5d6212600a14811768bc9bd/transformed/media3-common-1.2.1/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.media3:media3-exoplayer:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/0f2ea2b82178359614dd08924e33bb42/transformed/media3-exoplayer-1.2.1/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.biometric:biometric:1.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d8dcf14c3369b07d2136ab5b27423da2/transformed/biometric-1.1.0/AndroidManifest.xml:17:1-29:12
+MERGED from [androidx.media:media:1.6.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/2c746e4fd4d388c21aa6448fd6fff551/transformed/media-1.6.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.recyclerview:recyclerview:1.3.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/ca4c8861331b96041a414b261ffbe61b/transformed/recyclerview-1.3.0/AndroidManifest.xml:17:1-22:12
+MERGED from [com.google.maps.android:maps-ktx:5.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/793b3f413a4c36a3ba5c66686e5ae9ee/transformed/maps-ktx-5.0.0/AndroidManifest.xml:18:1-23:12
+MERGED from [com.google.android.gms:play-services-maps:18.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/35b14ae891c98446af3e5309c2525796/transformed/play-services-maps-18.2.0/AndroidManifest.xml:17:1-44:12
+MERGED from [com.google.android.gms:play-services-location:21.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/6518471191f63bb7808c37d9380e9212/transformed/play-services-location-21.1.0/AndroidManifest.xml:2:1-9:12
+MERGED from [com.google.android.gms:play-services-base:18.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e9a37aae52ccedd0ff695f0c82e36ced/transformed/play-services-base-18.1.0/AndroidManifest.xml:16:1-24:12
+MERGED from [com.google.android.gms:play-services-tasks:18.0.2] /Users/saravan-zpt0121/.gradle/caches/transforms-3/170421ddaacbb93906d720c199b587d6/transformed/play-services-tasks-18.0.2/AndroidManifest.xml:2:1-6:12
+MERGED from [com.google.android.gms:play-services-basement:18.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8a87b77e4097efd52a32c23d24850a6a/transformed/play-services-basement-18.1.0/AndroidManifest.xml:16:1-26:12
+MERGED from [androidx.hilt:hilt-work:1.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/b38628eb88ab74aba0454635f711d1d0/transformed/hilt-work-1.1.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.work:work-runtime-ktx:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/823c489f3f853f9b9daba57566e099ed/transformed/work-runtime-ktx-2.9.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:17:1-145:12
+MERGED from [androidx.hilt:hilt-navigation-compose:1.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/1562b8bccbf17baba459c015f9959be5/transformed/hilt-navigation-compose-1.1.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.hilt:hilt-navigation:1.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8edd2c5d7d8aaab4f11828ad3ee7a37c/transformed/hilt-navigation-1.1.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.google.dagger:hilt-android:2.50] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9b5d0cb10138f812dda5aee4affc5627/transformed/hilt-android-2.50/AndroidManifest.xml:16:1-19:12
+MERGED from [androidx.navigation:navigation-common:2.7.7] /Users/saravan-zpt0121/.gradle/caches/transforms-3/7e2ecca9a9ca7b5bb43d13bd7201dc27/transformed/navigation-common-2.7.7/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.navigation:navigation-runtime:2.7.7] /Users/saravan-zpt0121/.gradle/caches/transforms-3/63961bae21b3c81681215dbbe23b8e0b/transformed/navigation-runtime-2.7.7/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.navigation:navigation-common-ktx:2.7.7] /Users/saravan-zpt0121/.gradle/caches/transforms-3/73f334e51272abe018779d25a660f502/transformed/navigation-common-ktx-2.7.7/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.navigation:navigation-runtime-ktx:2.7.7] /Users/saravan-zpt0121/.gradle/caches/transforms-3/ed2e2c7842d8f13f9965c682454e2827/transformed/navigation-runtime-ktx-2.7.7/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.navigation:navigation-compose:2.7.7] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d9b61f59891ec88d9817abd10aad0bc3/transformed/navigation-compose-2.7.7/AndroidManifest.xml:2:1-7:12
+MERGED from [com.patrykandpatrick.vico:compose-m3:1.14.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d8feac9d4b87d68c49def1e988fc8a80/transformed/compose-m3-1.14.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.patrykandpatrick.vico:compose:1.14.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/4d779476dbe2f3f8f28f221bfd8c0d85/transformed/compose-1.14.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.material3:material3-android:1.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/fc5415b6466e0244e2c4d84d011b6a11/transformed/material3-release/AndroidManifest.xml:17:1-22:12
+MERGED from [io.coil-kt:coil-compose:2.5.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/3834e8c7a07be7c26ff8fe64d85e6b8c/transformed/coil-compose-2.5.0/AndroidManifest.xml:2:1-7:12
+MERGED from [io.coil-kt:coil-compose-base:2.5.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/a4c64aa121ddb94ac5183da16419dc15/transformed/coil-compose-base-2.5.0/AndroidManifest.xml:2:1-7:12
+MERGED from [io.coil-kt:coil:2.5.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/4b4bc1c1edb994db5c223e903aef1884/transformed/coil-2.5.0/AndroidManifest.xml:2:1-7:12
+MERGED from [io.coil-kt:coil-base:2.5.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/87a5f76733ff16fd9f950fb2e5e0744b/transformed/coil-base-2.5.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.appcompat:appcompat-resources:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/6fc927a05b8d6a1180eb863b570e06c6/transformed/appcompat-resources-1.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.appcompat:appcompat:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/1d5e81d9e8b4c31862ae756c7465c006/transformed/appcompat-1.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.fragment:fragment:1.5.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9226307523c79ea823fd8033c79318a9/transformed/fragment-1.5.1/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.loader:loader:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/517f21a011ca5d911d77a12becfeb627/transformed/loader-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.compose.material:material-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/c7b5f9e67890e6f2f0d9547732189698/transformed/material-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.material:material-icons-core-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/990ca78e4b83640f6620aaf155f852cb/transformed/material-icons-core-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.material:material-icons-extended-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/209e67dc506aa4f0675e49928a543905/transformed/material-icons-extended-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.material:material-ripple-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/97332619c0740f179dde708bb1e9cefe/transformed/material-ripple-release/AndroidManifest.xml:2:1-7:12
+MERGED from [com.valentinilk.shimmer:compose-shimmer-android:1.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb9872cc1e2df45f318a03eb82e6a249/transformed/shimmer-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.foundation:foundation-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/97931d86d8410b63eea11f95460fbe92/transformed/foundation-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.foundation:foundation-layout-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d3eac0e74aa2c5f1818ad83cca48eda1/transformed/foundation-layout-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.animation:animation-core-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/806a00e039795420c5bd39268719ccd0/transformed/animation-core-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.animation:animation-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/a0505520fe2353fcc09b2474a82711a5/transformed/animation-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.ui:ui-tooling-data-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/eb8379e83e6926883263d5472da95b14/transformed/ui-tooling-data-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.ui:ui-unit-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/7636c614f6560f36fa75c9179cf4068f/transformed/ui-unit-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.ui:ui-geometry-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e33c0ea2ddf61c908ef987717f046aa1/transformed/ui-geometry-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.ui:ui-util-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/b898d54a716ef28922151783cfdaa1e1/transformed/ui-util-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.ui:ui-text-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/3b526e4e49b3c9b286f7094ef0e8388d/transformed/ui-text-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.emoji2:emoji2-views-helper:1.3.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/19ed91fc12fac3fe61b7d4525ee1a2f5/transformed/emoji2-views-helper-1.3.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/dfeba6defa6e192b1c6607a4d1f03287/transformed/emoji2-1.3.0/AndroidManifest.xml:17:1-35:12
+MERGED from [androidx.lifecycle:lifecycle-process:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/1dbdb8a9b52c23809dc696e6e5fec9d1/transformed/lifecycle-process-2.7.0/AndroidManifest.xml:17:1-35:12
+MERGED from [androidx.lifecycle:lifecycle-livedata-core-ktx:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/69c1aa41663a8404de82bbc8a957dfe9/transformed/lifecycle-livedata-core-ktx-2.7.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.lifecycle:lifecycle-service:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/7ad9ad0c9bac35f4b0c80dd22538ee60/transformed/lifecycle-service-2.7.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.lifecycle:lifecycle-livedata:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8e9be05e5fba82124f5abf9487823201/transformed/lifecycle-livedata-2.7.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/80545d031e7fd3681d3d462282627a58/transformed/lifecycle-livedata-core-2.7.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.savedstate:savedstate-ktx:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/5caeb82d92565916e7d71e73ea9b5126/transformed/savedstate-ktx-1.2.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.savedstate:savedstate:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e7d70ce3004f86fa84e809de7adce0d5/transformed/savedstate-1.2.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/98696c8e1636c61d8dc8b202688cc391/transformed/lifecycle-viewmodel-2.7.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/bd42890b5ffe9d2c1c7c838648ad3afa/transformed/lifecycle-viewmodel-savedstate-2.7.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8a5f15fa0a0099020db59297c0be720d/transformed/lifecycle-viewmodel-ktx-2.7.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/010837a2aa4f53cbde0efd12b2c133f2/transformed/lifecycle-runtime-2.7.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d24c7be3bf7eb1112bca0ba207c24661/transformed/lifecycle-viewmodel-compose-2.7.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.lifecycle:lifecycle-runtime-ktx:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/091147a9bda0bff7ec172ecdd08b9e3e/transformed/lifecycle-runtime-ktx-2.7.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-runtime-compose:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/b536813bbd1fede6f38615e97fceeb39/transformed/lifecycle-runtime-compose-2.7.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.google.accompanist:accompanist-drawablepainter:0.32.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/86140114767bcc6a5b2335a3300f0741/transformed/accompanist-drawablepainter-0.32.0/AndroidManifest.xml:17:1-23:12
+MERGED from [androidx.compose.ui:ui-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/94c7fba9d81bbf46e4eafc08510ce5f6/transformed/ui-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.ui:ui-tooling-preview-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8eb2e82f0c37e11b75e90587811f2a10/transformed/ui-tooling-preview-release/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.compose.ui:ui-graphics-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/7e113485e4afbc32ec19a085d862dd43/transformed/ui-graphics-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.ui:ui-test-manifest:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/06e4e2b4d210cb3127e71d35e894379d/transformed/ui-test-manifest-1.6.1/AndroidManifest.xml:17:1-28:12
+MERGED from [androidx.compose.ui:ui-tooling-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f7a3cbdabd39b10dc340c07aca2fa713/transformed/ui-tooling-release/AndroidManifest.xml:17:1-28:12
+MERGED from [androidx.activity:activity-compose:1.8.2] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f24ad550c16285619c8601c682013f30/transformed/activity-compose-1.8.2/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.activity:activity-ktx:1.8.2] /Users/saravan-zpt0121/.gradle/caches/transforms-3/3a43777930c93243c59edc3cdc19bc58/transformed/activity-ktx-1.8.2/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.activity:activity:1.8.2] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f16fc083d57319ab8d8ae74ded158817/transformed/activity-1.8.2/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.viewpager:viewpager:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/a4a09039adcf708850caf5ff2bf73c0a/transformed/viewpager-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/b65ee8233155bce3ccf301f01f8ea84b/transformed/drawerlayout-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.customview:customview:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/ef47a059040be803f000f54840a94404/transformed/customview-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/74a2afa5214b5951248f9890b68051af/transformed/vectordrawable-animated-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/2aaa00a467913b4c532be62969269f35/transformed/vectordrawable-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.autofill:autofill:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d5990ef6a7685194a9d110a92cd00372/transformed/autofill-1.0.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.core:core:1.12.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f4b5f2c7d534927f0710a1029aaf002b/transformed/core-1.12.0/AndroidManifest.xml:17:1-30:12
+MERGED from [androidx.customview:customview-poolingcontainer:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e63e719479355211f8acab4b247994c0/transformed/customview-poolingcontainer-1.0.0/AndroidManifest.xml:17:1-23:12
+MERGED from [androidx.core:core-ktx:1.12.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9bc8024dd6c3492750635bf504027e78/transformed/core-ktx-1.12.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.room:room-runtime:2.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9cec96d6d564b991d8ea3bce5cb0834e/transformed/room-runtime-2.6.1/AndroidManifest.xml:17:1-31:12
+MERGED from [androidx.room:room-ktx:2.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/4a195ab2c769fe67d97112c1cdfec172/transformed/room-ktx-2.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.datastore:datastore-preferences:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d84a1cf545cad04e21b637468aec9d8f/transformed/datastore-preferences-1.0.0/AndroidManifest.xml:17:1-24:12
+MERGED from [com.jakewharton.timber:timber:5.0.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/4c9a544c9119329e3661abea1affee1c/transformed/timber-5.0.1/AndroidManifest.xml:2:1-9:12
+MERGED from [androidx.core:core-splashscreen:1.0.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8900d14c5722eb6f53e12e5108208476/transformed/core-splashscreen-1.0.1/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.sqlite:sqlite-framework:2.4.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/fa2f1b18c71f780475834400c264a712/transformed/sqlite-framework-2.4.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.sqlite:sqlite:2.4.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/b345eac8ea43bab56dfa44850e093355/transformed/sqlite-2.4.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.datastore:datastore:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f77056190171592b7d6f3199e8d1e71a/transformed/datastore-1.0.0/AndroidManifest.xml:17:1-24:12
+MERGED from [com.patrykandpatrick.vico:core:1.14.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/736257bddc8e6d26234ac03cba786713/transformed/core-1.14.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.runtime:runtime-saveable-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cbca66b9bba38e646bb6a34cd44b2a85/transformed/runtime-saveable-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.runtime:runtime-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/2fae804a127ec719ca2a29cf46d53562/transformed/runtime-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.annotation:annotation-experimental:1.4.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/562dfc412285f25a38218d065bcf287f/transformed/annotation-experimental-1.4.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.security:security-crypto:1.1.0-alpha06] /Users/saravan-zpt0121/.gradle/caches/transforms-3/7c77e35482441c2a117d86b0e7180d3c/transformed/security-crypto-1.1.0-alpha06/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8380db3c5cb62a46770f5858a0031bbe/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:17:1-27:12
+MERGED from [androidx.arch.core:core-runtime:2.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/80820844d2e515f43f0b19dfab2b2560/transformed/core-runtime-2.2.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.exifinterface:exifinterface:1.3.6] /Users/saravan-zpt0121/.gradle/caches/transforms-3/dc8a4d3e97f4eca34fd492f6cf7f7485/transformed/exifinterface-1.3.6/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/2fcbd411f2438f72a90c2d85406c664a/transformed/interpolator-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:17:1-55:12
+MERGED from [androidx.databinding:viewbinding:7.4.2] /Users/saravan-zpt0121/.gradle/caches/transforms-3/45ea0286d78682ab1898dbfedc681783/transformed/viewbinding-7.4.2/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/5d7514f5e52a5d0d517b0f0fb988ab49/transformed/startup-runtime-1.1.1/AndroidManifest.xml:17:1-33:12
+MERGED from [androidx.tracing:tracing:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/606ea4d1e9a60a4d44ef84d8ac26cef7/transformed/tracing-1.0.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/01625e823e831bd5926d387aee9f61d1/transformed/cursoradapter-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [org.osmdroid:osmdroid-android:6.1.18] /Users/saravan-zpt0121/.gradle/caches/transforms-3/96bf0b25496166a2e71a8a49e473c4c0/transformed/osmdroid-android-6.1.18/AndroidManifest.xml:2:1-27:12
+MERGED from [com.microsoft.onnxruntime:onnxruntime-android:1.16.3] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d9c55b75eaf9dafc4b14ce0b5e077846/transformed/onnxruntime-android-1.16.3/AndroidManifest.xml:2:1-7:12
+MERGED from [com.google.dagger:dagger-lint-aar:2.50] /Users/saravan-zpt0121/.gradle/caches/transforms-3/724c0a665ca73289c9953b013fc513fa/transformed/dagger-lint-aar-2.50/AndroidManifest.xml:16:1-19:12
+	package
+		INJECTED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml
+	android:versionName
+		INJECTED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml
+	xmlns:tools
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:3:5-51
+	android:versionCode
+		INJECTED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml
+	xmlns:android
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:2:11-69
+uses-permission#android.permission.INTERNET
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:6:5-67
+MERGED from [com.google.android.gms:play-services-maps:18.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/35b14ae891c98446af3e5309c2525796/transformed/play-services-maps-18.2.0/AndroidManifest.xml:24:5-67
+MERGED from [com.google.android.gms:play-services-maps:18.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/35b14ae891c98446af3e5309c2525796/transformed/play-services-maps-18.2.0/AndroidManifest.xml:24:5-67
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:6:22-64
+uses-permission#android.permission.ACCESS_NETWORK_STATE
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:7:5-79
+MERGED from [androidx.media3:media3-common:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e830544df5d6212600a14811768bc9bd/transformed/media3-common-1.2.1/AndroidManifest.xml:22:5-79
+MERGED from [androidx.media3:media3-common:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e830544df5d6212600a14811768bc9bd/transformed/media3-common-1.2.1/AndroidManifest.xml:22:5-79
+MERGED from [androidx.media3:media3-exoplayer:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/0f2ea2b82178359614dd08924e33bb42/transformed/media3-exoplayer-1.2.1/AndroidManifest.xml:22:5-79
+MERGED from [androidx.media3:media3-exoplayer:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/0f2ea2b82178359614dd08924e33bb42/transformed/media3-exoplayer-1.2.1/AndroidManifest.xml:22:5-79
+MERGED from [com.google.android.gms:play-services-maps:18.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/35b14ae891c98446af3e5309c2525796/transformed/play-services-maps-18.2.0/AndroidManifest.xml:23:5-79
+MERGED from [com.google.android.gms:play-services-maps:18.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/35b14ae891c98446af3e5309c2525796/transformed/play-services-maps-18.2.0/AndroidManifest.xml:23:5-79
+MERGED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:24:5-79
+MERGED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:24:5-79
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:7:22-76
+uses-permission#android.permission.ACCESS_FINE_LOCATION
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:10:5-79
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:10:22-76
+uses-permission#android.permission.ACCESS_COARSE_LOCATION
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:11:5-81
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:11:22-78
+uses-permission#android.permission.CAMERA
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:14:5-65
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:14:22-62
+uses-permission#android.permission.RECORD_AUDIO
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:15:5-71
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:15:22-68
+uses-permission#android.permission.READ_MEDIA_IMAGES
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:16:5-76
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:16:22-73
+uses-permission#android.permission.READ_MEDIA_VIDEO
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:17:5-75
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:17:22-72
+uses-permission#android.permission.READ_MEDIA_AUDIO
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:18:5-75
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:18:22-72
+uses-permission#android.permission.READ_EXTERNAL_STORAGE
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:20:5-21:38
+	android:maxSdkVersion
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:21:9-35
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:20:22-77
+uses-permission#android.permission.WRITE_EXTERNAL_STORAGE
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:22:5-24:40
+	android:maxSdkVersion
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:23:9-35
+	tools:ignore
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:24:9-37
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:22:22-78
+uses-permission#android.permission.FOREGROUND_SERVICE
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:27:5-77
+MERGED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:26:5-77
+MERGED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:26:5-77
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:27:22-74
+uses-permission#android.permission.POST_NOTIFICATIONS
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:28:5-77
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:28:22-74
+uses-permission#android.permission.VIBRATE
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:31:5-66
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:31:22-63
+uses-permission#android.permission.USE_BIOMETRIC
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:34:5-72
+MERGED from [androidx.biometric:biometric:1.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d8dcf14c3369b07d2136ab5b27423da2/transformed/biometric-1.1.0/AndroidManifest.xml:24:5-72
+MERGED from [androidx.biometric:biometric:1.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d8dcf14c3369b07d2136ab5b27423da2/transformed/biometric-1.1.0/AndroidManifest.xml:24:5-72
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:34:22-69
+uses-feature#android.hardware.camera
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:37:5-85
+	android:required
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:37:58-82
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:37:19-57
+uses-feature#android.hardware.camera.autofocus
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:38:5-95
+	android:required
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:38:68-92
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:38:19-67
+uses-feature#android.hardware.location
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:39:5-87
+	android:required
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:39:60-84
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:39:19-59
+uses-feature#android.hardware.location.gps
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:40:5-91
+MERGED from [org.osmdroid:osmdroid-android:6.1.18] /Users/saravan-zpt0121/.gradle/caches/transforms-3/96bf0b25496166a2e71a8a49e473c4c0/transformed/osmdroid-android-6.1.18/AndroidManifest.xml:17:5-19:36
+MERGED from [org.osmdroid:osmdroid-android:6.1.18] /Users/saravan-zpt0121/.gradle/caches/transforms-3/96bf0b25496166a2e71a8a49e473c4c0/transformed/osmdroid-android-6.1.18/AndroidManifest.xml:17:5-19:36
+	android:required
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:40:64-88
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:40:19-63
+uses-feature#android.hardware.microphone
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:41:5-89
+	android:required
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:41:62-86
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:41:19-61
+application
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:43:5-205:19
+INJECTED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:43:5-205:19
+MERGED from [com.google.android.gms:play-services-maps:18.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/35b14ae891c98446af3e5309c2525796/transformed/play-services-maps-18.2.0/AndroidManifest.xml:36:5-42:19
+MERGED from [com.google.android.gms:play-services-maps:18.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/35b14ae891c98446af3e5309c2525796/transformed/play-services-maps-18.2.0/AndroidManifest.xml:36:5-42:19
+MERGED from [com.google.android.gms:play-services-location:21.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/6518471191f63bb7808c37d9380e9212/transformed/play-services-location-21.1.0/AndroidManifest.xml:7:5-20
+MERGED from [com.google.android.gms:play-services-location:21.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/6518471191f63bb7808c37d9380e9212/transformed/play-services-location-21.1.0/AndroidManifest.xml:7:5-20
+MERGED from [com.google.android.gms:play-services-base:18.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e9a37aae52ccedd0ff695f0c82e36ced/transformed/play-services-base-18.1.0/AndroidManifest.xml:19:5-23:19
+MERGED from [com.google.android.gms:play-services-base:18.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e9a37aae52ccedd0ff695f0c82e36ced/transformed/play-services-base-18.1.0/AndroidManifest.xml:19:5-23:19
+MERGED from [com.google.android.gms:play-services-tasks:18.0.2] /Users/saravan-zpt0121/.gradle/caches/transforms-3/170421ddaacbb93906d720c199b587d6/transformed/play-services-tasks-18.0.2/AndroidManifest.xml:5:5-20
+MERGED from [com.google.android.gms:play-services-tasks:18.0.2] /Users/saravan-zpt0121/.gradle/caches/transforms-3/170421ddaacbb93906d720c199b587d6/transformed/play-services-tasks-18.0.2/AndroidManifest.xml:5:5-20
+MERGED from [com.google.android.gms:play-services-basement:18.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8a87b77e4097efd52a32c23d24850a6a/transformed/play-services-basement-18.1.0/AndroidManifest.xml:20:5-24:19
+MERGED from [com.google.android.gms:play-services-basement:18.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8a87b77e4097efd52a32c23d24850a6a/transformed/play-services-basement-18.1.0/AndroidManifest.xml:20:5-24:19
+MERGED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:28:5-143:19
+MERGED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:28:5-143:19
+MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/dfeba6defa6e192b1c6607a4d1f03287/transformed/emoji2-1.3.0/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/dfeba6defa6e192b1c6607a4d1f03287/transformed/emoji2-1.3.0/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.lifecycle:lifecycle-process:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/1dbdb8a9b52c23809dc696e6e5fec9d1/transformed/lifecycle-process-2.7.0/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.lifecycle:lifecycle-process:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/1dbdb8a9b52c23809dc696e6e5fec9d1/transformed/lifecycle-process-2.7.0/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.compose.ui:ui-test-manifest:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/06e4e2b4d210cb3127e71d35e894379d/transformed/ui-test-manifest-1.6.1/AndroidManifest.xml:22:5-26:19
+MERGED from [androidx.compose.ui:ui-test-manifest:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/06e4e2b4d210cb3127e71d35e894379d/transformed/ui-test-manifest-1.6.1/AndroidManifest.xml:22:5-26:19
+MERGED from [androidx.compose.ui:ui-tooling-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f7a3cbdabd39b10dc340c07aca2fa713/transformed/ui-tooling-release/AndroidManifest.xml:22:5-26:19
+MERGED from [androidx.compose.ui:ui-tooling-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f7a3cbdabd39b10dc340c07aca2fa713/transformed/ui-tooling-release/AndroidManifest.xml:22:5-26:19
+MERGED from [androidx.core:core:1.12.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f4b5f2c7d534927f0710a1029aaf002b/transformed/core-1.12.0/AndroidManifest.xml:28:5-89
+MERGED from [androidx.core:core:1.12.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f4b5f2c7d534927f0710a1029aaf002b/transformed/core-1.12.0/AndroidManifest.xml:28:5-89
+MERGED from [androidx.room:room-runtime:2.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9cec96d6d564b991d8ea3bce5cb0834e/transformed/room-runtime-2.6.1/AndroidManifest.xml:23:5-29:19
+MERGED from [androidx.room:room-runtime:2.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9cec96d6d564b991d8ea3bce5cb0834e/transformed/room-runtime-2.6.1/AndroidManifest.xml:23:5-29:19
+MERGED from [com.jakewharton.timber:timber:5.0.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/4c9a544c9119329e3661abea1affee1c/transformed/timber-5.0.1/AndroidManifest.xml:7:5-20
+MERGED from [com.jakewharton.timber:timber:5.0.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/4c9a544c9119329e3661abea1affee1c/transformed/timber-5.0.1/AndroidManifest.xml:7:5-20
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8380db3c5cb62a46770f5858a0031bbe/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:24:5-25:19
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8380db3c5cb62a46770f5858a0031bbe/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:24:5-25:19
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:23:5-53:19
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:23:5-53:19
+MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/5d7514f5e52a5d0d517b0f0fb988ab49/transformed/startup-runtime-1.1.1/AndroidManifest.xml:25:5-31:19
+MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/5d7514f5e52a5d0d517b0f0fb988ab49/transformed/startup-runtime-1.1.1/AndroidManifest.xml:25:5-31:19
+	android:extractNativeLibs
+		INJECTED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml
+	android:appComponentFactory
+		ADDED from [androidx.core:core:1.12.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f4b5f2c7d534927f0710a1029aaf002b/transformed/core-1.12.0/AndroidManifest.xml:28:18-86
+	android:supportsRtl
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:51:9-35
+	android:label
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:49:9-41
+	android:fullBackupContent
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:47:9-54
+	android:roundIcon
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:50:9-54
+	tools:targetApi
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:53:9-29
+	android:icon
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:48:9-43
+	android:allowBackup
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:45:9-35
+	android:theme
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:52:9-44
+	android:dataExtractionRules
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:46:9-65
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:44:9-42
+activity#com.dairum.presentation.MainActivity
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:56:9-66:20
+	android:label
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:59:13-45
+	android:windowSoftInputMode
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:61:13-55
+	android:exported
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:58:13-36
+	android:theme
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:60:13-55
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:57:13-54
+intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:62:13-65:29
+action#android.intent.action.MAIN
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:63:17-69
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:63:25-66
+category#android.intent.category.LAUNCHER
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:64:17-77
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:64:27-74
+meta-data#com.google.android.geo.API_KEY
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:92:9-94:56
+	android:value
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:94:13-53
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:93:13-58
+receiver#com.dairum.receiver.AutomationReceiver
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:97:9-104:20
+	android:exported
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:99:13-36
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:98:13-56
+intent-filter#action:name:com.dairum.action.BACKUP+action:name:com.dairum.action.EXPORT
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:100:13-103:29
+action#com.dairum.action.EXPORT
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:101:17-67
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:101:25-64
+action#com.dairum.action.BACKUP
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:102:17-67
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:102:25-64
+activity#com.dairum.plugin.PluginEditActivity
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:107:9-121:20
+	android:label
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:111:13-42
+	android:exported
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:109:13-36
+	android:icon
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:110:13-47
+	android:theme
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:112:13-48
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:108:13-54
+intent-filter#action:name:com.twofortyfouram.locale.intent.action.EDIT_SETTING
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:114:13-116:29
+action#com.twofortyfouram.locale.intent.action.EDIT_SETTING
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:115:17-95
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:115:25-92
+intent-filter#action:name:com.arlosoft.macrodroid.intent.action.EDIT_SETTING
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:118:13-120:29
+action#com.arlosoft.macrodroid.intent.action.EDIT_SETTING
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:119:17-93
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:119:25-90
+receiver#com.dairum.plugin.PluginFireReceiver
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:124:9-135:20
+	android:exported
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:126:13-36
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:125:13-54
+intent-filter#action:name:com.twofortyfouram.locale.intent.action.FIRE_SETTING
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:128:13-130:29
+action#com.twofortyfouram.locale.intent.action.FIRE_SETTING
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:129:17-95
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:129:25-92
+intent-filter#action:name:com.arlosoft.macrodroid.intent.action.FIRE_SETTING
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:132:13-134:29
+action#com.arlosoft.macrodroid.intent.action.FIRE_SETTING
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:133:17-93
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:133:25-90
+receiver#com.dairum.widget.QuickEntryWidgetProvider
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:138:9-153:20
+	android:label
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:141:13-48
+	android:exported
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:140:13-36
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:139:13-60
+intent-filter#action:name:android.appwidget.action.APPWIDGET_UPDATE
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:142:13-144:29
+action#android.appwidget.action.APPWIDGET_UPDATE
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:143:17-84
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:143:25-81
+intent-filter#action:name:com.dairum.widget.NEW_ENTRY+action:name:com.dairum.widget.NEW_ENTRY_WITH_PROMPT+action:name:com.dairum.widget.REFRESH_PROMPT
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:145:13-149:29
+action#com.dairum.widget.REFRESH_PROMPT
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:146:17-75
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:146:25-72
+action#com.dairum.widget.NEW_ENTRY
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:147:17-70
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:147:25-67
+action#com.dairum.widget.NEW_ENTRY_WITH_PROMPT
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:148:17-82
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:148:25-79
+meta-data#android.appwidget.provider
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:150:13-152:67
+	android:resource
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:152:17-64
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:151:17-58
+receiver#com.dairum.widget.StatsWidgetProvider
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:156:9-170:20
+	android:label
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:159:13-54
+	android:exported
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:158:13-36
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:157:13-55
+intent-filter#action:name:com.dairum.widget.OPEN_APP+action:name:com.dairum.widget.OPEN_STATS
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:163:13-166:29
+action#com.dairum.widget.OPEN_STATS
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:164:17-71
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:164:25-68
+action#com.dairum.widget.OPEN_APP
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:165:17-69
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:165:25-66
+receiver#com.dairum.widget.MoodWidgetProvider
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:173:9-186:20
+	android:label
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:176:13-53
+	android:exported
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:175:13-36
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:174:13-54
+intent-filter#action:name:com.dairum.widget.LOG_MOOD
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:180:13-182:29
+action#com.dairum.widget.LOG_MOOD
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:181:17-69
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:181:25-66
+receiver#com.dairum.widget.TodayWidgetProvider
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:189:9-203:20
+	android:label
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:192:13-54
+	android:exported
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:191:13-36
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:190:13-55
+intent-filter#action:name:com.dairum.widget.TODAY_NEW_ENTRY+action:name:com.dairum.widget.TODAY_OPEN_APP
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:196:13-199:29
+action#com.dairum.widget.TODAY_NEW_ENTRY
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:197:17-76
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:197:25-73
+action#com.dairum.widget.TODAY_OPEN_APP
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:198:17-75
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:198:25-72
+meta-data#android.support.FILE_PROVIDER_PATHS
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:74:13-76:54
+	android:resource
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:76:17-51
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:75:17-67
+meta-data#androidx.work.WorkManagerInitializer
+ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:85:13-88:39
+REJECTED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:34:13-36:52
+	tools:node
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:88:17-36
+	android:value
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:87:17-49
+	android:name
+		ADDED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml:86:17-68
+uses-sdk
+INJECTED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml
+INJECTED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml
+MERGED from [io.coil-kt:coil-video:2.5.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d094cc4c156fb36eb0515854105ad77b/transformed/coil-video-2.5.0/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt:coil-video:2.5.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d094cc4c156fb36eb0515854105ad77b/transformed/coil-video-2.5.0/AndroidManifest.xml:5:5-44
+MERGED from [com.google.maps.android:maps-compose:4.3.2] /Users/saravan-zpt0121/.gradle/caches/transforms-3/48d509134e5205e37673c4d272717644/transformed/maps-compose-4.3.2/AndroidManifest.xml:20:5-44
+MERGED from [com.google.maps.android:maps-compose:4.3.2] /Users/saravan-zpt0121/.gradle/caches/transforms-3/48d509134e5205e37673c4d272717644/transformed/maps-compose-4.3.2/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-ui:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/ce38e29c2013be0b53418352db66e4eb/transformed/media3-ui-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-ui:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/ce38e29c2013be0b53418352db66e4eb/transformed/media3-ui-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-extractor:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/57c755941601e6ccfde9e25807c26421/transformed/media3-extractor-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-extractor:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/57c755941601e6ccfde9e25807c26421/transformed/media3-extractor-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-container:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/0e0814f6302bb1e16cf357cacb5e504b/transformed/media3-container-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-container:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/0e0814f6302bb1e16cf357cacb5e504b/transformed/media3-container-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-datasource:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f8e7d4e3fa69654567a678717f7ae52d/transformed/media3-datasource-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-datasource:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f8e7d4e3fa69654567a678717f7ae52d/transformed/media3-datasource-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-decoder:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/92ff7e70f28c67f020bee6cb17e601cb/transformed/media3-decoder-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-decoder:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/92ff7e70f28c67f020bee6cb17e601cb/transformed/media3-decoder-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-database:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/b305c3f1b11ec8a3844250f851f60184/transformed/media3-database-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-database:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/b305c3f1b11ec8a3844250f851f60184/transformed/media3-database-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-common:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e830544df5d6212600a14811768bc9bd/transformed/media3-common-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-common:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e830544df5d6212600a14811768bc9bd/transformed/media3-common-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-exoplayer:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/0f2ea2b82178359614dd08924e33bb42/transformed/media3-exoplayer-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-exoplayer:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/0f2ea2b82178359614dd08924e33bb42/transformed/media3-exoplayer-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.biometric:biometric:1.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d8dcf14c3369b07d2136ab5b27423da2/transformed/biometric-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.biometric:biometric:1.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d8dcf14c3369b07d2136ab5b27423da2/transformed/biometric-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.media:media:1.6.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/2c746e4fd4d388c21aa6448fd6fff551/transformed/media-1.6.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.media:media:1.6.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/2c746e4fd4d388c21aa6448fd6fff551/transformed/media-1.6.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.recyclerview:recyclerview:1.3.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/ca4c8861331b96041a414b261ffbe61b/transformed/recyclerview-1.3.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.recyclerview:recyclerview:1.3.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/ca4c8861331b96041a414b261ffbe61b/transformed/recyclerview-1.3.0/AndroidManifest.xml:20:5-44
+MERGED from [com.google.maps.android:maps-ktx:5.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/793b3f413a4c36a3ba5c66686e5ae9ee/transformed/maps-ktx-5.0.0/AndroidManifest.xml:21:5-44
+MERGED from [com.google.maps.android:maps-ktx:5.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/793b3f413a4c36a3ba5c66686e5ae9ee/transformed/maps-ktx-5.0.0/AndroidManifest.xml:21:5-44
+MERGED from [com.google.android.gms:play-services-maps:18.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/35b14ae891c98446af3e5309c2525796/transformed/play-services-maps-18.2.0/AndroidManifest.xml:20:5-44
+MERGED from [com.google.android.gms:play-services-maps:18.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/35b14ae891c98446af3e5309c2525796/transformed/play-services-maps-18.2.0/AndroidManifest.xml:20:5-44
+MERGED from [com.google.android.gms:play-services-location:21.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/6518471191f63bb7808c37d9380e9212/transformed/play-services-location-21.1.0/AndroidManifest.xml:5:5-44
+MERGED from [com.google.android.gms:play-services-location:21.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/6518471191f63bb7808c37d9380e9212/transformed/play-services-location-21.1.0/AndroidManifest.xml:5:5-44
+MERGED from [com.google.android.gms:play-services-base:18.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e9a37aae52ccedd0ff695f0c82e36ced/transformed/play-services-base-18.1.0/AndroidManifest.xml:18:5-43
+MERGED from [com.google.android.gms:play-services-base:18.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e9a37aae52ccedd0ff695f0c82e36ced/transformed/play-services-base-18.1.0/AndroidManifest.xml:18:5-43
+MERGED from [com.google.android.gms:play-services-tasks:18.0.2] /Users/saravan-zpt0121/.gradle/caches/transforms-3/170421ddaacbb93906d720c199b587d6/transformed/play-services-tasks-18.0.2/AndroidManifest.xml:4:5-43
+MERGED from [com.google.android.gms:play-services-tasks:18.0.2] /Users/saravan-zpt0121/.gradle/caches/transforms-3/170421ddaacbb93906d720c199b587d6/transformed/play-services-tasks-18.0.2/AndroidManifest.xml:4:5-43
+MERGED from [com.google.android.gms:play-services-basement:18.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8a87b77e4097efd52a32c23d24850a6a/transformed/play-services-basement-18.1.0/AndroidManifest.xml:18:5-43
+MERGED from [com.google.android.gms:play-services-basement:18.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8a87b77e4097efd52a32c23d24850a6a/transformed/play-services-basement-18.1.0/AndroidManifest.xml:18:5-43
+MERGED from [androidx.hilt:hilt-work:1.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/b38628eb88ab74aba0454635f711d1d0/transformed/hilt-work-1.1.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.hilt:hilt-work:1.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/b38628eb88ab74aba0454635f711d1d0/transformed/hilt-work-1.1.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.work:work-runtime-ktx:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/823c489f3f853f9b9daba57566e099ed/transformed/work-runtime-ktx-2.9.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.work:work-runtime-ktx:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/823c489f3f853f9b9daba57566e099ed/transformed/work-runtime-ktx-2.9.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.hilt:hilt-navigation-compose:1.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/1562b8bccbf17baba459c015f9959be5/transformed/hilt-navigation-compose-1.1.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.hilt:hilt-navigation-compose:1.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/1562b8bccbf17baba459c015f9959be5/transformed/hilt-navigation-compose-1.1.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.hilt:hilt-navigation:1.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8edd2c5d7d8aaab4f11828ad3ee7a37c/transformed/hilt-navigation-1.1.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.hilt:hilt-navigation:1.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8edd2c5d7d8aaab4f11828ad3ee7a37c/transformed/hilt-navigation-1.1.0/AndroidManifest.xml:5:5-44
+MERGED from [com.google.dagger:hilt-android:2.50] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9b5d0cb10138f812dda5aee4affc5627/transformed/hilt-android-2.50/AndroidManifest.xml:18:3-42
+MERGED from [com.google.dagger:hilt-android:2.50] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9b5d0cb10138f812dda5aee4affc5627/transformed/hilt-android-2.50/AndroidManifest.xml:18:3-42
+MERGED from [androidx.navigation:navigation-common:2.7.7] /Users/saravan-zpt0121/.gradle/caches/transforms-3/7e2ecca9a9ca7b5bb43d13bd7201dc27/transformed/navigation-common-2.7.7/AndroidManifest.xml:20:5-44
+MERGED from [androidx.navigation:navigation-common:2.7.7] /Users/saravan-zpt0121/.gradle/caches/transforms-3/7e2ecca9a9ca7b5bb43d13bd7201dc27/transformed/navigation-common-2.7.7/AndroidManifest.xml:20:5-44
+MERGED from [androidx.navigation:navigation-runtime:2.7.7] /Users/saravan-zpt0121/.gradle/caches/transforms-3/63961bae21b3c81681215dbbe23b8e0b/transformed/navigation-runtime-2.7.7/AndroidManifest.xml:20:5-44
+MERGED from [androidx.navigation:navigation-runtime:2.7.7] /Users/saravan-zpt0121/.gradle/caches/transforms-3/63961bae21b3c81681215dbbe23b8e0b/transformed/navigation-runtime-2.7.7/AndroidManifest.xml:20:5-44
+MERGED from [androidx.navigation:navigation-common-ktx:2.7.7] /Users/saravan-zpt0121/.gradle/caches/transforms-3/73f334e51272abe018779d25a660f502/transformed/navigation-common-ktx-2.7.7/AndroidManifest.xml:5:5-44
+MERGED from [androidx.navigation:navigation-common-ktx:2.7.7] /Users/saravan-zpt0121/.gradle/caches/transforms-3/73f334e51272abe018779d25a660f502/transformed/navigation-common-ktx-2.7.7/AndroidManifest.xml:5:5-44
+MERGED from [androidx.navigation:navigation-runtime-ktx:2.7.7] /Users/saravan-zpt0121/.gradle/caches/transforms-3/ed2e2c7842d8f13f9965c682454e2827/transformed/navigation-runtime-ktx-2.7.7/AndroidManifest.xml:5:5-44
+MERGED from [androidx.navigation:navigation-runtime-ktx:2.7.7] /Users/saravan-zpt0121/.gradle/caches/transforms-3/ed2e2c7842d8f13f9965c682454e2827/transformed/navigation-runtime-ktx-2.7.7/AndroidManifest.xml:5:5-44
+MERGED from [androidx.navigation:navigation-compose:2.7.7] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d9b61f59891ec88d9817abd10aad0bc3/transformed/navigation-compose-2.7.7/AndroidManifest.xml:5:5-44
+MERGED from [androidx.navigation:navigation-compose:2.7.7] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d9b61f59891ec88d9817abd10aad0bc3/transformed/navigation-compose-2.7.7/AndroidManifest.xml:5:5-44
+MERGED from [com.patrykandpatrick.vico:compose-m3:1.14.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d8feac9d4b87d68c49def1e988fc8a80/transformed/compose-m3-1.14.0/AndroidManifest.xml:5:5-44
+MERGED from [com.patrykandpatrick.vico:compose-m3:1.14.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d8feac9d4b87d68c49def1e988fc8a80/transformed/compose-m3-1.14.0/AndroidManifest.xml:5:5-44
+MERGED from [com.patrykandpatrick.vico:compose:1.14.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/4d779476dbe2f3f8f28f221bfd8c0d85/transformed/compose-1.14.0/AndroidManifest.xml:5:5-44
+MERGED from [com.patrykandpatrick.vico:compose:1.14.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/4d779476dbe2f3f8f28f221bfd8c0d85/transformed/compose-1.14.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.material3:material3-android:1.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/fc5415b6466e0244e2c4d84d011b6a11/transformed/material3-release/AndroidManifest.xml:20:5-44
+MERGED from [androidx.compose.material3:material3-android:1.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/fc5415b6466e0244e2c4d84d011b6a11/transformed/material3-release/AndroidManifest.xml:20:5-44
+MERGED from [io.coil-kt:coil-compose:2.5.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/3834e8c7a07be7c26ff8fe64d85e6b8c/transformed/coil-compose-2.5.0/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt:coil-compose:2.5.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/3834e8c7a07be7c26ff8fe64d85e6b8c/transformed/coil-compose-2.5.0/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt:coil-compose-base:2.5.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/a4c64aa121ddb94ac5183da16419dc15/transformed/coil-compose-base-2.5.0/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt:coil-compose-base:2.5.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/a4c64aa121ddb94ac5183da16419dc15/transformed/coil-compose-base-2.5.0/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt:coil:2.5.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/4b4bc1c1edb994db5c223e903aef1884/transformed/coil-2.5.0/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt:coil:2.5.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/4b4bc1c1edb994db5c223e903aef1884/transformed/coil-2.5.0/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt:coil-base:2.5.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/87a5f76733ff16fd9f950fb2e5e0744b/transformed/coil-base-2.5.0/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt:coil-base:2.5.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/87a5f76733ff16fd9f950fb2e5e0744b/transformed/coil-base-2.5.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.appcompat:appcompat-resources:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/6fc927a05b8d6a1180eb863b570e06c6/transformed/appcompat-resources-1.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.appcompat:appcompat-resources:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/6fc927a05b8d6a1180eb863b570e06c6/transformed/appcompat-resources-1.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.appcompat:appcompat:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/1d5e81d9e8b4c31862ae756c7465c006/transformed/appcompat-1.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.appcompat:appcompat:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/1d5e81d9e8b4c31862ae756c7465c006/transformed/appcompat-1.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.fragment:fragment:1.5.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9226307523c79ea823fd8033c79318a9/transformed/fragment-1.5.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.fragment:fragment:1.5.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9226307523c79ea823fd8033c79318a9/transformed/fragment-1.5.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.loader:loader:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/517f21a011ca5d911d77a12becfeb627/transformed/loader-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.loader:loader:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/517f21a011ca5d911d77a12becfeb627/transformed/loader-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.compose.material:material-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/c7b5f9e67890e6f2f0d9547732189698/transformed/material-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.material:material-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/c7b5f9e67890e6f2f0d9547732189698/transformed/material-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.material:material-icons-core-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/990ca78e4b83640f6620aaf155f852cb/transformed/material-icons-core-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.material:material-icons-core-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/990ca78e4b83640f6620aaf155f852cb/transformed/material-icons-core-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.material:material-icons-extended-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/209e67dc506aa4f0675e49928a543905/transformed/material-icons-extended-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.material:material-icons-extended-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/209e67dc506aa4f0675e49928a543905/transformed/material-icons-extended-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.material:material-ripple-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/97332619c0740f179dde708bb1e9cefe/transformed/material-ripple-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.material:material-ripple-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/97332619c0740f179dde708bb1e9cefe/transformed/material-ripple-release/AndroidManifest.xml:5:5-44
+MERGED from [com.valentinilk.shimmer:compose-shimmer-android:1.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb9872cc1e2df45f318a03eb82e6a249/transformed/shimmer-release/AndroidManifest.xml:5:5-44
+MERGED from [com.valentinilk.shimmer:compose-shimmer-android:1.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb9872cc1e2df45f318a03eb82e6a249/transformed/shimmer-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.foundation:foundation-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/97931d86d8410b63eea11f95460fbe92/transformed/foundation-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.foundation:foundation-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/97931d86d8410b63eea11f95460fbe92/transformed/foundation-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.foundation:foundation-layout-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d3eac0e74aa2c5f1818ad83cca48eda1/transformed/foundation-layout-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.foundation:foundation-layout-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d3eac0e74aa2c5f1818ad83cca48eda1/transformed/foundation-layout-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.animation:animation-core-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/806a00e039795420c5bd39268719ccd0/transformed/animation-core-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.animation:animation-core-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/806a00e039795420c5bd39268719ccd0/transformed/animation-core-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.animation:animation-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/a0505520fe2353fcc09b2474a82711a5/transformed/animation-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.animation:animation-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/a0505520fe2353fcc09b2474a82711a5/transformed/animation-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-tooling-data-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/eb8379e83e6926883263d5472da95b14/transformed/ui-tooling-data-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-tooling-data-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/eb8379e83e6926883263d5472da95b14/transformed/ui-tooling-data-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-unit-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/7636c614f6560f36fa75c9179cf4068f/transformed/ui-unit-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-unit-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/7636c614f6560f36fa75c9179cf4068f/transformed/ui-unit-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-geometry-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e33c0ea2ddf61c908ef987717f046aa1/transformed/ui-geometry-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-geometry-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e33c0ea2ddf61c908ef987717f046aa1/transformed/ui-geometry-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-util-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/b898d54a716ef28922151783cfdaa1e1/transformed/ui-util-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-util-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/b898d54a716ef28922151783cfdaa1e1/transformed/ui-util-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-text-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/3b526e4e49b3c9b286f7094ef0e8388d/transformed/ui-text-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-text-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/3b526e4e49b3c9b286f7094ef0e8388d/transformed/ui-text-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.emoji2:emoji2-views-helper:1.3.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/19ed91fc12fac3fe61b7d4525ee1a2f5/transformed/emoji2-views-helper-1.3.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.emoji2:emoji2-views-helper:1.3.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/19ed91fc12fac3fe61b7d4525ee1a2f5/transformed/emoji2-views-helper-1.3.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/dfeba6defa6e192b1c6607a4d1f03287/transformed/emoji2-1.3.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/dfeba6defa6e192b1c6607a4d1f03287/transformed/emoji2-1.3.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.lifecycle:lifecycle-process:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/1dbdb8a9b52c23809dc696e6e5fec9d1/transformed/lifecycle-process-2.7.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.lifecycle:lifecycle-process:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/1dbdb8a9b52c23809dc696e6e5fec9d1/transformed/lifecycle-process-2.7.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core-ktx:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/69c1aa41663a8404de82bbc8a957dfe9/transformed/lifecycle-livedata-core-ktx-2.7.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core-ktx:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/69c1aa41663a8404de82bbc8a957dfe9/transformed/lifecycle-livedata-core-ktx-2.7.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-service:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/7ad9ad0c9bac35f4b0c80dd22538ee60/transformed/lifecycle-service-2.7.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-service:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/7ad9ad0c9bac35f4b0c80dd22538ee60/transformed/lifecycle-service-2.7.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8e9be05e5fba82124f5abf9487823201/transformed/lifecycle-livedata-2.7.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8e9be05e5fba82124f5abf9487823201/transformed/lifecycle-livedata-2.7.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/80545d031e7fd3681d3d462282627a58/transformed/lifecycle-livedata-core-2.7.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/80545d031e7fd3681d3d462282627a58/transformed/lifecycle-livedata-core-2.7.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.savedstate:savedstate-ktx:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/5caeb82d92565916e7d71e73ea9b5126/transformed/savedstate-ktx-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.savedstate:savedstate-ktx:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/5caeb82d92565916e7d71e73ea9b5126/transformed/savedstate-ktx-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.savedstate:savedstate:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e7d70ce3004f86fa84e809de7adce0d5/transformed/savedstate-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.savedstate:savedstate:1.2.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e7d70ce3004f86fa84e809de7adce0d5/transformed/savedstate-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/98696c8e1636c61d8dc8b202688cc391/transformed/lifecycle-viewmodel-2.7.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/98696c8e1636c61d8dc8b202688cc391/transformed/lifecycle-viewmodel-2.7.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/bd42890b5ffe9d2c1c7c838648ad3afa/transformed/lifecycle-viewmodel-savedstate-2.7.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/bd42890b5ffe9d2c1c7c838648ad3afa/transformed/lifecycle-viewmodel-savedstate-2.7.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8a5f15fa0a0099020db59297c0be720d/transformed/lifecycle-viewmodel-ktx-2.7.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8a5f15fa0a0099020db59297c0be720d/transformed/lifecycle-viewmodel-ktx-2.7.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/010837a2aa4f53cbde0efd12b2c133f2/transformed/lifecycle-runtime-2.7.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/010837a2aa4f53cbde0efd12b2c133f2/transformed/lifecycle-runtime-2.7.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d24c7be3bf7eb1112bca0ba207c24661/transformed/lifecycle-viewmodel-compose-2.7.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d24c7be3bf7eb1112bca0ba207c24661/transformed/lifecycle-viewmodel-compose-2.7.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime-ktx:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/091147a9bda0bff7ec172ecdd08b9e3e/transformed/lifecycle-runtime-ktx-2.7.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime-ktx:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/091147a9bda0bff7ec172ecdd08b9e3e/transformed/lifecycle-runtime-ktx-2.7.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime-compose:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/b536813bbd1fede6f38615e97fceeb39/transformed/lifecycle-runtime-compose-2.7.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime-compose:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/b536813bbd1fede6f38615e97fceeb39/transformed/lifecycle-runtime-compose-2.7.0/AndroidManifest.xml:5:5-44
+MERGED from [com.google.accompanist:accompanist-drawablepainter:0.32.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/86140114767bcc6a5b2335a3300f0741/transformed/accompanist-drawablepainter-0.32.0/AndroidManifest.xml:21:5-44
+MERGED from [com.google.accompanist:accompanist-drawablepainter:0.32.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/86140114767bcc6a5b2335a3300f0741/transformed/accompanist-drawablepainter-0.32.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.compose.ui:ui-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/94c7fba9d81bbf46e4eafc08510ce5f6/transformed/ui-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/94c7fba9d81bbf46e4eafc08510ce5f6/transformed/ui-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-tooling-preview-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8eb2e82f0c37e11b75e90587811f2a10/transformed/ui-tooling-preview-release/AndroidManifest.xml:20:5-44
+MERGED from [androidx.compose.ui:ui-tooling-preview-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8eb2e82f0c37e11b75e90587811f2a10/transformed/ui-tooling-preview-release/AndroidManifest.xml:20:5-44
+MERGED from [androidx.compose.ui:ui-graphics-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/7e113485e4afbc32ec19a085d862dd43/transformed/ui-graphics-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-graphics-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/7e113485e4afbc32ec19a085d862dd43/transformed/ui-graphics-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-test-manifest:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/06e4e2b4d210cb3127e71d35e894379d/transformed/ui-test-manifest-1.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.compose.ui:ui-test-manifest:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/06e4e2b4d210cb3127e71d35e894379d/transformed/ui-test-manifest-1.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.compose.ui:ui-tooling-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f7a3cbdabd39b10dc340c07aca2fa713/transformed/ui-tooling-release/AndroidManifest.xml:20:5-44
+MERGED from [androidx.compose.ui:ui-tooling-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f7a3cbdabd39b10dc340c07aca2fa713/transformed/ui-tooling-release/AndroidManifest.xml:20:5-44
+MERGED from [androidx.activity:activity-compose:1.8.2] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f24ad550c16285619c8601c682013f30/transformed/activity-compose-1.8.2/AndroidManifest.xml:5:5-44
+MERGED from [androidx.activity:activity-compose:1.8.2] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f24ad550c16285619c8601c682013f30/transformed/activity-compose-1.8.2/AndroidManifest.xml:5:5-44
+MERGED from [androidx.activity:activity-ktx:1.8.2] /Users/saravan-zpt0121/.gradle/caches/transforms-3/3a43777930c93243c59edc3cdc19bc58/transformed/activity-ktx-1.8.2/AndroidManifest.xml:5:5-44
+MERGED from [androidx.activity:activity-ktx:1.8.2] /Users/saravan-zpt0121/.gradle/caches/transforms-3/3a43777930c93243c59edc3cdc19bc58/transformed/activity-ktx-1.8.2/AndroidManifest.xml:5:5-44
+MERGED from [androidx.activity:activity:1.8.2] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f16fc083d57319ab8d8ae74ded158817/transformed/activity-1.8.2/AndroidManifest.xml:20:5-44
+MERGED from [androidx.activity:activity:1.8.2] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f16fc083d57319ab8d8ae74ded158817/transformed/activity-1.8.2/AndroidManifest.xml:20:5-44
+MERGED from [androidx.viewpager:viewpager:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/a4a09039adcf708850caf5ff2bf73c0a/transformed/viewpager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.viewpager:viewpager:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/a4a09039adcf708850caf5ff2bf73c0a/transformed/viewpager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/b65ee8233155bce3ccf301f01f8ea84b/transformed/drawerlayout-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/b65ee8233155bce3ccf301f01f8ea84b/transformed/drawerlayout-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.customview:customview:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/ef47a059040be803f000f54840a94404/transformed/customview-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.customview:customview:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/ef47a059040be803f000f54840a94404/transformed/customview-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/74a2afa5214b5951248f9890b68051af/transformed/vectordrawable-animated-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/74a2afa5214b5951248f9890b68051af/transformed/vectordrawable-animated-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/2aaa00a467913b4c532be62969269f35/transformed/vectordrawable-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/2aaa00a467913b4c532be62969269f35/transformed/vectordrawable-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.autofill:autofill:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d5990ef6a7685194a9d110a92cd00372/transformed/autofill-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.autofill:autofill:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d5990ef6a7685194a9d110a92cd00372/transformed/autofill-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.core:core:1.12.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f4b5f2c7d534927f0710a1029aaf002b/transformed/core-1.12.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.core:core:1.12.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f4b5f2c7d534927f0710a1029aaf002b/transformed/core-1.12.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.customview:customview-poolingcontainer:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e63e719479355211f8acab4b247994c0/transformed/customview-poolingcontainer-1.0.0/AndroidManifest.xml:20:5-21:38
+MERGED from [androidx.customview:customview-poolingcontainer:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e63e719479355211f8acab4b247994c0/transformed/customview-poolingcontainer-1.0.0/AndroidManifest.xml:20:5-21:38
+MERGED from [androidx.core:core-ktx:1.12.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9bc8024dd6c3492750635bf504027e78/transformed/core-ktx-1.12.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.core:core-ktx:1.12.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9bc8024dd6c3492750635bf504027e78/transformed/core-ktx-1.12.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.room:room-runtime:2.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9cec96d6d564b991d8ea3bce5cb0834e/transformed/room-runtime-2.6.1/AndroidManifest.xml:21:5-44
+MERGED from [androidx.room:room-runtime:2.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9cec96d6d564b991d8ea3bce5cb0834e/transformed/room-runtime-2.6.1/AndroidManifest.xml:21:5-44
+MERGED from [androidx.room:room-ktx:2.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/4a195ab2c769fe67d97112c1cdfec172/transformed/room-ktx-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.room:room-ktx:2.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/4a195ab2c769fe67d97112c1cdfec172/transformed/room-ktx-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.datastore:datastore-preferences:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d84a1cf545cad04e21b637468aec9d8f/transformed/datastore-preferences-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.datastore:datastore-preferences:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d84a1cf545cad04e21b637468aec9d8f/transformed/datastore-preferences-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [com.jakewharton.timber:timber:5.0.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/4c9a544c9119329e3661abea1affee1c/transformed/timber-5.0.1/AndroidManifest.xml:5:5-44
+MERGED from [com.jakewharton.timber:timber:5.0.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/4c9a544c9119329e3661abea1affee1c/transformed/timber-5.0.1/AndroidManifest.xml:5:5-44
+MERGED from [androidx.core:core-splashscreen:1.0.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8900d14c5722eb6f53e12e5108208476/transformed/core-splashscreen-1.0.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.core:core-splashscreen:1.0.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8900d14c5722eb6f53e12e5108208476/transformed/core-splashscreen-1.0.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.sqlite:sqlite-framework:2.4.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/fa2f1b18c71f780475834400c264a712/transformed/sqlite-framework-2.4.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.sqlite:sqlite-framework:2.4.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/fa2f1b18c71f780475834400c264a712/transformed/sqlite-framework-2.4.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.sqlite:sqlite:2.4.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/b345eac8ea43bab56dfa44850e093355/transformed/sqlite-2.4.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.sqlite:sqlite:2.4.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/b345eac8ea43bab56dfa44850e093355/transformed/sqlite-2.4.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.datastore:datastore:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f77056190171592b7d6f3199e8d1e71a/transformed/datastore-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.datastore:datastore:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f77056190171592b7d6f3199e8d1e71a/transformed/datastore-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [com.patrykandpatrick.vico:core:1.14.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/736257bddc8e6d26234ac03cba786713/transformed/core-1.14.0/AndroidManifest.xml:5:5-44
+MERGED from [com.patrykandpatrick.vico:core:1.14.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/736257bddc8e6d26234ac03cba786713/transformed/core-1.14.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.runtime:runtime-saveable-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cbca66b9bba38e646bb6a34cd44b2a85/transformed/runtime-saveable-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.runtime:runtime-saveable-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cbca66b9bba38e646bb6a34cd44b2a85/transformed/runtime-saveable-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.runtime:runtime-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/2fae804a127ec719ca2a29cf46d53562/transformed/runtime-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.runtime:runtime-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/2fae804a127ec719ca2a29cf46d53562/transformed/runtime-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.4.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/562dfc412285f25a38218d065bcf287f/transformed/annotation-experimental-1.4.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.4.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/562dfc412285f25a38218d065bcf287f/transformed/annotation-experimental-1.4.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.security:security-crypto:1.1.0-alpha06] /Users/saravan-zpt0121/.gradle/caches/transforms-3/7c77e35482441c2a117d86b0e7180d3c/transformed/security-crypto-1.1.0-alpha06/AndroidManifest.xml:20:5-44
+MERGED from [androidx.security:security-crypto:1.1.0-alpha06] /Users/saravan-zpt0121/.gradle/caches/transforms-3/7c77e35482441c2a117d86b0e7180d3c/transformed/security-crypto-1.1.0-alpha06/AndroidManifest.xml:20:5-44
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8380db3c5cb62a46770f5858a0031bbe/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8380db3c5cb62a46770f5858a0031bbe/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.arch.core:core-runtime:2.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/80820844d2e515f43f0b19dfab2b2560/transformed/core-runtime-2.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.arch.core:core-runtime:2.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/80820844d2e515f43f0b19dfab2b2560/transformed/core-runtime-2.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.exifinterface:exifinterface:1.3.6] /Users/saravan-zpt0121/.gradle/caches/transforms-3/dc8a4d3e97f4eca34fd492f6cf7f7485/transformed/exifinterface-1.3.6/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.exifinterface:exifinterface:1.3.6] /Users/saravan-zpt0121/.gradle/caches/transforms-3/dc8a4d3e97f4eca34fd492f6cf7f7485/transformed/exifinterface-1.3.6/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/2fcbd411f2438f72a90c2d85406c664a/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/2fcbd411f2438f72a90c2d85406c664a/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:21:5-44
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:21:5-44
+MERGED from [androidx.databinding:viewbinding:7.4.2] /Users/saravan-zpt0121/.gradle/caches/transforms-3/45ea0286d78682ab1898dbfedc681783/transformed/viewbinding-7.4.2/AndroidManifest.xml:5:5-44
+MERGED from [androidx.databinding:viewbinding:7.4.2] /Users/saravan-zpt0121/.gradle/caches/transforms-3/45ea0286d78682ab1898dbfedc681783/transformed/viewbinding-7.4.2/AndroidManifest.xml:5:5-44
+MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/5d7514f5e52a5d0d517b0f0fb988ab49/transformed/startup-runtime-1.1.1/AndroidManifest.xml:21:5-23:41
+MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/5d7514f5e52a5d0d517b0f0fb988ab49/transformed/startup-runtime-1.1.1/AndroidManifest.xml:21:5-23:41
+MERGED from [androidx.tracing:tracing:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/606ea4d1e9a60a4d44ef84d8ac26cef7/transformed/tracing-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.tracing:tracing:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/606ea4d1e9a60a4d44ef84d8ac26cef7/transformed/tracing-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/01625e823e831bd5926d387aee9f61d1/transformed/cursoradapter-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/01625e823e831bd5926d387aee9f61d1/transformed/cursoradapter-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [org.osmdroid:osmdroid-android:6.1.18] /Users/saravan-zpt0121/.gradle/caches/transforms-3/96bf0b25496166a2e71a8a49e473c4c0/transformed/osmdroid-android-6.1.18/AndroidManifest.xml:5:5-7:41
+MERGED from [org.osmdroid:osmdroid-android:6.1.18] /Users/saravan-zpt0121/.gradle/caches/transforms-3/96bf0b25496166a2e71a8a49e473c4c0/transformed/osmdroid-android-6.1.18/AndroidManifest.xml:5:5-7:41
+MERGED from [com.microsoft.onnxruntime:onnxruntime-android:1.16.3] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d9c55b75eaf9dafc4b14ce0b5e077846/transformed/onnxruntime-android-1.16.3/AndroidManifest.xml:5:5-44
+MERGED from [com.microsoft.onnxruntime:onnxruntime-android:1.16.3] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d9c55b75eaf9dafc4b14ce0b5e077846/transformed/onnxruntime-android-1.16.3/AndroidManifest.xml:5:5-44
+MERGED from [com.google.dagger:dagger-lint-aar:2.50] /Users/saravan-zpt0121/.gradle/caches/transforms-3/724c0a665ca73289c9953b013fc513fa/transformed/dagger-lint-aar-2.50/AndroidManifest.xml:18:3-42
+MERGED from [com.google.dagger:dagger-lint-aar:2.50] /Users/saravan-zpt0121/.gradle/caches/transforms-3/724c0a665ca73289c9953b013fc513fa/transformed/dagger-lint-aar-2.50/AndroidManifest.xml:18:3-42
+	android:targetSdkVersion
+		INJECTED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from /Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/AndroidManifest.xml
+uses-permission#android.permission.USE_FINGERPRINT
+ADDED from [androidx.biometric:biometric:1.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d8dcf14c3369b07d2136ab5b27423da2/transformed/biometric-1.1.0/AndroidManifest.xml:27:5-74
+	android:name
+		ADDED from [androidx.biometric:biometric:1.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/d8dcf14c3369b07d2136ab5b27423da2/transformed/biometric-1.1.0/AndroidManifest.xml:27:22-71
+uses-feature#0x00020000
+ADDED from [com.google.android.gms:play-services-maps:18.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/35b14ae891c98446af3e5309c2525796/transformed/play-services-maps-18.2.0/AndroidManifest.xml:26:5-28:35
+	android:glEsVersion
+		ADDED from [com.google.android.gms:play-services-maps:18.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/35b14ae891c98446af3e5309c2525796/transformed/play-services-maps-18.2.0/AndroidManifest.xml:27:9-41
+	android:required
+		ADDED from [com.google.android.gms:play-services-maps:18.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/35b14ae891c98446af3e5309c2525796/transformed/play-services-maps-18.2.0/AndroidManifest.xml:28:9-32
+queries
+ADDED from [com.google.android.gms:play-services-maps:18.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/35b14ae891c98446af3e5309c2525796/transformed/play-services-maps-18.2.0/AndroidManifest.xml:30:5-34:15
+package#com.google.android.apps.maps
+ADDED from [com.google.android.gms:play-services-maps:18.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/35b14ae891c98446af3e5309c2525796/transformed/play-services-maps-18.2.0/AndroidManifest.xml:33:9-64
+	android:name
+		ADDED from [com.google.android.gms:play-services-maps:18.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/35b14ae891c98446af3e5309c2525796/transformed/play-services-maps-18.2.0/AndroidManifest.xml:33:18-61
+uses-library#org.apache.http.legacy
+ADDED from [com.google.android.gms:play-services-maps:18.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/35b14ae891c98446af3e5309c2525796/transformed/play-services-maps-18.2.0/AndroidManifest.xml:39:9-41:40
+	android:required
+		ADDED from [com.google.android.gms:play-services-maps:18.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/35b14ae891c98446af3e5309c2525796/transformed/play-services-maps-18.2.0/AndroidManifest.xml:41:13-37
+	android:name
+		ADDED from [com.google.android.gms:play-services-maps:18.2.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/35b14ae891c98446af3e5309c2525796/transformed/play-services-maps-18.2.0/AndroidManifest.xml:40:13-50
+activity#com.google.android.gms.common.api.GoogleApiActivity
+ADDED from [com.google.android.gms:play-services-base:18.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e9a37aae52ccedd0ff695f0c82e36ced/transformed/play-services-base-18.1.0/AndroidManifest.xml:20:9-22:45
+	android:exported
+		ADDED from [com.google.android.gms:play-services-base:18.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e9a37aae52ccedd0ff695f0c82e36ced/transformed/play-services-base-18.1.0/AndroidManifest.xml:22:19-43
+	android:theme
+		ADDED from [com.google.android.gms:play-services-base:18.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e9a37aae52ccedd0ff695f0c82e36ced/transformed/play-services-base-18.1.0/AndroidManifest.xml:21:19-78
+	android:name
+		ADDED from [com.google.android.gms:play-services-base:18.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/e9a37aae52ccedd0ff695f0c82e36ced/transformed/play-services-base-18.1.0/AndroidManifest.xml:20:19-85
+meta-data#com.google.android.gms.version
+ADDED from [com.google.android.gms:play-services-basement:18.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8a87b77e4097efd52a32c23d24850a6a/transformed/play-services-basement-18.1.0/AndroidManifest.xml:21:9-23:69
+	android:value
+		ADDED from [com.google.android.gms:play-services-basement:18.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8a87b77e4097efd52a32c23d24850a6a/transformed/play-services-basement-18.1.0/AndroidManifest.xml:23:13-66
+	android:name
+		ADDED from [com.google.android.gms:play-services-basement:18.1.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/8a87b77e4097efd52a32c23d24850a6a/transformed/play-services-basement-18.1.0/AndroidManifest.xml:22:13-58
+uses-permission#android.permission.WAKE_LOCK
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:23:5-68
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:23:22-65
+uses-permission#android.permission.RECEIVE_BOOT_COMPLETED
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:25:5-81
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:25:22-78
+service#androidx.work.impl.background.systemalarm.SystemAlarmService
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:39:9-45:35
+	android:enabled
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:42:13-72
+	android:exported
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:43:13-37
+	tools:ignore
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:44:13-60
+	tools:targetApi
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:45:13-32
+	android:directBootAware
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:41:13-44
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:40:13-88
+service#androidx.work.impl.background.systemjob.SystemJobService
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:46:9-52:35
+	android:enabled
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:49:13-70
+	android:exported
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:50:13-36
+	android:permission
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:51:13-69
+	tools:targetApi
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:52:13-32
+	android:directBootAware
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:48:13-44
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:47:13-84
+service#androidx.work.impl.foreground.SystemForegroundService
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:53:9-59:35
+	android:enabled
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:56:13-77
+	android:exported
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:57:13-37
+	tools:ignore
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:58:13-60
+	tools:targetApi
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:59:13-32
+	android:directBootAware
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:55:13-44
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:54:13-81
+receiver#androidx.work.impl.utils.ForceStopRunnable$BroadcastReceiver
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:61:9-66:35
+	android:enabled
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:64:13-35
+	android:exported
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:65:13-37
+	tools:targetApi
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:66:13-32
+	android:directBootAware
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:63:13-44
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:62:13-88
+receiver#androidx.work.impl.background.systemalarm.ConstraintProxy$BatteryChargingProxy
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:67:9-77:20
+	android:enabled
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:70:13-36
+	android:exported
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:71:13-37
+	tools:targetApi
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:72:13-32
+	android:directBootAware
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:69:13-44
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:68:13-106
+intent-filter#action:name:android.intent.action.ACTION_POWER_CONNECTED+action:name:android.intent.action.ACTION_POWER_DISCONNECTED
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:73:13-76:29
+action#android.intent.action.ACTION_POWER_CONNECTED
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:74:17-87
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:74:25-84
+action#android.intent.action.ACTION_POWER_DISCONNECTED
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:75:17-90
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:75:25-87
+receiver#androidx.work.impl.background.systemalarm.ConstraintProxy$BatteryNotLowProxy
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:78:9-88:20
+	android:enabled
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:81:13-36
+	android:exported
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:82:13-37
+	tools:targetApi
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:83:13-32
+	android:directBootAware
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:80:13-44
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:79:13-104
+intent-filter#action:name:android.intent.action.BATTERY_LOW+action:name:android.intent.action.BATTERY_OKAY
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:84:13-87:29
+action#android.intent.action.BATTERY_OKAY
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:85:17-77
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:85:25-74
+action#android.intent.action.BATTERY_LOW
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:86:17-76
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:86:25-73
+receiver#androidx.work.impl.background.systemalarm.ConstraintProxy$StorageNotLowProxy
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:89:9-99:20
+	android:enabled
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:92:13-36
+	android:exported
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:93:13-37
+	tools:targetApi
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:94:13-32
+	android:directBootAware
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:91:13-44
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:90:13-104
+intent-filter#action:name:android.intent.action.DEVICE_STORAGE_LOW+action:name:android.intent.action.DEVICE_STORAGE_OK
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:95:13-98:29
+action#android.intent.action.DEVICE_STORAGE_LOW
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:96:17-83
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:96:25-80
+action#android.intent.action.DEVICE_STORAGE_OK
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:97:17-82
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:97:25-79
+receiver#androidx.work.impl.background.systemalarm.ConstraintProxy$NetworkStateProxy
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:100:9-109:20
+	android:enabled
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:103:13-36
+	android:exported
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:104:13-37
+	tools:targetApi
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:105:13-32
+	android:directBootAware
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:102:13-44
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:101:13-103
+intent-filter#action:name:android.net.conn.CONNECTIVITY_CHANGE
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:106:13-108:29
+action#android.net.conn.CONNECTIVITY_CHANGE
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:107:17-79
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:107:25-76
+receiver#androidx.work.impl.background.systemalarm.RescheduleReceiver
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:110:9-121:20
+	android:enabled
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:113:13-36
+	android:exported
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:114:13-37
+	tools:targetApi
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:115:13-32
+	android:directBootAware
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:112:13-44
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:111:13-88
+intent-filter#action:name:android.intent.action.BOOT_COMPLETED+action:name:android.intent.action.TIMEZONE_CHANGED+action:name:android.intent.action.TIME_SET
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:116:13-120:29
+action#android.intent.action.BOOT_COMPLETED
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:117:17-79
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:117:25-76
+action#android.intent.action.TIME_SET
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:118:17-73
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:118:25-70
+action#android.intent.action.TIMEZONE_CHANGED
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:119:17-81
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:119:25-78
+receiver#androidx.work.impl.background.systemalarm.ConstraintProxyUpdateReceiver
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:122:9-131:20
+	android:enabled
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:125:13-72
+	android:exported
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:126:13-37
+	tools:targetApi
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:127:13-32
+	android:directBootAware
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:124:13-44
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:123:13-99
+intent-filter#action:name:androidx.work.impl.background.systemalarm.UpdateProxies
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:128:13-130:29
+action#androidx.work.impl.background.systemalarm.UpdateProxies
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:129:17-98
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:129:25-95
+receiver#androidx.work.impl.diagnostics.DiagnosticsReceiver
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:132:9-142:20
+	android:enabled
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:135:13-35
+	android:exported
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:136:13-36
+	android:permission
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:137:13-57
+	tools:targetApi
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:138:13-32
+	android:directBootAware
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:134:13-44
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:133:13-78
+intent-filter#action:name:androidx.work.diagnostics.REQUEST_DIAGNOSTICS
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:139:13-141:29
+action#androidx.work.diagnostics.REQUEST_DIAGNOSTICS
+ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:140:17-88
+	android:name
+		ADDED from [androidx.work:work-runtime:2.9.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9efe1e52ac80c307722b357e9c9b40ba/transformed/work-runtime-2.9.0/AndroidManifest.xml:140:25-85
+meta-data#androidx.emoji2.text.EmojiCompatInitializer
+ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/dfeba6defa6e192b1c6607a4d1f03287/transformed/emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
+	android:value
+		ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/dfeba6defa6e192b1c6607a4d1f03287/transformed/emoji2-1.3.0/AndroidManifest.xml:31:17-49
+	android:name
+		ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/dfeba6defa6e192b1c6607a4d1f03287/transformed/emoji2-1.3.0/AndroidManifest.xml:30:17-75
+meta-data#androidx.lifecycle.ProcessLifecycleInitializer
+ADDED from [androidx.lifecycle:lifecycle-process:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/1dbdb8a9b52c23809dc696e6e5fec9d1/transformed/lifecycle-process-2.7.0/AndroidManifest.xml:29:13-31:52
+	android:value
+		ADDED from [androidx.lifecycle:lifecycle-process:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/1dbdb8a9b52c23809dc696e6e5fec9d1/transformed/lifecycle-process-2.7.0/AndroidManifest.xml:31:17-49
+	android:name
+		ADDED from [androidx.lifecycle:lifecycle-process:2.7.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/1dbdb8a9b52c23809dc696e6e5fec9d1/transformed/lifecycle-process-2.7.0/AndroidManifest.xml:30:17-78
+activity#androidx.activity.ComponentActivity
+ADDED from [androidx.compose.ui:ui-test-manifest:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/06e4e2b4d210cb3127e71d35e894379d/transformed/ui-test-manifest-1.6.1/AndroidManifest.xml:23:9-25:39
+	android:exported
+		ADDED from [androidx.compose.ui:ui-test-manifest:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/06e4e2b4d210cb3127e71d35e894379d/transformed/ui-test-manifest-1.6.1/AndroidManifest.xml:25:13-36
+	android:name
+		ADDED from [androidx.compose.ui:ui-test-manifest:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/06e4e2b4d210cb3127e71d35e894379d/transformed/ui-test-manifest-1.6.1/AndroidManifest.xml:24:13-63
+activity#androidx.compose.ui.tooling.PreviewActivity
+ADDED from [androidx.compose.ui:ui-tooling-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f7a3cbdabd39b10dc340c07aca2fa713/transformed/ui-tooling-release/AndroidManifest.xml:23:9-25:39
+	android:exported
+		ADDED from [androidx.compose.ui:ui-tooling-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f7a3cbdabd39b10dc340c07aca2fa713/transformed/ui-tooling-release/AndroidManifest.xml:25:13-36
+	android:name
+		ADDED from [androidx.compose.ui:ui-tooling-android:1.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f7a3cbdabd39b10dc340c07aca2fa713/transformed/ui-tooling-release/AndroidManifest.xml:24:13-71
+permission#${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.12.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f4b5f2c7d534927f0710a1029aaf002b/transformed/core-1.12.0/AndroidManifest.xml:22:5-24:47
+	android:protectionLevel
+		ADDED from [androidx.core:core:1.12.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f4b5f2c7d534927f0710a1029aaf002b/transformed/core-1.12.0/AndroidManifest.xml:24:9-44
+	android:name
+		ADDED from [androidx.core:core:1.12.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f4b5f2c7d534927f0710a1029aaf002b/transformed/core-1.12.0/AndroidManifest.xml:23:9-81
+permission#com.dairum.debug.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.12.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f4b5f2c7d534927f0710a1029aaf002b/transformed/core-1.12.0/AndroidManifest.xml:22:5-24:47
+	android:protectionLevel
+		ADDED from [androidx.core:core:1.12.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f4b5f2c7d534927f0710a1029aaf002b/transformed/core-1.12.0/AndroidManifest.xml:24:9-44
+	android:name
+		ADDED from [androidx.core:core:1.12.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f4b5f2c7d534927f0710a1029aaf002b/transformed/core-1.12.0/AndroidManifest.xml:23:9-81
+uses-permission#${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.12.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f4b5f2c7d534927f0710a1029aaf002b/transformed/core-1.12.0/AndroidManifest.xml:26:5-97
+	android:name
+		ADDED from [androidx.core:core:1.12.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f4b5f2c7d534927f0710a1029aaf002b/transformed/core-1.12.0/AndroidManifest.xml:26:22-94
+uses-permission#com.dairum.debug.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.12.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f4b5f2c7d534927f0710a1029aaf002b/transformed/core-1.12.0/AndroidManifest.xml:26:5-97
+	android:name
+		ADDED from [androidx.core:core:1.12.0] /Users/saravan-zpt0121/.gradle/caches/transforms-3/f4b5f2c7d534927f0710a1029aaf002b/transformed/core-1.12.0/AndroidManifest.xml:26:22-94
+service#androidx.room.MultiInstanceInvalidationService
+ADDED from [androidx.room:room-runtime:2.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9cec96d6d564b991d8ea3bce5cb0834e/transformed/room-runtime-2.6.1/AndroidManifest.xml:24:9-28:63
+	android:exported
+		ADDED from [androidx.room:room-runtime:2.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9cec96d6d564b991d8ea3bce5cb0834e/transformed/room-runtime-2.6.1/AndroidManifest.xml:27:13-37
+	tools:ignore
+		ADDED from [androidx.room:room-runtime:2.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9cec96d6d564b991d8ea3bce5cb0834e/transformed/room-runtime-2.6.1/AndroidManifest.xml:28:13-60
+	android:directBootAware
+		ADDED from [androidx.room:room-runtime:2.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9cec96d6d564b991d8ea3bce5cb0834e/transformed/room-runtime-2.6.1/AndroidManifest.xml:26:13-43
+	android:name
+		ADDED from [androidx.room:room-runtime:2.6.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/9cec96d6d564b991d8ea3bce5cb0834e/transformed/room-runtime-2.6.1/AndroidManifest.xml:25:13-74
+meta-data#androidx.profileinstaller.ProfileInstallerInitializer
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:29:13-31:52
+	android:value
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:31:17-49
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:30:17-85
+receiver#androidx.profileinstaller.ProfileInstallReceiver
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:34:9-52:20
+	android:enabled
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:37:13-35
+	android:exported
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:38:13-36
+	android:permission
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:39:13-57
+	android:directBootAware
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:36:13-44
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:35:13-76
+intent-filter#action:name:androidx.profileinstaller.action.INSTALL_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:40:13-42:29
+action#androidx.profileinstaller.action.INSTALL_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:41:17-91
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:41:25-88
+intent-filter#action:name:androidx.profileinstaller.action.SKIP_FILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:43:13-45:29
+action#androidx.profileinstaller.action.SKIP_FILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:44:17-85
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:44:25-82
+intent-filter#action:name:androidx.profileinstaller.action.SAVE_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:46:13-48:29
+action#androidx.profileinstaller.action.SAVE_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:47:17-88
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:47:25-85
+intent-filter#action:name:androidx.profileinstaller.action.BENCHMARK_OPERATION
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:49:13-51:29
+action#androidx.profileinstaller.action.BENCHMARK_OPERATION
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:50:17-95
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/saravan-zpt0121/.gradle/caches/transforms-3/cb99d04b67e93e8659d9f88665db2c01/transformed/profileinstaller-1.3.1/AndroidManifest.xml:50:25-92
+supports-screens
+ADDED from [org.osmdroid:osmdroid-android:6.1.18] /Users/saravan-zpt0121/.gradle/caches/transforms-3/96bf0b25496166a2e71a8a49e473c4c0/transformed/osmdroid-android-6.1.18/AndroidManifest.xml:9:5-12:40
+	android:largeScreens
+		ADDED from [org.osmdroid:osmdroid-android:6.1.18] /Users/saravan-zpt0121/.gradle/caches/transforms-3/96bf0b25496166a2e71a8a49e473c4c0/transformed/osmdroid-android-6.1.18/AndroidManifest.xml:11:9-36
+	android:normalScreens
+		ADDED from [org.osmdroid:osmdroid-android:6.1.18] /Users/saravan-zpt0121/.gradle/caches/transforms-3/96bf0b25496166a2e71a8a49e473c4c0/transformed/osmdroid-android-6.1.18/AndroidManifest.xml:12:9-37
+	android:anyDensity
+		ADDED from [org.osmdroid:osmdroid-android:6.1.18] /Users/saravan-zpt0121/.gradle/caches/transforms-3/96bf0b25496166a2e71a8a49e473c4c0/transformed/osmdroid-android-6.1.18/AndroidManifest.xml:10:9-34
+uses-feature#android.hardware.location.network
+ADDED from [org.osmdroid:osmdroid-android:6.1.18] /Users/saravan-zpt0121/.gradle/caches/transforms-3/96bf0b25496166a2e71a8a49e473c4c0/transformed/osmdroid-android-6.1.18/AndroidManifest.xml:14:5-16:36
+	android:required
+		ADDED from [org.osmdroid:osmdroid-android:6.1.18] /Users/saravan-zpt0121/.gradle/caches/transforms-3/96bf0b25496166a2e71a8a49e473c4c0/transformed/osmdroid-android-6.1.18/AndroidManifest.xml:16:9-33
+	android:name
+		ADDED from [org.osmdroid:osmdroid-android:6.1.18] /Users/saravan-zpt0121/.gradle/caches/transforms-3/96bf0b25496166a2e71a8a49e473c4c0/transformed/osmdroid-android-6.1.18/AndroidManifest.xml:15:9-57
+uses-feature#android.hardware.telephony
+ADDED from [org.osmdroid:osmdroid-android:6.1.18] /Users/saravan-zpt0121/.gradle/caches/transforms-3/96bf0b25496166a2e71a8a49e473c4c0/transformed/osmdroid-android-6.1.18/AndroidManifest.xml:20:5-22:36
+	android:required
+		ADDED from [org.osmdroid:osmdroid-android:6.1.18] /Users/saravan-zpt0121/.gradle/caches/transforms-3/96bf0b25496166a2e71a8a49e473c4c0/transformed/osmdroid-android-6.1.18/AndroidManifest.xml:22:9-33
+	android:name
+		ADDED from [org.osmdroid:osmdroid-android:6.1.18] /Users/saravan-zpt0121/.gradle/caches/transforms-3/96bf0b25496166a2e71a8a49e473c4c0/transformed/osmdroid-android-6.1.18/AndroidManifest.xml:21:9-50
+uses-feature#android.hardware.wifi
+ADDED from [org.osmdroid:osmdroid-android:6.1.18] /Users/saravan-zpt0121/.gradle/caches/transforms-3/96bf0b25496166a2e71a8a49e473c4c0/transformed/osmdroid-android-6.1.18/AndroidManifest.xml:23:5-25:36
+	android:required
+		ADDED from [org.osmdroid:osmdroid-android:6.1.18] /Users/saravan-zpt0121/.gradle/caches/transforms-3/96bf0b25496166a2e71a8a49e473c4c0/transformed/osmdroid-android-6.1.18/AndroidManifest.xml:25:9-33
+	android:name
+		ADDED from [org.osmdroid:osmdroid-android:6.1.18] /Users/saravan-zpt0121/.gradle/caches/transforms-3/96bf0b25496166a2e71a8a49e473c4c0/transformed/osmdroid-android-6.1.18/AndroidManifest.xml:24:9-45

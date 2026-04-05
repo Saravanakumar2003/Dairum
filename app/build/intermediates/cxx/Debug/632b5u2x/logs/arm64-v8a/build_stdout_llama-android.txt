@@ -1,0 +1,2 @@
+ninja: Entering directory `/Users/saravan-zpt0121/Documents/Code/Dairum/app/.cxx/Debug/632b5u2x/arm64-v8a'
+ninja: no work to do.

@@ -1,0 +1,40 @@
+{
+  "buildFiles": [
+    "/Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/cpp/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/Users/saravan-zpt0121/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+      "-C",
+      "/Users/saravan-zpt0121/Documents/Code/Dairum/app/.cxx/Debug/632b5u2x/arm64-v8a",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/Users/saravan-zpt0121/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+    "-C",
+    "/Users/saravan-zpt0121/Documents/Code/Dairum/app/.cxx/Debug/632b5u2x/arm64-v8a",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "llama-android::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "llama-android",
+      "output": "/Users/saravan-zpt0121/Documents/Code/Dairum/app/build/intermediates/cxx/Debug/632b5u2x/obj/arm64-v8a/libllama-android.so",
+      "runtimeFiles": []
+    }
+  },
+  "toolchains": {
+    "toolchain": {
+      "cCompilerExecutable": "/Users/saravan-zpt0121/Library/Android/sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang.lld",
+      "cppCompilerExecutable": "/Users/saravan-zpt0121/Library/Android/sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++.lld"
+    }
+  },
+  "cFileExtensions": [
+    "c"
+  ],
+  "cppFileExtensions": [
+    "cpp"
+  ]
+}

@@ -1,0 +1,4 @@
+/Users/saravan-zpt0121/Library/Android/sdk/cmake/3.22.1/bin/ninja \
+  -C \
+  /Users/saravan-zpt0121/Documents/Code/Dairum/app/.cxx/Debug/632b5u2x/arm64-v8a \
+  llama-android

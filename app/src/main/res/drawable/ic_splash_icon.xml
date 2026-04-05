@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background circle -->
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/splash_icon_background" />
+            <size android:width="108dp" android:height="108dp" />
+        </shape>
+    </item>
+    
+    <!-- Foreground icon - Journal/Book symbol -->
+    <item
+        android:width="48dp"
+        android:height="48dp"
+        android:gravity="center">
+        <vector
+            android:width="48dp"
+            android:height="48dp"
+            android:viewportWidth="24"
+            android:viewportHeight="24">
+            <!-- Book/Journal icon -->
+            <path
+                android:fillColor="#FFFFFF"
+                android:pathData="M18,2H6c-1.1,0 -2,0.9 -2,2v16c0,1.1 0.9,2 2,2h12c1.1,0 2,-0.9 2,-2V4c0,-1.1 -0.9,-2 -2,-2zM9,4h2v5l-1,-0.75L9,9V4zM18,20H6V4h1v9l3,-2.25L13,13V4h5v16z"/>
+            <!-- Pen line -->
+            <path
+                android:fillColor="#FFFFFF"
+                android:strokeColor="#FFFFFF"
+                android:strokeWidth="0.5"
+                android:pathData="M15,15L17,15M15,17L17,17"/>
+        </vector>
+    </item>
+</layer-list>
