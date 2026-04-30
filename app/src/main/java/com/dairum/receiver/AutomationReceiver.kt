@@ -3,6 +3,7 @@ package com.dairum.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import com.dairum.domain.model.ExportFormat
 import com.dairum.domain.repository.BackupRepository
 import com.dairum.domain.repository.ExportRepository
@@ -10,6 +11,7 @@ import com.dairum.domain.repository.JournalRepository
 import com.dairum.domain.repository.SettingsRepository
 import com.dairum.domain.repository.TaskerPeriod
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -50,20 +52,37 @@ class AutomationReceiver : BroadcastReceiver() {
     @Inject
     lateinit var settingsRepository: SettingsRepository
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        Log.e(TAG, "Coroutine exception in AutomationReceiver", throwable)
+    }
+    
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + exceptionHandler)
 
     override fun onReceive(context: Context, intent: Intent) {
         val pendingResult = goAsync()
         
         scope.launch {
             try {
-                // Check if automation is enabled
-                val isEnabled = settingsRepository.getTaskerEnabledFlow().first()
-                if (!isEnabled) {
-                    sendResultBroadcast(context, false, "Automation is disabled in Dairum settings")
+                // Check if dependencies are properly initialized
+                if (!::settingsRepository.isInitialized || 
+                    !::exportRepository.isInitialized ||
+                    !::journalRepository.isInitialized ||
+                    !::backupRepository.isInitialized) {
+                    Log.e(TAG, "Dependencies not initialized")
+                    sendResultBroadcast(context, false, "App not properly initialized")
                     pendingResult.finish()
                     return@launch
                 }
+                
+                // Check if automation is enabled
+                val isEnabled = settingsRepository.getTaskerEnabledFlow().first()
+                if (!isEnabled) {
+                    sendResultBroadcast(context, false, "Automation is disabled in Diarum settings")
+                    pendingResult.finish()
+                    return@launch
+                }
+                
+                Log.d(TAG, "Processing action: ${intent.action}")
                 
                 when (intent.action) {
                     ACTION_EXPORT -> handleExport(context, intent)
@@ -71,6 +90,7 @@ class AutomationReceiver : BroadcastReceiver() {
                     else -> sendResultBroadcast(context, false, "Unknown action: ${intent.action}")
                 }
             } catch (e: Exception) {
+                Log.e(TAG, "Error processing automation request", e)
                 sendResultBroadcast(context, false, "Error: ${e.message}")
             } finally {
                 pendingResult.finish()
@@ -239,6 +259,7 @@ class AutomationReceiver : BroadcastReceiver() {
     }
 
     companion object {
+        private const val TAG = "AutomationReceiver"
         const val ACTION_EXPORT = "com.dairum.action.EXPORT"
         const val ACTION_BACKUP = "com.dairum.action.BACKUP"
         const val ACTION_RESULT = "com.dairum.action.RESULT"

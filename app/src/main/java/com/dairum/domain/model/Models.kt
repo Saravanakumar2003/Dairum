@@ -10,6 +10,7 @@ data class JournalEntry(
     val title: String? = null,
     val content: RichContent = RichContent(),
     val plainContent: String = "",
+    val formattingJson: String = "", // JSON for TextFormatting spans
     val category: Category? = null,
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val updatedAt: LocalDateTime = LocalDateTime.now(),
@@ -24,7 +25,8 @@ data class JournalEntry(
     val isArchived: Boolean = false,
     val isDraft: Boolean = false,
     val isPinned: Boolean = false,
-    val wordCount: Int = 0
+    val wordCount: Int = 0,
+    val backgroundColor: String? = null // Background color name
 )
 
 /**
@@ -350,7 +352,7 @@ data class ExportConfig(
 )
 
 enum class ExportFormat {
-    TXT, PDF
+    TXT, PDF, JSON, CSV
 }
 
 /**

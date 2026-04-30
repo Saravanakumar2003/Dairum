@@ -37,7 +37,7 @@
     <string name="api_keys_title">API Configuration</string>
     <string name="api_keys_weather">Weather API Key</string>
     <string name="api_keys_weather_desc">Required for automatic weather tracking</string>
-    <string name="app_name">Dairum</string>
+    <string name="app_name">Diarum</string>
     <string name="category_default">General</string>
     <string name="category_goals">Goals</string>
     <string name="category_health">Health</string>
@@ -239,7 +239,7 @@
     <string name="widget_today_description">See if you\'ve journaled today with a quick add button</string>
     <string name="widget_today_name">Today</string>
     <string name="widget_use_prompt">Use Prompt</string>
-    <style name="Theme.Dairum" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.Dairum" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>

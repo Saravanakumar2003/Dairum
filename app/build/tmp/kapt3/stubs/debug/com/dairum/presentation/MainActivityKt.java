@@ -1,7 +1,7 @@
 package com.dairum.presentation;
 
 import android.os.Bundle;
-import androidx.activity.ComponentActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.compose.material.icons.Icons;
 import androidx.compose.material3.*;
 import androidx.compose.runtime.*;

@@ -38,8 +38,9 @@ class BackupRepositoryImpl @Inject constructor(
     private val internalBackupDir: File
         get() = File(context.filesDir, "backups").also { it.mkdirs() }
 
-    private val mediaDir: File
-        get() = File(context.filesDir, "media")
+    /** Media type directories that MediaRepositoryImpl saves into */
+    private val mediaDirs: List<File>
+        get() = listOf("photo", "video", "voice", "attachment").map { File(context.filesDir, it) }
     
     /**
      * Save backup file to Documents/dairum folder
@@ -88,7 +89,7 @@ class BackupRepositoryImpl @Inject constructor(
         try {
             val timestamp = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
                 .format(LocalDateTime.now())
-            val fileName = "dairum_backup_$timestamp.zip"
+            val fileName = "diarum_backup_$timestamp.zip"
             
             // Create temp file first
             val tempFile = File(internalBackupDir, "temp_$fileName")
@@ -132,13 +133,17 @@ class BackupRepositoryImpl @Inject constructor(
                 }
 
                 // 2. Export media files if requested
-                if (includeMedia && mediaDir.exists()) {
-                    mediaDir.walkTopDown().filter { it.isFile }.forEach { file ->
-                        val relativePath = file.relativeTo(mediaDir).path
-                        zipOut.putNextEntry(ZipEntry("media/$relativePath"))
-                        FileInputStream(file).use { it.copyTo(zipOut) }
-                        zipOut.closeEntry()
-                        mediaCount++
+                if (includeMedia) {
+                    for (dir in mediaDirs) {
+                        if (dir.exists()) {
+                            dir.walkTopDown().filter { it.isFile }.forEach { file ->
+                                val relativePath = "${dir.name}/${file.relativeTo(dir).path}"
+                                zipOut.putNextEntry(ZipEntry("media/$relativePath"))
+                                FileInputStream(file).use { it.copyTo(zipOut) }
+                                zipOut.closeEntry()
+                                mediaCount++
+                            }
+                        }
                     }
                 }
 
@@ -205,7 +210,7 @@ class BackupRepositoryImpl @Inject constructor(
 
     override suspend fun restoreBackup(
         backupFile: File,
-        mergeData: Boolean
+        mergeData: Boolean // NOTE: merge is not supported; DB is always fully replaced.
     ): Result<RestoreResult> = withContext(Dispatchers.IO) {
         try {
             // Validate backup first
@@ -267,17 +272,15 @@ class BackupRepositoryImpl @Inject constructor(
                     entriesRestored = backupInfo.entriesCount
                 }
 
-                // Restore media files
+                // Restore media files (stored as media/{type}/filename in the zip)
                 val extractedMediaDir = File(tempDir, "media")
                 if (extractedMediaDir.exists()) {
-                    if (!mergeData) {
-                        mediaDir.deleteRecursively()
-                    }
-                    mediaDir.mkdirs()
+                    // Always clean existing media (merge is not supported for DB)
+                    mediaDirs.forEach { it.deleteRecursively() }
                     
                     extractedMediaDir.walkTopDown().filter { it.isFile }.forEach { file ->
                         val relativePath = file.relativeTo(extractedMediaDir).path
-                        val destFile = File(mediaDir, relativePath)
+                        val destFile = File(context.filesDir, relativePath)
                         destFile.parentFile?.mkdirs()
                         file.copyTo(destFile, overwrite = true)
                         mediaRestored++
@@ -339,11 +342,28 @@ class BackupRepositoryImpl @Inject constructor(
     }
 
     override fun getAvailableBackups(): Flow<List<BackupInfo>> = flow {
-        val backups = internalBackupDir.listFiles()
+        val allFiles = mutableListOf<File>()
+        
+        // 1. Internal backup directory
+        internalBackupDir.listFiles()
             ?.filter { it.isFile && it.name.endsWith(".zip") }
-            ?.mapNotNull { file -> validateBackup(file) }
-            ?.sortedByDescending { it.createdAt }
-            ?: emptyList()
+            ?.let { allFiles.addAll(it) }
+        
+        // 2. Public Documents/dairum directory (legacy storage, pre-Q)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            val documentsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+            val dairumDir = File(documentsDir, "dairum")
+            dairumDir.listFiles()
+                ?.filter { it.isFile && it.name.endsWith(".zip") }
+                ?.let { allFiles.addAll(it) }
+        }
+        
+        val seen = mutableSetOf<String>()
+        val backups = allFiles
+            .mapNotNull { file -> validateBackup(file) }
+            .filter { seen.add(it.fileName) } // deduplicate by name
+            .sortedByDescending { it.createdAt }
+        
         emit(backups)
     }
 

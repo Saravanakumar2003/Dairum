@@ -141,6 +141,8 @@ fun TaskerIntegrationScreen(
                                                 when (format) {
                                                     ExportFormat.TXT -> "Text"
                                                     ExportFormat.PDF -> "PDF"
+                                                    ExportFormat.JSON -> "JSON"
+                                                    ExportFormat.CSV -> "CSV"
                                                 }
                                             )
                                         }

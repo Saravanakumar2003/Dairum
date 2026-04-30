@@ -111,6 +111,7 @@ fun TagEntriesScreen(
                     entries = uiState.entries,
                     tag = uiState.tag,
                     onEntryClick = onEntryClick,
+                    onFavoriteClick = { entryId, isFavorite -> viewModel.toggleFavorite(entryId, isFavorite) },
                     modifier = Modifier.padding(paddingValues)
                 )
             }
@@ -123,6 +124,7 @@ private fun TagEntriesContent(
     entries: List<JournalEntry>,
     tag: Tag?,
     onEntryClick: (Long) -> Unit,
+    onFavoriteClick: (Long, Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     // Group entries by date
@@ -163,7 +165,7 @@ private fun TagEntriesContent(
                 EntryCard(
                     entry = entry,
                     onClick = { onEntryClick(entry.id) },
-                    onFavoriteClick = { /* TODO */ }
+                    onFavoriteClick = { onFavoriteClick(entry.id, entry.isFavorite) }
                 )
             }
         }

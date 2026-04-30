@@ -66,6 +66,9 @@ timber = "5.0.1"
 # Splash Screen
 splashscreen = "1.0.1"
 
+# AppCompat
+appcompat = "1.6.1"
+
 # Shimmer
 shimmer = "1.2.0"
 
@@ -157,6 +160,9 @@ timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "tim
 
 # Splash Screen
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
+
+# AppCompat
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 
 # Shimmer
 shimmer-compose = { group = "com.valentinilk.shimmer", name = "compose-shimmer", version.ref = "shimmer" }

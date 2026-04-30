@@ -41,6 +41,7 @@ fun NotificationSettingsScreen(
     var showAddSmartReminderDialog by remember { mutableStateOf(false) }
     var showTimePickerDialog by remember { mutableStateOf<Long?>(null) }
     var showMoodCheckInDialog by remember { mutableStateOf(false) }
+    var showMultipleDailyRemindersDialog by remember { mutableStateOf(false) }
     var showPermissionDeniedDialog by remember { mutableStateOf(false) }
     
     // Permission launcher for Android 13+
@@ -281,6 +282,34 @@ fun NotificationSettingsScreen(
                     )
                 }
                 
+                // Multiple Daily Reminders Section
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    SettingsSectionHeader(title = "Multiple Daily Reminders")
+                }
+                
+                item {
+                    Text(
+                        text = "Set up generic reminders at multiple times throughout the day",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+                
+                item {
+                    SmartReminderTypeCard(
+                        icon = Icons.Outlined.NotificationsActive,
+                        title = "Daily Notification Schedule",
+                        description = if (uiState.multipleDailyRemindersEnabled && uiState.dailyReminderTimes.isNotEmpty())
+                            "${uiState.dailyReminderTimes.size} notifications daily at ${uiState.dailyReminderTimes.take(3).joinToString(", ") { String.format("%02d:%02d", it.first, it.second) }}${if (uiState.dailyReminderTimes.size > 3) "..." else ""}"
+                        else 
+                            "Tap to setup multiple daily notifications",
+                        enabled = uiState.multipleDailyRemindersEnabled && uiState.dailyReminderTimes.isNotEmpty(),
+                        onClick = { showMultipleDailyRemindersDialog = true }
+                    )
+                }
+                
                 // Custom Reminders Section
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
@@ -408,6 +437,21 @@ fun NotificationSettingsScreen(
                 viewModel.setMoodCheckInInterval(interval)
                 viewModel.setMoodCheckInTimeRange(start, end)
                 showMoodCheckInDialog = false
+            }
+        )
+    }
+    
+    // Multiple Daily Reminders Dialog
+    if (showMultipleDailyRemindersDialog) {
+        MultipleDailyRemindersDialog(
+            isEnabled = uiState.multipleDailyRemindersEnabled,
+            times = uiState.dailyReminderTimes,
+            title = uiState.dailyReminderTitle,
+            message = uiState.dailyReminderMessage,
+            onDismiss = { showMultipleDailyRemindersDialog = false },
+            onSave = { enabled, times, title, message ->
+                viewModel.setMultipleDailyReminders(enabled, times, title, message)
+                showMultipleDailyRemindersDialog = false
             }
         )
     }
@@ -1125,4 +1169,196 @@ private fun MoodCheckInConfigDialog(
             }
         }
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+private fun MultipleDailyRemindersDialog(
+    isEnabled: Boolean,
+    times: List<Pair<Int, Int>>,
+    title: String,
+    message: String,
+    onDismiss: () -> Unit,
+    onSave: (enabled: Boolean, times: List<Pair<Int, Int>>, title: String, message: String) -> Unit
+) {
+    var enabled by remember { mutableStateOf(isEnabled) }
+    var reminderTimes by remember { mutableStateOf(times.toMutableList().ifEmpty { mutableListOf(Pair(9, 0)) }) }
+    var reminderTitle by remember { mutableStateOf(title.ifBlank { "Journal Reminder" }) }
+    var reminderMessage by remember { mutableStateOf(message.ifBlank { "Take a moment to write in your journal" }) }
+    var showTimePickerForIndex by remember { mutableStateOf<Int?>(null) }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Outlined.NotificationsActive, contentDescription = null) },
+        title = { Text("Multiple Daily Reminders") },
+        text = {
+            Column {
+                Text(
+                    text = "Set up multiple notifications throughout the day to remind you to journal.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Enable toggle
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Enable Daily Reminders",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Switch(
+                        checked = enabled,
+                        onCheckedChange = { enabled = it }
+                    )
+                }
+                
+                if (enabled) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Notification title
+                    OutlinedTextField(
+                        value = reminderTitle,
+                        onValueChange = { reminderTitle = it },
+                        label = { Text("Notification Title") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Notification message
+                    OutlinedTextField(
+                        value = reminderMessage,
+                        onValueChange = { reminderMessage = it },
+                        label = { Text("Notification Message") },
+                        modifier = Modifier.fillMaxWidth(),
+                        maxLines = 2
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Times section
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Notification Times (${reminderTimes.size})",
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                        IconButton(
+                            onClick = { 
+                                // Add a new time - default to next hour after last time
+                                val lastTime = reminderTimes.lastOrNull() ?: Pair(8, 0)
+                                val newHour = (lastTime.first + 3).coerceAtMost(23)
+                                reminderTimes = (reminderTimes + Pair(newHour, 0)).toMutableList()
+                            },
+                            enabled = reminderTimes.size < 10
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = "Add time")
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Time chips
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        reminderTimes.forEachIndexed { index, time ->
+                            InputChip(
+                                selected = false,
+                                onClick = { showTimePickerForIndex = index },
+                                label = { 
+                                    Text(String.format("%02d:%02d", time.first, time.second))
+                                },
+                                trailingIcon = if (reminderTimes.size > 1) {
+                                    {
+                                        IconButton(
+                                            onClick = { 
+                                                reminderTimes = reminderTimes.toMutableList().apply { removeAt(index) }
+                                            },
+                                            modifier = Modifier.size(18.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Close,
+                                                contentDescription = "Remove",
+                                                modifier = Modifier.size(14.dp)
+                                            )
+                                        }
+                                    }
+                                } else null
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = "Tap on a time to change it. You can add up to 10 reminders.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { 
+                    onSave(
+                        enabled, 
+                        reminderTimes.sortedBy { it.first * 60 + it.second },
+                        reminderTitle,
+                        reminderMessage
+                    )
+                }
+            ) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+    
+    // Time picker for editing individual times
+    showTimePickerForIndex?.let { index ->
+        val currentTime = reminderTimes.getOrNull(index) ?: Pair(9, 0)
+        val timePickerState = rememberTimePickerState(
+            initialHour = currentTime.first,
+            initialMinute = currentTime.second
+        )
+        AlertDialog(
+            onDismissRequest = { showTimePickerForIndex = null },
+            title = { Text("Select Time") },
+            text = {
+                TimePicker(state = timePickerState)
+            },
+            confirmButton = {
+                TextButton(onClick = { 
+                    reminderTimes = reminderTimes.toMutableList().apply {
+                        set(index, Pair(timePickerState.hour, timePickerState.minute))
+                    }
+                    showTimePickerForIndex = null 
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePickerForIndex = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }

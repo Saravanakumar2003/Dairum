@@ -4,7 +4,7 @@
             "outputFile": "com.dairum.app-mergeDebugResources-81:/values-v16/values-v16.xml",
             "map": [
                 {
-                    "source": "/Users/saravan-zpt0121/.gradle/caches/transforms-3/f4b5f2c7d534927f0710a1029aaf002b/transformed/core-1.12.0/res/values-v16/values-v16.xml",
+                    "source": "/Users/saravan-zpt0121/.gradle/caches/transforms-3/3b5d6f1686b32c5e460c92f492038e1e/transformed/core-1.12.0/res/values-v16/values-v16.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",
@@ -14,7 +14,7 @@
                     }
                 },
                 {
-                    "source": "/Users/saravan-zpt0121/.gradle/caches/transforms-3/1d5e81d9e8b4c31862ae756c7465c006/transformed/appcompat-1.6.1/res/values-v16/values-v16.xml",
+                    "source": "/Users/saravan-zpt0121/.gradle/caches/transforms-3/15c0a4b09e3428c1dc09c513a2db0fe9/transformed/appcompat-1.6.1/res/values-v16/values-v16.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

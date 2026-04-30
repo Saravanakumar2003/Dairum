@@ -4,13 +4,23 @@ import android.Manifest
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.*
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,28 +32,39 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.flow.collect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.viewinterop.AndroidView
+import com.dairum.presentation.screens.editor.toAnnotatedString
 import coil.compose.AsyncImage
 import com.dairum.R
 import com.dairum.domain.model.*
 import com.dairum.presentation.components.*
+import com.dairum.presentation.theme.EntryBackgroundColor
+import com.dairum.presentation.theme.EntryBackgroundColors
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -74,6 +95,18 @@ fun EditorScreen(
     var showMediaOptions by remember { mutableStateOf(false) }
     var showLocationPermissionRationale by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var isKeyboardVisible by remember { mutableStateOf(false) }
+    var isContentFocused by remember { mutableStateOf(false) }
+    
+    // Detect keyboard visibility
+    val imeInsets = WindowInsets.ime
+    val density = LocalDensity.current
+    LaunchedEffect(imeInsets) {
+        snapshotFlow { imeInsets.getBottom(density) }
+            .collect { bottomInset ->
+                isKeyboardVisible = bottomInset > 0
+            }
+    }
     
     // Media pickers
     val photoPickerLauncher = rememberLauncherForActivityResult(
@@ -161,30 +194,38 @@ fun EditorScreen(
     
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = if (entryId != null) "Edit Entry" else "New Entry"
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        if (uiState.hasChanges) {
-                            showDiscardDialog = true
-                        } else {
-                            onBackClick()
-                        }
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = stringResource(R.string.action_close)
+            Column {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = if (entryId != null) "Edit Entry" else "New Entry",
+                            modifier = Modifier.semantics { heading() }
                         )
-                    }
-                },
-                actions = {
-                    // Template button (always visible for new entries)
-                    if (entryId == null) {
-                        IconButton(onClick = { viewModel.showTemplateDialog() }) {
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = {
+                                if (uiState.hasChanges) {
+                                    showDiscardDialog = true
+                                } else {
+                                    onBackClick()
+                                }
+                            },
+                            modifier = Modifier.semantics { contentDescription = "Close entry editor" }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = stringResource(R.string.action_close)
+                            )
+                        }
+                    },
+                    actions = {
+                        // Template button (always visible for new entries)
+                        if (entryId == null) {
+                            IconButton(
+                                onClick = { viewModel.showTemplateDialog() },
+                                modifier = Modifier.semantics { contentDescription = "Choose template" }
+                            ) {
                             Icon(
                                 imageVector = Icons.Outlined.Description,
                                 contentDescription = "Use Template"
@@ -192,27 +233,131 @@ fun EditorScreen(
                         }
                     }
                     
-                    // Save as draft
-                    if (!uiState.isDraft) {
-                        TextButton(onClick = { viewModel.saveAsDraft() }) {
-                            Text("Draft")
-                        }
+                    // Background color button
+                    IconButton(
+                        onClick = { viewModel.showBackgroundColorPicker() },
+                        modifier = Modifier.semantics { contentDescription = "Change background color" }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Palette,
+                            contentDescription = "Background Color",
+                            tint = uiState.backgroundColor?.color ?: LocalContentColor.current
+                        )
                     }
                     
                     // Save button
                     Button(
                         onClick = { viewModel.saveEntry() },
-                        enabled = uiState.canSave
+                        enabled = uiState.canSave,
+                        modifier = Modifier.semantics { contentDescription = "Save entry" }
                     ) {
                         Text(stringResource(R.string.action_save))
                     }
                 }
             )
+                
+                // Info bar below TopAppBar showing word count and autosave status
+                val wordCount = uiState.content.text.split("\\s+".toRegex())
+                    .filter { it.isNotBlank() }.size
+                
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Word count
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.TextFields,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "$wordCount words",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        
+                        // Autosave status
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            when (uiState.autosaveStatus) {
+                                AutosaveStatus.SAVING -> {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(12.dp),
+                                        strokeWidth = 1.5.dp,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = "Saving...",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                                AutosaveStatus.SAVED -> {
+                                    Icon(
+                                        imageVector = Icons.Outlined.CloudDone,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp),
+                                        tint = MaterialTheme.colorScheme.tertiary
+                                    )
+                                    Text(
+                                        text = uiState.autosaveStatusText,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.tertiary
+                                    )
+                                }
+                                AutosaveStatus.ERROR -> {
+                                    Icon(
+                                        imageVector = Icons.Outlined.CloudOff,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp),
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                    Text(
+                                        text = "Save failed",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                                else -> {
+                                    // IDLE - show nothing or a subtle indicator
+                                    Icon(
+                                        imageVector = Icons.Outlined.Edit,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                    )
+                                    Text(
+                                        text = "Editing",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         },
         bottomBar = {
-            // Formatting toolbar
+            // Formatting toolbar - stays above keyboard when visible
             Surface(
-                tonalElevation = 3.dp
+                tonalElevation = 3.dp,
+                modifier = Modifier.imePadding()
             ) {
                 Column {
                     // Media & trackers bar
@@ -223,7 +368,10 @@ fun EditorScreen(
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         // Timestamp button
-                        IconButton(onClick = { viewModel.insertTimestamp() }) {
+                        IconButton(
+                            onClick = { viewModel.insertTimestamp() },
+                            modifier = Modifier.semantics { contentDescription = "Add timestamp" }
+                        ) {
                             Icon(
                                 imageVector = Icons.Outlined.Schedule,
                                 contentDescription = stringResource(R.string.entry_add_timestamp)
@@ -231,7 +379,10 @@ fun EditorScreen(
                         }
                         
                         // Photo
-                        IconButton(onClick = { photoPickerLauncher.launch("image/*") }) {
+                        IconButton(
+                            onClick = { photoPickerLauncher.launch("image/*") },
+                            modifier = Modifier.semantics { contentDescription = "Add photo" }
+                        ) {
                             Icon(
                                 imageVector = Icons.Outlined.Photo,
                                 contentDescription = stringResource(R.string.entry_add_photo)
@@ -239,7 +390,10 @@ fun EditorScreen(
                         }
                         
                         // Video
-                        IconButton(onClick = { videoPickerLauncher.launch("video/*") }) {
+                        IconButton(
+                            onClick = { videoPickerLauncher.launch("video/*") },
+                            modifier = Modifier.semantics { contentDescription = "Add video" }
+                        ) {
                             Icon(
                                 imageVector = Icons.Outlined.Videocam,
                                 contentDescription = stringResource(R.string.entry_add_video)
@@ -247,9 +401,10 @@ fun EditorScreen(
                         }
                         
                         // Audio Upload
-                        IconButton(onClick = { 
-                            audioPickerLauncher.launch("audio/*")
-                        }) {
+                        IconButton(
+                            onClick = { audioPickerLauncher.launch("audio/*") },
+                            modifier = Modifier.semantics { contentDescription = "Add audio file" }
+                        ) {
                             Icon(
                                 imageVector = Icons.Outlined.AudioFile,
                                 contentDescription = "Add Audio"
@@ -257,7 +412,10 @@ fun EditorScreen(
                         }
                         
                         // Attachment
-                        IconButton(onClick = { filePickerLauncher.launch("*/*") }) {
+                        IconButton(
+                            onClick = { filePickerLauncher.launch("*/*") },
+                            modifier = Modifier.semantics { contentDescription = "Attach file" }
+                        ) {
                             Icon(
                                 imageVector = Icons.Outlined.AttachFile,
                                 contentDescription = stringResource(R.string.entry_add_file)
@@ -272,7 +430,8 @@ fun EditorScreen(
                                     requestLocationWithPermission()
                                 }
                                 viewModel.toggleLocationPicker()
-                            }
+                            },
+                            modifier = Modifier.semantics { contentDescription = "Add location" }
                         ) {
                             if (uiState.isLoadingLocation) {
                                 CircularProgressIndicator(
@@ -299,39 +458,61 @@ fun EditorScreen(
                     
                     HorizontalDivider()
                     
-                    // Text formatting bar
+                    // Text formatting bar - Row 1: Basic formatting
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        IconButton(onClick = { viewModel.toggleBold() }) {
+                        IconButton(
+                            onClick = { viewModel.toggleBold() },
+                            modifier = Modifier.semantics { contentDescription = "Toggle bold text" }
+                        ) {
                             Icon(Icons.Outlined.FormatBold, contentDescription = "Bold")
                         }
-                        IconButton(onClick = { viewModel.toggleItalic() }) {
+                        IconButton(
+                            onClick = { viewModel.toggleItalic() },
+                            modifier = Modifier.semantics { contentDescription = "Toggle italic text" }
+                        ) {
                             Icon(Icons.Outlined.FormatItalic, contentDescription = "Italic")
                         }
-                        IconButton(onClick = { viewModel.toggleUnderline() }) {
+                        IconButton(
+                            onClick = { viewModel.toggleUnderline() },
+                            modifier = Modifier.semantics { contentDescription = "Toggle underline text" }
+                        ) {
                             Icon(Icons.Outlined.FormatUnderlined, contentDescription = "Underline")
                         }
-                        IconButton(onClick = { viewModel.addBulletList() }) {
+                        IconButton(
+                            onClick = { viewModel.addBulletList() },
+                            modifier = Modifier.semantics { contentDescription = "Add bullet list" }
+                        ) {
                             Icon(Icons.Outlined.FormatListBulleted, contentDescription = "Bullet list")
                         }
-                        IconButton(onClick = { viewModel.addNumberedList() }) {
-                            Icon(Icons.Outlined.FormatListNumbered, contentDescription = "Numbered list")
+                        IconButton(
+                            onClick = { viewModel.showHighlightPicker() },
+                            modifier = Modifier.semantics { contentDescription = "Highlight text" }
+                        ) {
+                            Icon(Icons.Outlined.Highlight, contentDescription = "Highlight")
                         }
-                        IconButton(onClick = { viewModel.addHeading() }) {
-                            Icon(Icons.Outlined.Title, contentDescription = "Heading")
+                        IconButton(
+                            onClick = { viewModel.showFontPicker() },
+                            modifier = Modifier.semantics { contentDescription = "Change font" }
+                        ) {
+                            Icon(Icons.Outlined.FontDownload, contentDescription = "Font")
                         }
                     }
                 }
             }
         }
     ) { paddingValues ->
+        val backgroundColor = uiState.backgroundColor?.color 
+            ?: MaterialTheme.colorScheme.background
+        
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(backgroundColor)
                 .padding(paddingValues)
                 .verticalScroll(scrollState)
                 .padding(16.dp)
@@ -449,31 +630,48 @@ fun EditorScreen(
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Content input
-            BasicTextField(
-                value = uiState.content,
-                onValueChange = { viewModel.updateContent(it) },
-                textStyle = MaterialTheme.typography.bodyLarge.copy(
-                    color = MaterialTheme.colorScheme.onSurface
-                ),
+            // Content input with visual formatting
+            val formattedText = remember(uiState.content.text, uiState.textFormatting) {
+                uiState.textFormatting.toAnnotatedString(uiState.content.text)
+            }
+            
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .defaultMinSize(minHeight = 200.dp)
-                    .focusRequester(contentFocusRequester),
-                decorationBox = { innerTextField ->
-                    Box {
-                        if (uiState.content.text.isEmpty()) {
-                            Text(
-                                text = stringResource(R.string.entry_content_hint),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        innerTextField()
-                    }
-                },
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-            )
+            ) {
+                // Show placeholder when empty
+                if (uiState.content.text.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.entry_content_hint),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                
+                // Formatted text overlay (visible but not interactive)
+                Text(
+                    text = formattedText,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        color = MaterialTheme.colorScheme.onSurface
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                // Invisible text field for input handling
+                BasicTextField(
+                    value = uiState.content,
+                    onValueChange = { viewModel.updateContent(it) },
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(
+                        color = Color.Transparent // Invisible - formatted text shows instead
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .matchParentSize()
+                        .focusRequester(contentFocusRequester),
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
+                )
+            }
             
             Spacer(modifier = Modifier.height(16.dp))
             
@@ -650,6 +848,17 @@ fun EditorScreen(
         )
     }
     
+    // Background color picker dialog
+    if (uiState.showBackgroundColorPicker) {
+        BackgroundColorPickerDialog(
+            selectedColor = uiState.backgroundColor,
+            onColorSelected = { color ->
+                viewModel.setBackgroundColor(color)
+            },
+            onDismiss = { viewModel.hideBackgroundColorPicker() }
+        )
+    }
+    
     // Date picker dialog
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
@@ -773,6 +982,22 @@ fun EditorScreen(
             templates = uiState.templates,
             onTemplateSelected = { viewModel.applyTemplate(it) },
             onDismiss = { viewModel.hideTemplateDialog() }
+        )
+    }
+    
+    // Highlight color picker dialog
+    if (uiState.showHighlightPicker) {
+        HighlightColorPickerDialog(
+            onHighlightSelected = { viewModel.applyHighlight(it) },
+            onDismiss = { viewModel.hideHighlightPicker() }
+        )
+    }
+    
+    // Font picker dialog
+    if (uiState.showFontPicker) {
+        FontPickerDialog(
+            onFontSelected = { viewModel.applyFont(it) },
+            onDismiss = { viewModel.hideFontPicker() }
         )
     }
 }
@@ -2510,6 +2735,247 @@ private fun MoodPickerDialog(
                     }
                     
                     Spacer(modifier = Modifier.height(8.dp))
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+fun BackgroundColorPickerDialog(
+    selectedColor: EntryBackgroundColor?,
+    onColorSelected: (EntryBackgroundColor?) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val isSystemInDarkTheme = isSystemInDarkTheme()
+    val colors = if (isSystemInDarkTheme) {
+        EntryBackgroundColors.darkColors
+    } else {
+        EntryBackgroundColors.lightColors
+    }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { 
+            Text(
+                text = "Background Color",
+                modifier = Modifier.semantics { heading() }
+            ) 
+        },
+        text = {
+            Column {
+                Text(
+                    text = "Choose a background color for this entry",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Clear option
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onColorSelected(null) }
+                        .padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .border(
+                                width = if (selectedColor == null) 3.dp else 1.dp,
+                                color = if (selectedColor == null) 
+                                    MaterialTheme.colorScheme.primary 
+                                else 
+                                    MaterialTheme.colorScheme.outline,
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Block,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Text(
+                        text = "None (Default)",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                // Color grid
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(4),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.height(200.dp)
+                ) {
+                    items(colors) { color ->
+                        val isSelected = selectedColor?.id == color.id
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(CircleShape)
+                                .background(color.color)
+                                .border(
+                                    width = if (isSelected) 3.dp else 0.dp,
+                                    color = if (isSelected) 
+                                        MaterialTheme.colorScheme.primary 
+                                    else 
+                                        Color.Transparent,
+                                    shape = CircleShape
+                                )
+                                .clickable { onColorSelected(color) }
+                                .semantics { contentDescription = "Select ${color.name} background" },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isSelected) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Selected",
+                                    tint = color.color.luminance().let { luminance ->
+                                        if (luminance > 0.5f) Color.Black else Color.White
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Done")
+            }
+        },
+        dismissButton = {}
+    )
+}
+
+private fun Color.luminance(): Float {
+    val r = red
+    val g = green
+    val b = blue
+    return 0.2126f * r + 0.7152f * g + 0.0722f * b
+}
+
+@Composable
+fun HighlightColorPickerDialog(
+    onHighlightSelected: (SpanStyle) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Highlight Color") },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Select text first, then choose a highlight color",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                highlightColors.forEach { highlightColor ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { onHighlightSelected(highlightColor.style) }
+                            .background(highlightColor.color.copy(alpha = 0.3f))
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .background(highlightColor.color)
+                        )
+                        Text(
+                            text = highlightColor.name,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+fun FontPickerDialog(
+    onFontSelected: (SpanStyle?) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Font Style") },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Select text first, then choose a font",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                fontOptions.forEach { fontOption ->
+                    val textStyle = when (fontOption.style) {
+                        SpanStyle.FONT_SERIF -> MaterialTheme.typography.bodyLarge.copy(
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Serif
+                        )
+                        SpanStyle.FONT_MONO -> MaterialTheme.typography.bodyLarge.copy(
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                        )
+                        SpanStyle.FONT_CURSIVE -> MaterialTheme.typography.bodyLarge.copy(
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Cursive
+                        )
+                        else -> MaterialTheme.typography.bodyLarge
+                    }
+                    
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { onFontSelected(fontOption.style) }
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = fontOption.displayName,
+                            style = textStyle
+                        )
+                    }
                 }
             }
         },

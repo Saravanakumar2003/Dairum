@@ -84,6 +84,18 @@ interface NotificationDao {
     """)
     fun getAnniversaryRemindersFlow(): Flow<List<SmartReminderEntity>>
     
+    /**
+     * Get all enabled smart reminders (for recurrence-aware processing).
+     * Recurring reminders are fetched unfiltered by date so the worker can
+     * adjust to the current year before deciding whether to fire.
+     */
+    @Query("""
+        SELECT * FROM smart_reminders 
+        WHERE isEnabled = 1
+        ORDER BY reminderDate ASC
+    """)
+    suspend fun getAllEnabledSmartReminders(): List<SmartReminderEntity>
+    
     // ============ NOTIFICATION HISTORY ============
     
     @Insert

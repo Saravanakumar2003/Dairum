@@ -110,10 +110,10 @@ public final class DairumDatabase_Impl extends DairumDatabase {
   @Override
   @NonNull
   protected SupportSQLiteOpenHelper createOpenHelper(@NonNull final DatabaseConfiguration config) {
-    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(8) {
+    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(1) {
       @Override
       public void createAllTables(@NonNull final SupportSQLiteDatabase db) {
-        db.execSQL("CREATE TABLE IF NOT EXISTS `journal_entries` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT, `content` TEXT NOT NULL, `plainContent` TEXT NOT NULL, `categoryId` INTEGER, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `moodLevel` INTEGER, `moodIcon` TEXT, `weatherData` TEXT, `locationData` TEXT, `isFavorite` INTEGER NOT NULL, `isArchived` INTEGER NOT NULL, `isDraft` INTEGER NOT NULL, `isPinned` INTEGER NOT NULL, `wordCount` INTEGER NOT NULL)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS `journal_entries` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT, `content` TEXT NOT NULL, `plainContent` TEXT NOT NULL, `categoryId` INTEGER, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `moodLevel` INTEGER, `moodIcon` TEXT, `weatherData` TEXT, `locationData` TEXT, `isFavorite` INTEGER NOT NULL, `isArchived` INTEGER NOT NULL, `isDraft` INTEGER NOT NULL, `isPinned` INTEGER NOT NULL, `wordCount` INTEGER NOT NULL, `backgroundColor` TEXT)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_journal_entries_categoryId` ON `journal_entries` (`categoryId`)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_journal_entries_createdAt` ON `journal_entries` (`createdAt`)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_journal_entries_moodLevel` ON `journal_entries` (`moodLevel`)");
@@ -196,7 +196,7 @@ public final class DairumDatabase_Impl extends DairumDatabase {
         db.execSQL("CREATE TABLE IF NOT EXISTS `conversation_context` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `sessionId` TEXT NOT NULL, `currentTopics` TEXT, `emotionalTone` TEXT, `pendingQuestions` TEXT, `userPreferences` TEXT, `discussionDepth` INTEGER NOT NULL, `lastSummaryAt` INTEGER, `updatedAt` INTEGER NOT NULL, FOREIGN KEY(`sessionId`) REFERENCES `chat_sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )");
         db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_conversation_context_sessionId` ON `conversation_context` (`sessionId`)");
         db.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)");
-        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'fccbd8129d92d5d60cd5c64cbe7a2742')");
+        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd2d98dd1ca3a5bdd53fa85267eab944c')");
       }
 
       @Override
@@ -275,7 +275,7 @@ public final class DairumDatabase_Impl extends DairumDatabase {
       @NonNull
       public RoomOpenHelper.ValidationResult onValidateSchema(
           @NonNull final SupportSQLiteDatabase db) {
-        final HashMap<String, TableInfo.Column> _columnsJournalEntries = new HashMap<String, TableInfo.Column>(16);
+        final HashMap<String, TableInfo.Column> _columnsJournalEntries = new HashMap<String, TableInfo.Column>(17);
         _columnsJournalEntries.put("id", new TableInfo.Column("id", "INTEGER", true, 1, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsJournalEntries.put("title", new TableInfo.Column("title", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsJournalEntries.put("content", new TableInfo.Column("content", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
@@ -292,6 +292,7 @@ public final class DairumDatabase_Impl extends DairumDatabase {
         _columnsJournalEntries.put("isDraft", new TableInfo.Column("isDraft", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsJournalEntries.put("isPinned", new TableInfo.Column("isPinned", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsJournalEntries.put("wordCount", new TableInfo.Column("wordCount", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsJournalEntries.put("backgroundColor", new TableInfo.Column("backgroundColor", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         final HashSet<TableInfo.ForeignKey> _foreignKeysJournalEntries = new HashSet<TableInfo.ForeignKey>(0);
         final HashSet<TableInfo.Index> _indicesJournalEntries = new HashSet<TableInfo.Index>(5);
         _indicesJournalEntries.add(new TableInfo.Index("index_journal_entries_categoryId", false, Arrays.asList("categoryId"), Arrays.asList("ASC")));
@@ -939,7 +940,7 @@ public final class DairumDatabase_Impl extends DairumDatabase {
         }
         return new RoomOpenHelper.ValidationResult(true, null);
       }
-    }, "fccbd8129d92d5d60cd5c64cbe7a2742", "7c8fa77f50b4355e417457b4d96b49d3");
+    }, "d2d98dd1ca3a5bdd53fa85267eab944c", "e70d76296170094d4e4c31636a7759d9");
     final SupportSQLiteOpenHelper.Configuration _sqliteConfig = SupportSQLiteOpenHelper.Configuration.builder(config.context).name(config.name).callback(_openCallback).build();
     final SupportSQLiteOpenHelper _helper = config.sqliteOpenHelperFactory.create(_sqliteConfig);
     return _helper;

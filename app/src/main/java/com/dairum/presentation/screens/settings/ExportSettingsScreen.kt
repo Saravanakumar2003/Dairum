@@ -49,6 +49,8 @@ fun ExportSettingsScreen(
             when (uiState.exportFormat) {
                 ExportFormat.PDF -> "application/pdf"
                 ExportFormat.TXT -> "text/plain"
+                ExportFormat.JSON -> "application/json"
+                ExportFormat.CSV -> "text/csv"
             }
         )
     ) { uri: Uri? ->
@@ -72,6 +74,8 @@ fun ExportSettingsScreen(
                         type = when (uiState.exportFormat) {
                             ExportFormat.PDF -> "application/pdf"
                             ExportFormat.TXT -> "text/plain"
+                            ExportFormat.JSON -> "application/json"
+                            ExportFormat.CSV -> "text/csv"
                         }
                         putExtra(Intent.EXTRA_STREAM, uri)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -104,6 +108,8 @@ fun ExportSettingsScreen(
         val extension = when (uiState.exportFormat) {
             ExportFormat.PDF -> "pdf"
             ExportFormat.TXT -> "txt"
+            ExportFormat.JSON -> "json"
+            ExportFormat.CSV -> "csv"
         }
         return "dairum_export_$timestamp.$extension"
     }
@@ -249,6 +255,8 @@ fun ExportSettingsScreen(
                                         text = when (format) {
                                             ExportFormat.TXT -> "Plain Text (.txt)"
                                             ExportFormat.PDF -> "PDF Document (.pdf)"
+                                            ExportFormat.JSON -> "JSON (.json)"
+                                            ExportFormat.CSV -> "CSV Spreadsheet (.csv)"
                                         },
                                         style = MaterialTheme.typography.bodyLarge
                                     )
@@ -256,6 +264,8 @@ fun ExportSettingsScreen(
                                         text = when (format) {
                                             ExportFormat.TXT -> "Text only, no media"
                                             ExportFormat.PDF -> "Includes photos and formatting"
+                                            ExportFormat.JSON -> "Structured data, ideal for import/export"
+                                            ExportFormat.CSV -> "Spreadsheet compatible, tabular data"
                                         },
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant

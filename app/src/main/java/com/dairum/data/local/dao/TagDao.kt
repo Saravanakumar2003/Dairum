@@ -60,6 +60,18 @@ interface TagDao {
     """)
     suspend fun getTopTags(limit: Int): List<TagWithCount>
     
+    @Query("""
+        SELECT t.*, COUNT(et.entryId) as entryCount 
+        FROM tags t
+        LEFT JOIN entry_tags et ON t.id = et.tagId
+        LEFT JOIN journal_entries e ON et.entryId = e.id AND e.isArchived = 0 AND e.isDraft = 0
+            AND e.createdAt >= :startTime
+        GROUP BY t.id
+        ORDER BY entryCount DESC
+        LIMIT :limit
+    """)
+    suspend fun getTopTagsSince(limit: Int, startTime: Long): List<TagWithCount>
+    
     @Query("UPDATE tags SET usageCount = usageCount + 1 WHERE id = :id")
     suspend fun incrementUsageCount(id: Long)
     

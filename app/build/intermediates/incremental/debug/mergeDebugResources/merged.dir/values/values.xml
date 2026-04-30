@@ -633,7 +633,7 @@
     <string name="api_keys_title">API Configuration</string>
     <string name="api_keys_weather">Weather API Key</string>
     <string name="api_keys_weather_desc">Required for automatic weather tracking</string>
-    <string name="app_name">Dairum</string>
+    <string name="app_name">Diarum</string>
     <string name="base">OSM base layer</string>
     <string name="base_nl">Netherlands base overlay</string>
     <string name="bing">Bing</string>
@@ -2647,7 +2647,7 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
-    <style name="Theme.Dairum" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.Dairum" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>

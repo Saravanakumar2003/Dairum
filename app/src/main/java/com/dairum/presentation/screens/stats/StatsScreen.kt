@@ -40,6 +40,9 @@ fun StatsScreen(
     
     var selectedTab by remember { mutableStateOf(StatsTab.OVERVIEW) }
     var selectedTimeRange by remember { mutableStateOf(TimeRange.MONTH) }
+    var showDateRangePicker by remember { mutableStateOf(false) }
+    var customStartDate by remember { mutableStateOf<Long?>(null) }
+    var customEndDate by remember { mutableStateOf<Long?>(null) }
     
     Scaffold(
         topBar = {
@@ -78,10 +81,21 @@ fun StatsScreen(
                     FilterChip(
                         selected = selectedTimeRange == range,
                         onClick = { 
-                            selectedTimeRange = range
-                            viewModel.loadStatsForRange(range)
+                            if (range == TimeRange.CUSTOM) {
+                                showDateRangePicker = true
+                            } else {
+                                selectedTimeRange = range
+                                viewModel.loadStatsForRange(range)
+                            }
                         },
-                        label = { Text(range.label) }
+                        label = { 
+                            if (range == TimeRange.CUSTOM && customStartDate != null && customEndDate != null) {
+                                val formatter = java.text.SimpleDateFormat("MMM d", java.util.Locale.getDefault())
+                                Text("${formatter.format(java.util.Date(customStartDate!!))} - ${formatter.format(java.util.Date(customEndDate!!))}")
+                            } else {
+                                Text(range.label)
+                            }
+                        }
                     )
                 }
             }
@@ -94,7 +108,10 @@ fun StatsScreen(
                 }
                 else -> {
                     when (selectedTab) {
-                        StatsTab.OVERVIEW -> OverviewContent(stats = uiState.journalStats)
+                        StatsTab.OVERVIEW -> OverviewContent(
+                            stats = uiState.journalStats,
+                            selectedRange = selectedTimeRange
+                        )
                         StatsTab.ENTRIES -> EntriesContent(stats = uiState.activityStats)
                         StatsTab.MOOD -> MoodContent(stats = uiState.moodStats)
                         StatsTab.TAGS -> TagsContent(stats = uiState.tagStats)
@@ -103,6 +120,47 @@ fun StatsScreen(
                     }
                 }
             }
+        }
+    }
+    
+    // Custom date range picker dialog
+    if (showDateRangePicker) {
+        val dateRangePickerState = rememberDateRangePickerState(
+            initialSelectedStartDateMillis = customStartDate,
+            initialSelectedEndDateMillis = customEndDate
+        )
+        
+        DatePickerDialog(
+            onDismissRequest = { showDateRangePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val startMillis = dateRangePickerState.selectedStartDateMillis
+                        val endMillis = dateRangePickerState.selectedEndDateMillis
+                        if (startMillis != null && endMillis != null) {
+                            customStartDate = startMillis
+                            customEndDate = endMillis
+                            selectedTimeRange = TimeRange.CUSTOM
+                            viewModel.loadStatsForCustomRange(startMillis, endMillis)
+                        }
+                        showDateRangePicker = false
+                    }
+                ) {
+                    Text("Apply")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDateRangePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DateRangePicker(
+                state = dateRangePickerState,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 400.dp)
+            )
         }
     }
 }
@@ -140,7 +198,23 @@ private fun ShimmerStatsContent() {
 }
 
 @Composable
-private fun OverviewContent(stats: JournalStats) {
+private fun OverviewContent(stats: JournalStats, selectedRange: TimeRange) {
+    val periodLabel = when (selectedRange) {
+        TimeRange.WEEK -> "This Week"
+        TimeRange.MONTH -> "This Month"
+        TimeRange.YEAR -> "This Year"
+        TimeRange.ALL_TIME -> "All Time"
+        TimeRange.CUSTOM -> "Custom Range"
+    }
+    
+    val entriesInPeriod = when (selectedRange) {
+        TimeRange.WEEK -> stats.entriesThisWeek
+        TimeRange.MONTH -> stats.entriesThisMonth
+        TimeRange.YEAR -> stats.entriesThisYear
+        TimeRange.ALL_TIME -> stats.totalEntries
+        TimeRange.CUSTOM -> stats.entriesInCustomRange
+    }
+    
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -158,8 +232,8 @@ private fun OverviewContent(stats: JournalStats) {
                     modifier = Modifier.weight(1f)
                 )
                 StatCard(
-                    title = stringResource(R.string.stats_this_month),
-                    value = stats.entriesThisMonth.toString(),
+                    title = periodLabel,
+                    value = entriesInPeriod.toString(),
                     icon = Icons.Outlined.CalendarMonth,
                     modifier = Modifier.weight(1f)
                 )
@@ -275,6 +349,314 @@ private fun OverviewContent(stats: JournalStats) {
                             )
                         }
                     }
+                }
+            }
+        }
+        
+        // New Insights Section
+        item {
+            Text(
+                text = "Insights",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
+        
+        // Consistency and Activity Insights
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Consistency Score Card
+                Card(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Consistency",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "${(stats.consistencyScore * 100).toInt()}%",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = when {
+                                stats.consistencyScore >= 0.7f -> MaterialTheme.colorScheme.primary
+                                stats.consistencyScore >= 0.4f -> MaterialTheme.colorScheme.tertiary
+                                else -> MaterialTheme.colorScheme.error
+                            }
+                        )
+                        Text(
+                            text = "Last 30 days",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                
+                // Avg Entries per Week Card
+                Card(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Weekly Avg",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "%.1f".format(stats.averageEntriesPerWeek),
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "entries/week",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+        
+        // Writing Pattern Card
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Your Writing Style",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text(
+                                text = "You're a",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = when (stats.writingTimePreference) {
+                                    com.dairum.domain.model.WritingTimePreference.EARLY_BIRD -> "🌅 Early Bird"
+                                    com.dairum.domain.model.WritingTimePreference.AFTERNOON -> "☀️ Afternoon Writer"
+                                    com.dairum.domain.model.WritingTimePreference.NIGHT_OWL -> "🌙 Night Owl"
+                                    com.dairum.domain.model.WritingTimePreference.LATE_NIGHT -> "🦉 Night Writer"
+                                    else -> "📝 Flexible Writer"
+                                },
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "Best day",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = stats.bestWritingDayOfWeek?.let { day ->
+                                    listOf("", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun").getOrElse(day) { "—" }
+                                } ?: "—",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Monthly Comparison Card
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Monthly Progress",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "This month",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "${stats.entriesThisMonth} entries",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "vs last month",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = if (stats.monthlyGrowth >= 0) Icons.Default.TrendingUp else Icons.Default.TrendingDown,
+                                    contentDescription = null,
+                                    tint = if (stats.monthlyGrowth >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Text(
+                                    text = "${if (stats.monthlyGrowth >= 0) "+" else ""}${stats.monthlyGrowth.toInt()}%",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (stats.monthlyGrowth >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+                        
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "Last month",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "${stats.entriesLastMonth} entries",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Days Since Last Entry (only show if > 0)
+        if (stats.daysSinceLastEntry > 0) {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (stats.daysSinceLastEntry > 3) 
+                            MaterialTheme.colorScheme.errorContainer 
+                        else 
+                            MaterialTheme.colorScheme.tertiaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Schedule,
+                                contentDescription = null,
+                                tint = if (stats.daysSinceLastEntry > 3) 
+                                    MaterialTheme.colorScheme.onErrorContainer 
+                                else 
+                                    MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                            Column {
+                                Text(
+                                    text = "Last Entry",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = if (stats.daysSinceLastEntry > 3) 
+                                        MaterialTheme.colorScheme.onErrorContainer 
+                                    else 
+                                        MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                                Text(
+                                    text = when (stats.daysSinceLastEntry) {
+                                        1 -> "Yesterday"
+                                        else -> "${stats.daysSinceLastEntry} days ago"
+                                    },
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = if (stats.daysSinceLastEntry > 3) 
+                                        MaterialTheme.colorScheme.onErrorContainer 
+                                    else 
+                                        MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                            }
+                        }
+                        
+                        if (stats.daysSinceLastEntry > 3) {
+                            Text(
+                                text = "Time to write! ✍️",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Journey Summary Card
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Your Journaling Journey",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    Text(
+                        text = "You've been journaling for ${stats.totalDaysJournaling} unique days, " +
+                            "writing ${"%,d".format(stats.totalWordCount)} words across ${stats.totalEntries} entries. " +
+                            if (stats.longestStreak > 7) "Your best streak of ${stats.longestStreak} days shows great dedication!" 
+                            else "Keep building your streak!",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
                 }
             }
         }
@@ -1126,7 +1508,8 @@ enum class TimeRange(val label: String) {
     WEEK("Week"),
     MONTH("Month"),
     YEAR("Year"),
-    ALL_TIME("All Time")
+    ALL_TIME("All Time"),
+    CUSTOM("Custom")
 }
 
 @Composable

@@ -9,6 +9,7 @@ data class JournalStats(
     val entriesThisWeek: Int = 0,
     val entriesThisMonth: Int = 0,
     val entriesThisYear: Int = 0,
+    val entriesInCustomRange: Int = 0,
     val currentStreak: Int = 0,
     val longestStreak: Int = 0,
     val averageWordCount: Double = 0.0,
@@ -17,8 +18,27 @@ data class JournalStats(
     val totalVideos: Int = 0,
     val totalVoiceNotes: Int = 0,
     val totalAttachments: Int = 0,
-    val storageUsed: Long = 0 // bytes
+    val storageUsed: Long = 0, // bytes
+    val totalStorageUsed: Long = 0, // bytes (for ViewModel compatibility)
+    val comparisonToLastMonth: Float = 0f, // percentage change from last month
+    // New insights
+    val averageEntriesPerWeek: Double = 0.0,
+    val consistencyScore: Float = 0f, // percentage of days with entries in last 30 days
+    val daysSinceLastEntry: Int = 0,
+    val bestWritingDayOfWeek: Int? = null, // 1-7 (Monday-Sunday)
+    val writingTimePreference: WritingTimePreference = WritingTimePreference.UNKNOWN,
+    val totalDaysJournaling: Int = 0,
+    val entriesLastMonth: Int = 0, // for comparison with this month
+    val monthlyGrowth: Float = 0f // percentage change from last month
 )
+
+enum class WritingTimePreference {
+    EARLY_BIRD,    // Most entries between 5-11
+    AFTERNOON,     // Most entries between 11-17
+    NIGHT_OWL,     // Most entries between 17-23
+    LATE_NIGHT,    // Most entries between 23-5
+    UNKNOWN
+}
 
 data class MoodStats(
     val distribution: List<MoodDistributionItem>,

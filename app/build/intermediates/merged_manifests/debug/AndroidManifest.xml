@@ -169,7 +169,7 @@
             android:name="com.dairum.plugin.PluginEditActivity"
             android:exported="true"
             android:icon="@mipmap/ic_launcher"
-            android:label="Dairum Action"
+            android:label="Diarum Action"
             android:theme="@style/Theme.Dairum" >
 
             <!-- Tasker Plugin Category -->

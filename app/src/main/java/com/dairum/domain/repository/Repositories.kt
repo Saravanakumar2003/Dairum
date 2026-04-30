@@ -168,6 +168,8 @@ interface ExportRepository {
     
     suspend fun exportToTxt(entries: List<JournalEntry>): Result<String>
     suspend fun exportToPdf(entries: List<JournalEntry>, includeMedia: Boolean): Result<String>
+    suspend fun exportToJson(entries: List<JournalEntry>): Result<String>
+    suspend fun exportToCsv(entries: List<JournalEntry>): Result<String>
     suspend fun triggerImmediateExport()
     
     // Export to external storage (user-selected folder via SAF)

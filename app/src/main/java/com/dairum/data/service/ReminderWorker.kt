@@ -44,10 +44,12 @@ class ReminderWorker @AssistedInject constructor(
         for (reminder in enabledReminders) {
             val scheduledDays = reminder.scheduleDays.split(",").mapNotNull { it.toIntOrNull() }
             
-            // Check if current time matches scheduled time (within 15 min window)
-            val isTimeMatch = currentHour == reminder.scheduleHour && 
-                currentMinute >= reminder.scheduleMinute && 
-                currentMinute < reminder.scheduleMinute + 15
+            // Compare using minutes-since-midnight for correct wraparound
+            val currentMinuteOfDay = currentHour * 60 + currentMinute
+            val scheduledMinuteOfDay = reminder.scheduleHour * 60 + reminder.scheduleMinute
+            val diff = currentMinuteOfDay - scheduledMinuteOfDay
+            // Within 15-minute window (handles hour-boundary wraparound)
+            val isTimeMatch = diff in 0 until 15
             
             val isDayMatch = currentDayOfWeek in scheduledDays
             

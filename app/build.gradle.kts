@@ -146,6 +146,9 @@ dependencies {
     implementation(libs.androidx.biometric)
     implementation(libs.androidx.security.crypto)
 
+    // AppCompat (needed for FragmentActivity / biometric support)
+    implementation(libs.androidx.appcompat)
+
     // Logging
     implementation(libs.timber)
 

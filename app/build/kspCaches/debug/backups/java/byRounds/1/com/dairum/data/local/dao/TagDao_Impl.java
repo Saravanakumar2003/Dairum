@@ -770,6 +770,70 @@ public final class TagDao_Impl implements TagDao {
   }
 
   @Override
+  public Object getTopTagsSince(final int limit, final long startTime,
+      final Continuation<? super List<TagWithCount>> $completion) {
+    final String _sql = "\n"
+            + "        SELECT t.*, COUNT(et.entryId) as entryCount \n"
+            + "        FROM tags t\n"
+            + "        LEFT JOIN entry_tags et ON t.id = et.tagId\n"
+            + "        LEFT JOIN journal_entries e ON et.entryId = e.id AND e.isArchived = 0 AND e.isDraft = 0\n"
+            + "            AND e.createdAt >= ?\n"
+            + "        GROUP BY t.id\n"
+            + "        ORDER BY entryCount DESC\n"
+            + "        LIMIT ?\n"
+            + "    ";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 2);
+    int _argIndex = 1;
+    _statement.bindLong(_argIndex, startTime);
+    _argIndex = 2;
+    _statement.bindLong(_argIndex, limit);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<TagWithCount>>() {
+      @Override
+      @NonNull
+      public List<TagWithCount> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfName = CursorUtil.getColumnIndexOrThrow(_cursor, "name");
+          final int _cursorIndexOfColor = CursorUtil.getColumnIndexOrThrow(_cursor, "color");
+          final int _cursorIndexOfUsageCount = CursorUtil.getColumnIndexOrThrow(_cursor, "usageCount");
+          final int _cursorIndexOfCreatedAt = CursorUtil.getColumnIndexOrThrow(_cursor, "createdAt");
+          final int _cursorIndexOfEntryCount = CursorUtil.getColumnIndexOrThrow(_cursor, "entryCount");
+          final List<TagWithCount> _result = new ArrayList<TagWithCount>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final TagWithCount _item;
+            final int _tmpEntryCount;
+            _tmpEntryCount = _cursor.getInt(_cursorIndexOfEntryCount);
+            final TagEntity _tmpTag;
+            final long _tmpId;
+            _tmpId = _cursor.getLong(_cursorIndexOfId);
+            final String _tmpName;
+            _tmpName = _cursor.getString(_cursorIndexOfName);
+            final Integer _tmpColor;
+            if (_cursor.isNull(_cursorIndexOfColor)) {
+              _tmpColor = null;
+            } else {
+              _tmpColor = _cursor.getInt(_cursorIndexOfColor);
+            }
+            final int _tmpUsageCount;
+            _tmpUsageCount = _cursor.getInt(_cursorIndexOfUsageCount);
+            final long _tmpCreatedAt;
+            _tmpCreatedAt = _cursor.getLong(_cursorIndexOfCreatedAt);
+            _tmpTag = new TagEntity(_tmpId,_tmpName,_tmpColor,_tmpUsageCount,_tmpCreatedAt);
+            _item = new TagWithCount(_tmpTag,_tmpEntryCount);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
   public Object getTagIdsForEntry(final long entryId,
       final Continuation<? super List<Long>> $completion) {
     final String _sql = "SELECT tagId FROM entry_tags WHERE entryId = ?";

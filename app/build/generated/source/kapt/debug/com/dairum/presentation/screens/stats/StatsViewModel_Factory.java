@@ -1,6 +1,8 @@
 package com.dairum.presentation.screens.stats;
 
 import com.dairum.data.local.dao.JournalEntryDao;
+import com.dairum.data.local.dao.PersonDao;
+import com.dairum.data.local.dao.TagDao;
 import com.dairum.domain.repository.MediaRepository;
 import com.dairum.domain.repository.PersonRepository;
 import com.dairum.domain.repository.TagRepository;
@@ -28,6 +30,10 @@ import javax.inject.Provider;
 public final class StatsViewModel_Factory implements Factory<StatsViewModel> {
   private final Provider<JournalEntryDao> entryDaoProvider;
 
+  private final Provider<TagDao> tagDaoProvider;
+
+  private final Provider<PersonDao> personDaoProvider;
+
   private final Provider<TagRepository> tagRepositoryProvider;
 
   private final Provider<PersonRepository> personRepositoryProvider;
@@ -37,11 +43,14 @@ public final class StatsViewModel_Factory implements Factory<StatsViewModel> {
   private final Provider<TrackerRepository> trackerRepositoryProvider;
 
   public StatsViewModel_Factory(Provider<JournalEntryDao> entryDaoProvider,
+      Provider<TagDao> tagDaoProvider, Provider<PersonDao> personDaoProvider,
       Provider<TagRepository> tagRepositoryProvider,
       Provider<PersonRepository> personRepositoryProvider,
       Provider<MediaRepository> mediaRepositoryProvider,
       Provider<TrackerRepository> trackerRepositoryProvider) {
     this.entryDaoProvider = entryDaoProvider;
+    this.tagDaoProvider = tagDaoProvider;
+    this.personDaoProvider = personDaoProvider;
     this.tagRepositoryProvider = tagRepositoryProvider;
     this.personRepositoryProvider = personRepositoryProvider;
     this.mediaRepositoryProvider = mediaRepositoryProvider;
@@ -50,20 +59,21 @@ public final class StatsViewModel_Factory implements Factory<StatsViewModel> {
 
   @Override
   public StatsViewModel get() {
-    return newInstance(entryDaoProvider.get(), tagRepositoryProvider.get(), personRepositoryProvider.get(), mediaRepositoryProvider.get(), trackerRepositoryProvider.get());
+    return newInstance(entryDaoProvider.get(), tagDaoProvider.get(), personDaoProvider.get(), tagRepositoryProvider.get(), personRepositoryProvider.get(), mediaRepositoryProvider.get(), trackerRepositoryProvider.get());
   }
 
   public static StatsViewModel_Factory create(Provider<JournalEntryDao> entryDaoProvider,
+      Provider<TagDao> tagDaoProvider, Provider<PersonDao> personDaoProvider,
       Provider<TagRepository> tagRepositoryProvider,
       Provider<PersonRepository> personRepositoryProvider,
       Provider<MediaRepository> mediaRepositoryProvider,
       Provider<TrackerRepository> trackerRepositoryProvider) {
-    return new StatsViewModel_Factory(entryDaoProvider, tagRepositoryProvider, personRepositoryProvider, mediaRepositoryProvider, trackerRepositoryProvider);
+    return new StatsViewModel_Factory(entryDaoProvider, tagDaoProvider, personDaoProvider, tagRepositoryProvider, personRepositoryProvider, mediaRepositoryProvider, trackerRepositoryProvider);
   }
 
-  public static StatsViewModel newInstance(JournalEntryDao entryDao, TagRepository tagRepository,
-      PersonRepository personRepository, MediaRepository mediaRepository,
-      TrackerRepository trackerRepository) {
-    return new StatsViewModel(entryDao, tagRepository, personRepository, mediaRepository, trackerRepository);
+  public static StatsViewModel newInstance(JournalEntryDao entryDao, TagDao tagDao,
+      PersonDao personDao, TagRepository tagRepository, PersonRepository personRepository,
+      MediaRepository mediaRepository, TrackerRepository trackerRepository) {
+    return new StatsViewModel(entryDao, tagDao, personDao, tagRepository, personRepository, mediaRepository, trackerRepository);
   }
 }

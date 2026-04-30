@@ -48,50 +48,107 @@ class ExportRepositoryImpl @Inject constructor(
     private val internalExportDir: File
         get() = File(context.filesDir, "exports").also { it.mkdirs() }
     
-    private val mediaDir: File
-        get() = File(context.filesDir, "media")
+    /** Media type directories that MediaRepositoryImpl saves into */
+    private val mediaDirs: List<File>
+        get() = listOf("photo", "video", "voice", "attachment").map { File(context.filesDir, it) }
     
     /**
-     * Save a file to Documents/dairum folder using MediaStore for Android 10+
+     * Save a file to Documents/diarum folder using MediaStore for Android 10+
      * or legacy file system approach for older versions.
      * Returns the file path or URI string.
      */
-    private suspend fun saveToDocumentsDairum(tempFile: File, fileName: String, mimeType: String): String = 
+    private suspend fun saveToDocumentsDiarum(tempFile: File, fileName: String, mimeType: String): String = 
         withContext(Dispatchers.IO) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             // Use MediaStore API for Android 10+
-            val contentValues = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-                put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
-                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/dairum")
-            }
-            
-            val collection = MediaStore.Files.getContentUri("external")
-            val uri = context.contentResolver.insert(collection, contentValues)
-            
-            if (uri != null) {
-                context.contentResolver.openOutputStream(uri)?.use { output ->
-                    tempFile.inputStream().use { input ->
-                        input.copyTo(output)
+            try {
+                // First, delete any existing file with the same name to avoid conflicts
+                val existingUri = findExistingFile(fileName)
+                if (existingUri != null) {
+                    try {
+                        context.contentResolver.delete(existingUri, null, null)
+                    } catch (e: Exception) {
+                        // Ignore deletion errors, file may not exist
                     }
                 }
-                // Return the URI string for the file
-                uri.toString()
-            } else {
-                // Fallback to internal storage
+                
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                    put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/diarum")
+                    // Set IS_PENDING to write atomically
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        put(MediaStore.MediaColumns.IS_PENDING, 1)
+                    }
+                }
+                
+                val collection = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+                val uri = context.contentResolver.insert(collection, contentValues)
+                
+                if (uri != null) {
+                    context.contentResolver.openOutputStream(uri)?.use { output ->
+                        tempFile.inputStream().use { input ->
+                            input.copyTo(output)
+                        }
+                    }
+                    
+                    // Clear IS_PENDING flag to make file visible
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        val updateValues = ContentValues().apply {
+                            put(MediaStore.MediaColumns.IS_PENDING, 0)
+                        }
+                        context.contentResolver.update(uri, updateValues, null, null)
+                    }
+                    
+                    // Return the URI string for the file
+                    return@withContext uri.toString()
+                } else {
+                    // Fallback to internal storage
+                    val internalFile = File(internalExportDir, fileName)
+                    tempFile.copyTo(internalFile, overwrite = true)
+                    return@withContext internalFile.absolutePath
+                }
+            } catch (e: Exception) {
+                // Log the error and fallback to internal storage
+                android.util.Log.e("ExportRepositoryImpl", "Failed to save to Documents/diarum: ${e.message}", e)
                 val internalFile = File(internalExportDir, fileName)
                 tempFile.copyTo(internalFile, overwrite = true)
-                internalFile.absolutePath
+                return@withContext internalFile.absolutePath
             }
         } else {
             // Legacy approach for Android 9 and below
             val documentsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
-            val dairumDir = File(documentsDir, "dairum").also { it.mkdirs() }
-            val destFile = File(dairumDir, fileName)
+            val diarumDir = File(documentsDir, "diarum").also { it.mkdirs() }
+            val destFile = File(diarumDir, fileName)
             
             tempFile.copyTo(destFile, overwrite = true)
             destFile.absolutePath
         }
+    }
+    
+    /**
+     * Find an existing file in Documents/diarum by name
+     */
+    private fun findExistingFile(fileName: String): Uri? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
+        
+        val projection = arrayOf(MediaStore.MediaColumns._ID)
+        val selection = "${MediaStore.MediaColumns.DISPLAY_NAME} = ? AND ${MediaStore.MediaColumns.RELATIVE_PATH} = ?"
+        val selectionArgs = arrayOf(fileName, Environment.DIRECTORY_DOCUMENTS + "/diarum/")
+        
+        context.contentResolver.query(
+            MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
+            projection,
+            selection,
+            selectionArgs,
+            null
+        )?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
+                return MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY, id)
+            }
+        }
+        return null
     }
 
     override suspend fun createConfig(config: ExportConfig): Long {
@@ -136,6 +193,12 @@ class ExportRepositoryImpl @Inject constructor(
             ExportFormat.PDF -> exportToPdf(entries, includeMedia).map { filePath ->
                 createHistoryEntry(filePath, entries.size, format)
             }
+            ExportFormat.JSON -> exportToJson(entries).map { filePath ->
+                createHistoryEntry(filePath, entries.size, format)
+            }
+            ExportFormat.CSV -> exportToCsv(entries).map { filePath ->
+                createHistoryEntry(filePath, entries.size, format)
+            }
         }
     }
 
@@ -144,7 +207,7 @@ class ExportRepositoryImpl @Inject constructor(
         try {
             val timestamp = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
                 .format(LocalDateTime.now())
-            val fileName = "dairum_export_$timestamp.txt"
+            val fileName = "diarum_export_$timestamp.txt"
             
             // Write to temp file first
             val tempFile = File(internalExportDir, "temp_$fileName")
@@ -213,8 +276,8 @@ class ExportRepositoryImpl @Inject constructor(
             // Get file size before moving
             val fileSize = tempFile.length()
             
-            // Save to Documents/dairum
-            val savedPath = saveToDocumentsDairum(tempFile, fileName, "text/plain")
+            // Save to Documents/diarum
+            val savedPath = saveToDocumentsDiarum(tempFile, fileName, "text/plain")
             
             // Store the file size in a temporary way (append to path with separator)
             // We'll parse this in createHistoryEntry
@@ -229,12 +292,188 @@ class ExportRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun exportToJson(entries: List<JournalEntry>): Result<String> =
+        withContext(Dispatchers.IO) {
+        try {
+            val timestamp = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
+                .format(LocalDateTime.now())
+            val fileName = "diarum_export_$timestamp.json"
+            val tempFile = File(internalExportDir, "temp_$fileName")
+
+            val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
+
+            FileOutputStream(tempFile).bufferedWriter().use { writer ->
+                writer.appendLine("[")
+                entries.forEachIndexed { index, entry ->
+                    val json = buildString {
+                        append("  {\n")
+                        append("    \"id\": ${entry.id},\n")
+                        append("    \"title\": ${escapeJson(entry.title)},\n")
+                        append("    \"content\": ${escapeJson(entry.plainContent)},\n")
+                        append("    \"createdAt\": \"${entry.createdAt.format(dateFormatter)}\",\n")
+                        append("    \"updatedAt\": \"${entry.updatedAt.format(dateFormatter)}\",\n")
+                        append("    \"wordCount\": ${entry.wordCount},\n")
+                        append("    \"isFavorite\": ${entry.isFavorite},\n")
+                        append("    \"isArchived\": ${entry.isArchived},\n")
+                        append("    \"isDraft\": ${entry.isDraft},\n")
+                        append("    \"isPinned\": ${entry.isPinned},\n")
+
+                        // Mood
+                        if (entry.mood != null) {
+                            append("    \"mood\": { \"label\": ${escapeJson(entry.mood.label)}, \"emoji\": ${escapeJson(entry.mood.emoji)}, \"level\": ${entry.mood.level} },\n")
+                        } else {
+                            append("    \"mood\": null,\n")
+                        }
+
+                        // Category
+                        if (entry.category != null) {
+                            append("    \"category\": ${escapeJson(entry.category.name)},\n")
+                        } else {
+                            append("    \"category\": null,\n")
+                        }
+
+                        // Tags
+                        val tagsStr = entry.tags.joinToString(", ") { "\"${it.name.replace("\"", "\\\"")}\"" }
+                        append("    \"tags\": [$tagsStr],\n")
+
+                        // People
+                        val peopleStr = entry.people.joinToString(", ") { "\"${it.name.replace("\"", "\\\"")}\"" }
+                        append("    \"people\": [$peopleStr],\n")
+
+                        // Weather
+                        if (entry.weather != null) {
+                            append("    \"weather\": { \"condition\": ${escapeJson(entry.weather.condition)}, \"temperature\": ${entry.weather.temperature}, \"humidity\": ${entry.weather.humidity} },\n")
+                        } else {
+                            append("    \"weather\": null,\n")
+                        }
+
+                        // Location
+                        if (entry.location != null) {
+                            append("    \"location\": { \"latitude\": ${entry.location.latitude}, \"longitude\": ${entry.location.longitude}, \"address\": ${escapeJson(entry.location.address)}, \"placeName\": ${escapeJson(entry.location.placeName)} },\n")
+                        } else {
+                            append("    \"location\": null,\n")
+                        }
+
+                        // Background color
+                        append("    \"backgroundColor\": ${escapeJson(entry.backgroundColor)}\n")
+                        append("  }")
+                    }
+                    writer.append(json)
+                    if (index < entries.size - 1) writer.append(",")
+                    writer.appendLine()
+                }
+                writer.appendLine("]")
+            }
+
+            val fileSize = tempFile.length()
+            val savedPath = saveToDocumentsDiarum(tempFile, fileName, "application/json")
+            val pathWithSize = "$savedPath|$fileSize"
+            tempFile.delete()
+
+            Result.success(pathWithSize)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun exportToCsv(entries: List<JournalEntry>): Result<String> =
+        withContext(Dispatchers.IO) {
+        try {
+            val timestamp = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
+                .format(LocalDateTime.now())
+            val fileName = "diarum_export_$timestamp.csv"
+            val tempFile = File(internalExportDir, "temp_$fileName")
+
+            val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+
+            FileOutputStream(tempFile).bufferedWriter().use { writer ->
+                // CSV Header
+                writer.appendLine("\"ID\",\"Title\",\"Content\",\"Created At\",\"Updated At\",\"Category\",\"Mood\",\"Mood Emoji\",\"Tags\",\"People\",\"Weather\",\"Temperature (°C)\",\"Location\",\"Latitude\",\"Longitude\",\"Word Count\",\"Favorite\",\"Archived\",\"Draft\",\"Pinned\",\"Background Color\"")
+
+                entries.forEach { entry ->
+                    val row = buildString {
+                        append(entry.id)
+                        append(",")
+                        append(escapeCsv(entry.title ?: ""))
+                        append(",")
+                        append(escapeCsv(entry.plainContent))
+                        append(",")
+                        append(escapeCsv(entry.createdAt.format(dateFormatter)))
+                        append(",")
+                        append(escapeCsv(entry.updatedAt.format(dateFormatter)))
+                        append(",")
+                        append(escapeCsv(entry.category?.name ?: ""))
+                        append(",")
+                        append(escapeCsv(entry.mood?.label ?: ""))
+                        append(",")
+                        append(escapeCsv(entry.mood?.emoji ?: ""))
+                        append(",")
+                        append(escapeCsv(entry.tags.joinToString("; ") { it.name }))
+                        append(",")
+                        append(escapeCsv(entry.people.joinToString("; ") { it.name }))
+                        append(",")
+                        append(escapeCsv(entry.weather?.condition ?: ""))
+                        append(",")
+                        append(entry.weather?.temperature ?: "")
+                        append(",")
+                        append(escapeCsv(entry.location?.placeName ?: entry.location?.address ?: ""))
+                        append(",")
+                        append(entry.location?.latitude ?: "")
+                        append(",")
+                        append(entry.location?.longitude ?: "")
+                        append(",")
+                        append(entry.wordCount)
+                        append(",")
+                        append(entry.isFavorite)
+                        append(",")
+                        append(entry.isArchived)
+                        append(",")
+                        append(entry.isDraft)
+                        append(",")
+                        append(entry.isPinned)
+                        append(",")
+                        append(escapeCsv(entry.backgroundColor ?: ""))
+                    }
+                    writer.appendLine(row)
+                }
+            }
+
+            val fileSize = tempFile.length()
+            val savedPath = saveToDocumentsDiarum(tempFile, fileName, "text/csv")
+            val pathWithSize = "$savedPath|$fileSize"
+            tempFile.delete()
+
+            Result.success(pathWithSize)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    private fun escapeJson(value: String?): String {
+        if (value == null) return "null"
+        val escaped = value
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("\n", "\\n")
+            .replace("\r", "\\r")
+            .replace("\t", "\\t")
+        return "\"$escaped\""
+    }
+
+    private fun escapeCsv(value: String): String {
+        return if (value.contains(",") || value.contains("\"") || value.contains("\n") || value.contains("\r")) {
+            "\"${value.replace("\"", "\"\"")}\""
+        } else {
+            "\"$value\""
+        }
+    }
+
     override suspend fun exportToPdf(entries: List<JournalEntry>, includeMedia: Boolean): Result<String> = 
         withContext(Dispatchers.IO) {
         try {
             val timestamp = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
                 .format(LocalDateTime.now())
-            val fileName = "dairum_export_$timestamp.pdf"
+            val fileName = "diarum_export_$timestamp.pdf"
             val tempFile = File(internalExportDir, "temp_$fileName")
             
             // Create PDF document
@@ -583,8 +822,8 @@ class ExportRepositoryImpl @Inject constructor(
             // Get file size before moving
             val fileSize = tempFile.length()
             
-            // Save to Documents/dairum
-            val savedPath = saveToDocumentsDairum(tempFile, fileName, "application/pdf")
+            // Save to Documents/diarum
+            val savedPath = saveToDocumentsDiarum(tempFile, fileName, "application/pdf")
             
             // Store the file size in a temporary way (append to path with separator)
             val pathWithSize = "$savedPath|$fileSize"
@@ -734,6 +973,8 @@ class ExportRepositoryImpl @Inject constructor(
         return when (this) {
             com.dairum.data.local.entity.ExportFormat.TXT -> ExportFormat.TXT
             com.dairum.data.local.entity.ExportFormat.PDF -> ExportFormat.PDF
+            com.dairum.data.local.entity.ExportFormat.JSON -> ExportFormat.JSON
+            com.dairum.data.local.entity.ExportFormat.CSV -> ExportFormat.CSV
         }
     }
 
@@ -741,6 +982,8 @@ class ExportRepositoryImpl @Inject constructor(
         return when (this) {
             ExportFormat.TXT -> com.dairum.data.local.entity.ExportFormat.TXT
             ExportFormat.PDF -> com.dairum.data.local.entity.ExportFormat.PDF
+            ExportFormat.JSON -> com.dairum.data.local.entity.ExportFormat.JSON
+            ExportFormat.CSV -> com.dairum.data.local.entity.ExportFormat.CSV
         }
     }
     
@@ -755,6 +998,8 @@ class ExportRepositoryImpl @Inject constructor(
             val internalResult = when (format) {
                 ExportFormat.TXT -> exportToTxt(entries)
                 ExportFormat.PDF -> exportToPdf(entries, includeMedia)
+                ExportFormat.JSON -> exportToJson(entries)
+                ExportFormat.CSV -> exportToCsv(entries)
             }
             
             internalResult.fold(

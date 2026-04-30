@@ -1,9 +1,9 @@
 package com.dairum.presentation
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -12,11 +12,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CollectionsBookmark
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.CollectionsBookmark
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.MoreHoriz
@@ -44,7 +46,7 @@ import timber.log.Timber
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     
     @Inject
     lateinit var appLockManager: AppLockManager
@@ -95,17 +97,24 @@ fun DairumAppWithLock(
     val biometricEnabled by appLockManager.isBiometricEnabled().collectAsState(initial = false)
     
     var isUnlocked by remember { mutableStateOf(false) }
+    var backgroundTimestamp by remember { mutableStateOf(0L) }
     val lifecycleOwner = LocalLifecycleOwner.current
     
-    // Lock app when going to background (optional - can be configurable)
+    // Lock app after 30 seconds in background (grace period for camera/share intents)
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_STOP -> {
-                    // Lock when app goes to background
-                    if (isLockConfigured) {
-                        isUnlocked = false
+                    backgroundTimestamp = System.currentTimeMillis()
+                }
+                Lifecycle.Event.ON_START -> {
+                    if (isLockConfigured && isUnlocked && backgroundTimestamp > 0L) {
+                        val elapsed = System.currentTimeMillis() - backgroundTimestamp
+                        if (elapsed > 30_000L) { // 30 seconds grace period
+                            isUnlocked = false
+                        }
                     }
+                    backgroundTimestamp = 0L
                 }
                 else -> {}
             }

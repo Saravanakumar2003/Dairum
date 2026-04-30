@@ -2,6 +2,8 @@ package com.dairum.presentation.screens.editor
 
 import android.content.Context
 import android.net.Uri
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -11,9 +13,13 @@ import com.dairum.data.service.LocationService
 import com.dairum.data.service.VoiceRecorderService
 import com.dairum.domain.model.*
 import com.dairum.domain.repository.*
+import com.dairum.presentation.theme.EntryBackgroundColor
+import com.dairum.presentation.theme.EntryBackgroundColors
 import com.dairum.widget.TodayWidgetProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.json.JSONArray
@@ -45,6 +51,11 @@ class EditorViewModel @Inject constructor(
     private var originalEntry: JournalEntry? = null
     private var isNewEntry: Boolean = true
     
+    // Autosave related
+    private var autosaveJob: Job? = null
+    private var tempEntryId: Long? = null
+    private val autosaveIntervalMs = 5000L // 5 seconds
+    
     companion object {
         private val CUSTOM_TEMPLATES_KEY = stringPreferencesKey("custom_templates")
     }
@@ -67,6 +78,18 @@ class EditorViewModel @Inject constructor(
             voiceRecorderService.recordingDuration.collect { duration ->
                 _uiState.update { it.copy(recordingDuration = duration) }
             }
+        }
+        
+        // Start observing content changes for autosave
+        viewModelScope.launch {
+            uiState
+                .map { it.content.text to it.title }
+                .distinctUntilChanged()
+                .collect { (content, title) ->
+                    if (content.isNotBlank() || title.isNotBlank()) {
+                        scheduleAutosave()
+                    }
+                }
         }
         
         // Note: Auto-fetch for location is handled by EditorScreen's LaunchedEffect
@@ -207,20 +230,36 @@ class EditorViewModel @Inject constructor(
                     selectedTrackerIds.contains(tracker.id) 
                 }
                 
+                // Parse formatting JSON
+                val formatting = if (it.formattingJson.isNotBlank()) {
+                    try {
+                        TextFormatting.fromJson(it.formattingJson)
+                    } catch (e: Exception) {
+                        TextFormatting()
+                    }
+                } else {
+                    TextFormatting()
+                }
+                
                 _uiState.update { state ->
                     state.copy(
                         title = it.title ?: "",
                         content = TextFieldValue(it.plainContent),
+                        textFormatting = formatting,
                         category = it.category,
                         mood = it.mood,
                         weather = it.weather,
                         location = it.location,
+                        media = it.media.map { m -> MediaItem(uri = m.uri, type = m.type) },
                         tags = it.tags,
                         people = it.people,
                         trackerValues = it.trackerValues,
                         selectedTrackers = selectedTrackers,
                         createdAt = it.createdAt,
-                        isDraft = it.isDraft
+                        isDraft = it.isDraft,
+                        backgroundColor = it.backgroundColor?.let { bgId -> 
+                            EntryBackgroundColors.fromId(bgId, false) 
+                        }
                     )
                 }
             }
@@ -229,10 +268,39 @@ class EditorViewModel @Inject constructor(
 
     fun updateTitle(title: String) {
         _uiState.update { it.copy(title = title, hasChanges = true) }
+        scheduleAutosave()
     }
 
     fun updateContent(content: TextFieldValue) {
-        _uiState.update { it.copy(content = content, hasChanges = true) }
+        val oldContent = _uiState.value.content
+        val oldText = oldContent.text
+        val newText = content.text
+        
+        // Calculate position and delta for formatting adjustment
+        val delta = newText.length - oldText.length
+        var changePosition = 0
+        
+        if (delta != 0) {
+            // Find where the change occurred
+            val minLen = minOf(oldText.length, newText.length)
+            while (changePosition < minLen && oldText[changePosition] == newText[changePosition]) {
+                changePosition++
+            }
+        } else {
+            changePosition = content.selection.start
+        }
+        
+        // Adjust formatting spans
+        val adjustedFormatting = _uiState.value.textFormatting.adjustForTextChange(changePosition, delta)
+        
+        _uiState.update { 
+            it.copy(
+                content = content, 
+                textFormatting = adjustedFormatting,
+                hasChanges = true
+            ) 
+        }
+        scheduleAutosave()
     }
 
     fun updateCategory(category: Category) {
@@ -484,17 +552,130 @@ class EditorViewModel @Inject constructor(
         voiceRecorderService.updateDuration()
     }
 
-    // Text formatting
+    // Text formatting - using span-based formatting
     fun toggleBold() {
-        // TODO: Implement rich text formatting
+        applyTextStyle(SpanStyle.BOLD)
     }
 
     fun toggleItalic() {
-        // TODO: Implement rich text formatting
+        applyTextStyle(SpanStyle.ITALIC)
     }
 
     fun toggleUnderline() {
-        // TODO: Implement rich text formatting
+        applyTextStyle(SpanStyle.UNDERLINE)
+    }
+    
+    fun applyHighlight(highlightStyle: SpanStyle) {
+        applyTextStyle(highlightStyle)
+        _uiState.update { it.copy(showHighlightPicker = false) }
+    }
+    
+    fun applyFont(fontStyle: SpanStyle?) {
+        // First remove any existing font styles from selection
+        val selection = _uiState.value.content.selection
+        if (selection.start < selection.end) {
+            val currentFormatting = _uiState.value.textFormatting
+            var newFormatting = currentFormatting
+            
+            // Remove existing font styles in selection range
+            listOf(SpanStyle.FONT_SERIF, SpanStyle.FONT_MONO, SpanStyle.FONT_CURSIVE).forEach { style ->
+                val spansToRemove = currentFormatting.getSpansOfStyle(style).filter { span ->
+                    span.start < selection.end && span.end > selection.start
+                }
+                spansToRemove.forEach { span ->
+                    newFormatting = newFormatting.copy(spans = newFormatting.spans - span)
+                }
+            }
+            
+            // Apply new font style if not default
+            if (fontStyle != null) {
+                newFormatting = newFormatting.toggleSpan(selection.start, selection.end, fontStyle)
+            }
+            
+            _uiState.update { 
+                it.copy(
+                    textFormatting = newFormatting,
+                    showFontPicker = false,
+                    hasChanges = true
+                )
+            }
+            scheduleAutosave()
+        } else {
+            _uiState.update { it.copy(showFontPicker = false) }
+        }
+    }
+    
+    fun showHighlightPicker() {
+        _uiState.update { it.copy(showHighlightPicker = true) }
+    }
+    
+    fun hideHighlightPicker() {
+        _uiState.update { it.copy(showHighlightPicker = false) }
+    }
+    
+    fun showFontPicker() {
+        _uiState.update { it.copy(showFontPicker = true) }
+    }
+    
+    fun hideFontPicker() {
+        _uiState.update { it.copy(showFontPicker = false) }
+    }
+    
+    /**
+     * Applies a text style (bold, italic, underline, highlight, font) to the selected text.
+     */
+    private fun applyTextStyle(style: SpanStyle) {
+        val selection = _uiState.value.content.selection
+        
+        if (selection.start < selection.end) {
+            // Text is selected - toggle the style on selection
+            val currentFormatting = _uiState.value.textFormatting
+            val newFormatting = currentFormatting.toggleSpan(selection.start, selection.end, style)
+            
+            _uiState.update { state ->
+                state.copy(
+                    textFormatting = newFormatting,
+                    hasChanges = true
+                )
+            }
+            scheduleAutosave()
+        }
+        // If no selection, do nothing (user needs to select text first)
+    }
+    
+    /**
+     * Called when text content changes - adjusts formatting spans accordingly
+     */
+    fun onContentChange(newContent: TextFieldValue) {
+        val oldContent = _uiState.value.content
+        val oldText = oldContent.text
+        val newText = newContent.text
+        
+        // Calculate the change delta
+        val delta = newText.length - oldText.length
+        val changePosition = if (delta != 0) {
+            // Find where the change occurred
+            val minLen = minOf(oldText.length, newText.length)
+            var pos = 0
+            while (pos < minLen && oldText[pos] == newText[pos]) {
+                pos++
+            }
+            pos
+        } else {
+            newContent.selection.start
+        }
+        
+        // Adjust formatting spans for the text change
+        val adjustedFormatting = _uiState.value.textFormatting.adjustForTextChange(changePosition, delta)
+        
+        _uiState.update { state ->
+            state.copy(
+                content = newContent,
+                textFormatting = adjustedFormatting,
+                hasChanges = true
+            )
+        }
+        scheduleAutosave()
     }
 
     fun addBulletList() {
@@ -532,12 +713,113 @@ class EditorViewModel @Inject constructor(
 
     fun saveEntry() {
         viewModelScope.launch {
+            // Cancel any pending autosave
+            autosaveJob?.cancel()
             saveEntryInternal(isDraft = false)
         }
     }
     
+    // Autosave functions
+    private fun scheduleAutosave() {
+        autosaveJob?.cancel()
+        autosaveJob = viewModelScope.launch {
+            delay(autosaveIntervalMs)
+            performAutosave()
+        }
+    }
+    
+    private suspend fun performAutosave() {
+        val state = _uiState.value
+        
+        // Only autosave if there's content
+        if (state.content.text.isBlank() && state.title.isBlank()) {
+            android.util.Log.d("EditorViewModel", "Autosave skipped - no content")
+            return
+        }
+        
+        android.util.Log.d("EditorViewModel", "performAutosave started - tempEntryId=$tempEntryId, originalEntry=${originalEntry?.id}")
+        
+        // Update autosave status
+        _uiState.update { it.copy(autosaveStatus = AutosaveStatus.SAVING) }
+        
+        try {
+            val entry = JournalEntry(
+                id = tempEntryId ?: originalEntry?.id ?: 0,
+                title = state.title.takeIf { it.isNotBlank() },
+                plainContent = state.content.text,
+                formattingJson = state.textFormatting.toJson(),
+                category = state.category,
+                createdAt = state.createdAt,
+                updatedAt = LocalDateTime.now(),
+                mood = state.mood,
+                weather = state.weather,
+                location = state.location,
+                tags = state.tags,
+                people = state.people,
+                trackerValues = state.trackerValues,
+                isDraft = false, // Autosaved entries are saved as regular entries
+                wordCount = state.content.text.split("\\s+".toRegex()).filter { it.isNotBlank() }.size,
+                backgroundColor = state.backgroundColor?.id
+            )
+            
+            val savedId = if (tempEntryId == null && originalEntry == null) {
+                // First autosave - create new entry
+                android.util.Log.d("EditorViewModel", "Autosave: Creating new entry")
+                val newId = journalRepository.createEntry(entry)
+                tempEntryId = newId
+                android.util.Log.d("EditorViewModel", "Autosave: Created entry with id=$newId")
+                newId
+            } else {
+                // Update existing
+                val entryId = tempEntryId ?: originalEntry?.id ?: 0
+                android.util.Log.d("EditorViewModel", "Autosave: Updating existing entry id=$entryId")
+                journalRepository.updateEntry(entry.copy(id = entryId))
+                android.util.Log.d("EditorViewModel", "Autosave: Updated entry id=$entryId")
+                entryId
+            }
+            
+            // Save related data
+            journalRepository.setTagsForEntry(savedId, state.tags.map { it.id })
+            journalRepository.setPeopleForEntry(savedId, state.people.map { it.id })
+            journalRepository.setTrackerValues(savedId, state.trackerValues)
+            
+            android.util.Log.d("EditorViewModel", "Autosave complete for entry id=$savedId")
+            
+            _uiState.update { 
+                it.copy(
+                    autosaveStatus = AutosaveStatus.SAVED,
+                    lastAutosaveTime = LocalDateTime.now()
+                ) 
+            }
+            
+            // Reset status after a delay
+            delay(2000)
+            _uiState.update { it.copy(autosaveStatus = AutosaveStatus.IDLE) }
+            
+        } catch (e: Exception) {
+            android.util.Log.e("EditorViewModel", "Autosave failed", e)
+            _uiState.update { it.copy(autosaveStatus = AutosaveStatus.ERROR) }
+            delay(2000)
+            _uiState.update { it.copy(autosaveStatus = AutosaveStatus.IDLE) }
+        }
+    }
+    
+    // Background color functions
+    fun setBackgroundColor(color: EntryBackgroundColor?) {
+        _uiState.update { it.copy(backgroundColor = color, hasChanges = true) }
+    }
+    
+    fun showBackgroundColorPicker() {
+        _uiState.update { it.copy(showBackgroundColorPicker = true) }
+    }
+    
+    fun hideBackgroundColorPicker() {
+        _uiState.update { it.copy(showBackgroundColorPicker = false) }
+    }
+    
     // Template functions
     fun updateCreatedAt(dateTime: LocalDateTime) {
+        android.util.Log.d("EditorViewModel", "updateCreatedAt called with: $dateTime")
         _uiState.update { it.copy(createdAt = dateTime, hasChanges = true) }
     }
     
@@ -566,12 +848,13 @@ class EditorViewModel @Inject constructor(
     private suspend fun saveEntryInternal(isDraft: Boolean) {
         val state = _uiState.value
         
-        android.util.Log.d("EditorViewModel", "Saving entry - location: ${state.location?.let { "lat=${it.latitude}, lng=${it.longitude}, place=${it.placeName}" } ?: "null"}")
+        android.util.Log.d("EditorViewModel", "Saving entry - createdAt: ${state.createdAt}, isDraft: $isDraft")
         
         val entry = JournalEntry(
-            id = originalEntry?.id ?: 0,
+            id = tempEntryId ?: originalEntry?.id ?: 0,
             title = state.title.takeIf { it.isNotBlank() },
             plainContent = state.content.text,
+            formattingJson = state.textFormatting.toJson(),
             category = state.category,
             createdAt = state.createdAt,
             updatedAt = LocalDateTime.now(),
@@ -582,10 +865,11 @@ class EditorViewModel @Inject constructor(
             people = state.people,
             trackerValues = state.trackerValues,
             isDraft = isDraft,
-            wordCount = state.content.text.split("\\s+".toRegex()).size
+            wordCount = state.content.text.split("\\s+".toRegex()).filter { it.isNotBlank() }.size,
+            backgroundColor = state.backgroundColor?.id
         )
 
-        val entryId = if (originalEntry == null) {
+        val entryId = if (tempEntryId == null && originalEntry == null) {
             val newId = journalRepository.createEntry(entry)
             android.util.Log.d("EditorViewModel", "Created new entry with ID: $newId")
             newId
@@ -594,6 +878,9 @@ class EditorViewModel @Inject constructor(
             android.util.Log.d("EditorViewModel", "Updated entry with ID: ${entry.id}")
             entry.id
         }
+        
+        // Clear temp entry ID after successful save
+        tempEntryId = null
         
         // Save tags, people, and trackers
         journalRepository.setTagsForEntry(entryId, state.tags.map { it.id })
@@ -629,9 +916,17 @@ class EditorViewModel @Inject constructor(
     }
 }
 
+enum class AutosaveStatus {
+    IDLE,
+    SAVING,
+    SAVED,
+    ERROR
+}
+
 data class EditorUiState(
     val title: String = "",
     val content: TextFieldValue = TextFieldValue(),
+    val textFormatting: TextFormatting = TextFormatting(), // Rich text formatting spans
     val category: Category? = null,
     val mood: Mood? = null,
     val weather: Weather? = null,
@@ -643,6 +938,7 @@ data class EditorUiState(
     val selectedTrackers: List<CustomTracker> = emptyList(), // Trackers user has added to this entry
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val isDraft: Boolean = false,
+    val backgroundColor: EntryBackgroundColor? = null, // Entry background color
     
     // Available selections
     val availableCategories: List<Category> = emptyList(),
@@ -661,11 +957,28 @@ data class EditorUiState(
     val hasChanges: Boolean = false,
     val isSaved: Boolean = false,
     val showTemplateDialog: Boolean = false,
+    val showBackgroundColorPicker: Boolean = false,
+    val showHighlightPicker: Boolean = false,
+    val showFontPicker: Boolean = false,
     val error: String? = null,
-    val weatherError: String? = null
+    val weatherError: String? = null,
+    
+    // Autosave state
+    val autosaveStatus: AutosaveStatus = AutosaveStatus.IDLE,
+    val lastAutosaveTime: LocalDateTime? = null
 ) {
     val canSave: Boolean
         get() = content.text.isNotBlank() || title.isNotBlank()
+        
+    val autosaveStatusText: String
+        get() = when (autosaveStatus) {
+            AutosaveStatus.IDLE -> ""
+            AutosaveStatus.SAVING -> "Saving..."
+            AutosaveStatus.SAVED -> lastAutosaveTime?.let { 
+                "Saved at ${it.format(DateTimeFormatter.ofPattern("h:mm a"))}"
+            } ?: "Saved"
+            AutosaveStatus.ERROR -> "Save failed"
+        }
 }
 
 data class MediaItem(

@@ -725,7 +725,7 @@ public final class DaggerDairumApplication_HiltComponents_SingletonC {
           return (T) new ExportSettingsViewModel(singletonCImpl.bindExportRepositoryProvider.get(), singletonCImpl.bindJournalRepositoryProvider.get());
 
           case 8: // com.dairum.presentation.screens.favorites.FavoritesViewModel 
-          return (T) new FavoritesViewModel(singletonCImpl.bindJournalRepositoryProvider.get());
+          return (T) new FavoritesViewModel(singletonCImpl.bindJournalRepositoryProvider.get(), singletonCImpl.memoryRepositoryImplProvider.get());
 
           case 9: // com.dairum.presentation.screens.files.FilesViewModel 
           return (T) new FilesViewModel(singletonCImpl.bindMediaRepositoryProvider.get(), singletonCImpl.bindJournalRepositoryProvider.get());
@@ -770,7 +770,7 @@ public final class DaggerDairumApplication_HiltComponents_SingletonC {
           return (T) new SettingsViewModel(singletonCImpl.bindSettingsRepositoryProvider.get(), singletonCImpl.bindCategoryRepositoryProvider.get());
 
           case 23: // com.dairum.presentation.screens.stats.StatsViewModel 
-          return (T) new StatsViewModel(singletonCImpl.provideJournalEntryDaoProvider.get(), singletonCImpl.bindTagRepositoryProvider.get(), singletonCImpl.bindPersonRepositoryProvider.get(), singletonCImpl.bindMediaRepositoryProvider.get(), singletonCImpl.bindTrackerRepositoryProvider.get());
+          return (T) new StatsViewModel(singletonCImpl.provideJournalEntryDaoProvider.get(), singletonCImpl.provideTagDaoProvider.get(), singletonCImpl.providePersonDaoProvider.get(), singletonCImpl.bindTagRepositoryProvider.get(), singletonCImpl.bindPersonRepositoryProvider.get(), singletonCImpl.bindMediaRepositoryProvider.get(), singletonCImpl.bindTrackerRepositoryProvider.get());
 
           case 24: // com.dairum.presentation.screens.story.StoryViewModel 
           return (T) new StoryViewModel(singletonCImpl.bindJournalRepositoryProvider.get());

@@ -42,7 +42,7 @@ import com.dairum.data.local.entity.*
         ReflectionMemoryEntity::class,
         ConversationContextEntity::class
     ],
-    version = 8,
+    version = 1,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

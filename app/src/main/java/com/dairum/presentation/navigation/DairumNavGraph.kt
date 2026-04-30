@@ -240,12 +240,14 @@ fun DairumNavGraph(
             )
         }
         
-        // Favorites
+        // Favorites (main tab - no back button)
         composable(Screen.Favorites.route) {
             FavoritesScreen(
-                onNavigateBack = { navController.popBackStack() },
                 onEntryClick = { entryId ->
                     navController.navigate(Screen.EntryDetail.createRoute(entryId))
+                },
+                onMemoryClick = { memoryId ->
+                    navController.navigate(Screen.MemoryDetail.createRoute(memoryId))
                 }
             )
         }

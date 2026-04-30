@@ -15,6 +15,8 @@ import androidx.compose.ui.text.style.TextOverflow;
 import com.dairum.R;
 import com.dairum.domain.model.*;
 import com.dairum.presentation.components.*;
+import com.dairum.presentation.screens.editor.TextFormatting;
+import com.dairum.presentation.theme.EntryBackgroundColors;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;

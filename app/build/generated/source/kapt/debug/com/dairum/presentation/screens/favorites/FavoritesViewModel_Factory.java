@@ -1,6 +1,7 @@
 package com.dairum.presentation.screens.favorites;
 
 import com.dairum.domain.repository.JournalRepository;
+import com.dairum.domain.repository.MemoryRepository;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
 import dagger.internal.QualifierMetadata;
@@ -24,21 +25,27 @@ import javax.inject.Provider;
 public final class FavoritesViewModel_Factory implements Factory<FavoritesViewModel> {
   private final Provider<JournalRepository> journalRepositoryProvider;
 
-  public FavoritesViewModel_Factory(Provider<JournalRepository> journalRepositoryProvider) {
+  private final Provider<MemoryRepository> memoryRepositoryProvider;
+
+  public FavoritesViewModel_Factory(Provider<JournalRepository> journalRepositoryProvider,
+      Provider<MemoryRepository> memoryRepositoryProvider) {
     this.journalRepositoryProvider = journalRepositoryProvider;
+    this.memoryRepositoryProvider = memoryRepositoryProvider;
   }
 
   @Override
   public FavoritesViewModel get() {
-    return newInstance(journalRepositoryProvider.get());
+    return newInstance(journalRepositoryProvider.get(), memoryRepositoryProvider.get());
   }
 
   public static FavoritesViewModel_Factory create(
-      Provider<JournalRepository> journalRepositoryProvider) {
-    return new FavoritesViewModel_Factory(journalRepositoryProvider);
+      Provider<JournalRepository> journalRepositoryProvider,
+      Provider<MemoryRepository> memoryRepositoryProvider) {
+    return new FavoritesViewModel_Factory(journalRepositoryProvider, memoryRepositoryProvider);
   }
 
-  public static FavoritesViewModel newInstance(JournalRepository journalRepository) {
-    return new FavoritesViewModel(journalRepository);
+  public static FavoritesViewModel newInstance(JournalRepository journalRepository,
+      MemoryRepository memoryRepository) {
+    return new FavoritesViewModel(journalRepository, memoryRepository);
   }
 }

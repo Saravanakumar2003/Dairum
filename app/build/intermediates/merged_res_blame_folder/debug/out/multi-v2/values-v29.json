@@ -4,7 +4,7 @@
             "outputFile": "com.dairum.app-mergeDebugResources-81:/values-v29/values-v29.xml",
             "map": [
                 {
-                    "source": "/Users/saravan-zpt0121/.gradle/caches/transforms-3/8900d14c5722eb6f53e12e5108208476/transformed/core-splashscreen-1.0.1/res/values-v29/values-v29.xml",
+                    "source": "/Users/saravan-zpt0121/.gradle/caches/transforms-3/8450e38ee58aab7849541b92dfdb1ed4/transformed/core-splashscreen-1.0.1/res/values-v29/values-v29.xml",
                     "from": {
                         "startLines": "2,7",
                         "startColumns": "4,4",

@@ -171,7 +171,7 @@ class AppLockManager @Inject constructor(
      * Create prompt info for biometric dialog
      */
     fun createPromptInfo(
-        title: String = "Unlock Dairum",
+        title: String = "Unlock Diarum",
         subtitle: String = "Use your fingerprint to unlock",
         negativeButtonText: String = "Use PIN"
     ): BiometricPrompt.PromptInfo {

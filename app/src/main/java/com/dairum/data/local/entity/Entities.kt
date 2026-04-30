@@ -38,7 +38,8 @@ data class JournalEntryEntity(
     val isArchived: Boolean = false,
     val isDraft: Boolean = false,
     val isPinned: Boolean = false,
-    val wordCount: Int = 0
+    val wordCount: Int = 0,
+    val backgroundColor: String? = null // Background color name
 )
 
 /**
@@ -284,7 +285,9 @@ data class ExportConfigEntity(
 
 enum class ExportFormat {
     TXT,  // Plain text without images
-    PDF   // Formatted with images
+    PDF,  // Formatted with images
+    JSON, // Structured JSON export
+    CSV   // Spreadsheet-compatible CSV
 }
 
 /**

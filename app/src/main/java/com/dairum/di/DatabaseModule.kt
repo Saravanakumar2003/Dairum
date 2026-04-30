@@ -2,7 +2,6 @@ package com.dairum.di
 
 import android.content.Context
 import androidx.room.Room
-import com.dairum.BuildConfig
 import com.dairum.data.local.dao.*
 import com.dairum.data.local.database.DatabaseCallback
 import com.dairum.data.local.database.DairumDatabase
@@ -33,12 +32,6 @@ object DatabaseModule {
         )
             .addCallback(DatabaseCallback(context))
             .addMigrations(*Migrations.ALL_MIGRATIONS)
-            .apply {
-                // Only allow destructive migration in debug builds as safety fallback
-                if (BuildConfig.DEBUG) {
-                    fallbackToDestructiveMigration()
-                }
-            }
             .build()
     }
     

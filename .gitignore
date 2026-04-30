@@ -3,3 +3,12 @@
 /.vscode
 /Dairum-debug.apk
 /build
+/local.properties
+/.idea
+/.iml
+
+/app/build
+/app/.cxx
+/app/.externalNativeBuild
+/app/.gradle
+

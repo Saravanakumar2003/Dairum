@@ -71,7 +71,7 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
       @Override
       @NonNull
       protected String createQuery() {
-        return "INSERT OR REPLACE INTO `journal_entries` (`id`,`title`,`content`,`plainContent`,`categoryId`,`createdAt`,`updatedAt`,`moodLevel`,`moodIcon`,`weatherData`,`locationData`,`isFavorite`,`isArchived`,`isDraft`,`isPinned`,`wordCount`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        return "INSERT OR REPLACE INTO `journal_entries` (`id`,`title`,`content`,`plainContent`,`categoryId`,`createdAt`,`updatedAt`,`moodLevel`,`moodIcon`,`weatherData`,`locationData`,`isFavorite`,`isArchived`,`isDraft`,`isPinned`,`wordCount`,`backgroundColor`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
       }
 
       @Override
@@ -121,6 +121,11 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
         final int _tmp_3 = entity.isPinned() ? 1 : 0;
         statement.bindLong(15, _tmp_3);
         statement.bindLong(16, entity.getWordCount());
+        if (entity.getBackgroundColor() == null) {
+          statement.bindNull(17);
+        } else {
+          statement.bindString(17, entity.getBackgroundColor());
+        }
       }
     };
     this.__deletionAdapterOfJournalEntryEntity = new EntityDeletionOrUpdateAdapter<JournalEntryEntity>(__db) {
@@ -140,7 +145,7 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
       @Override
       @NonNull
       protected String createQuery() {
-        return "UPDATE OR ABORT `journal_entries` SET `id` = ?,`title` = ?,`content` = ?,`plainContent` = ?,`categoryId` = ?,`createdAt` = ?,`updatedAt` = ?,`moodLevel` = ?,`moodIcon` = ?,`weatherData` = ?,`locationData` = ?,`isFavorite` = ?,`isArchived` = ?,`isDraft` = ?,`isPinned` = ?,`wordCount` = ? WHERE `id` = ?";
+        return "UPDATE OR ABORT `journal_entries` SET `id` = ?,`title` = ?,`content` = ?,`plainContent` = ?,`categoryId` = ?,`createdAt` = ?,`updatedAt` = ?,`moodLevel` = ?,`moodIcon` = ?,`weatherData` = ?,`locationData` = ?,`isFavorite` = ?,`isArchived` = ?,`isDraft` = ?,`isPinned` = ?,`wordCount` = ?,`backgroundColor` = ? WHERE `id` = ?";
       }
 
       @Override
@@ -190,7 +195,12 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
         final int _tmp_3 = entity.isPinned() ? 1 : 0;
         statement.bindLong(15, _tmp_3);
         statement.bindLong(16, entity.getWordCount());
-        statement.bindLong(17, entity.getId());
+        if (entity.getBackgroundColor() == null) {
+          statement.bindNull(17);
+        } else {
+          statement.bindString(17, entity.getBackgroundColor());
+        }
+        statement.bindLong(18, entity.getId());
       }
     };
     this.__preparedStmtOfDeleteById = new SharedSQLiteStatement(__db) {
@@ -425,6 +435,7 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
           final int _cursorIndexOfIsDraft = CursorUtil.getColumnIndexOrThrow(_cursor, "isDraft");
           final int _cursorIndexOfIsPinned = CursorUtil.getColumnIndexOrThrow(_cursor, "isPinned");
           final int _cursorIndexOfWordCount = CursorUtil.getColumnIndexOrThrow(_cursor, "wordCount");
+          final int _cursorIndexOfBackgroundColor = CursorUtil.getColumnIndexOrThrow(_cursor, "backgroundColor");
           final JournalEntryEntity _result;
           if (_cursor.moveToFirst()) {
             final long _tmpId;
@@ -491,7 +502,13 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
             _tmpIsPinned = _tmp_3 != 0;
             final int _tmpWordCount;
             _tmpWordCount = _cursor.getInt(_cursorIndexOfWordCount);
-            _result = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount);
+            final String _tmpBackgroundColor;
+            if (_cursor.isNull(_cursorIndexOfBackgroundColor)) {
+              _tmpBackgroundColor = null;
+            } else {
+              _tmpBackgroundColor = _cursor.getString(_cursorIndexOfBackgroundColor);
+            }
+            _result = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount,_tmpBackgroundColor);
           } else {
             _result = null;
           }
@@ -532,6 +549,7 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
           final int _cursorIndexOfIsDraft = CursorUtil.getColumnIndexOrThrow(_cursor, "isDraft");
           final int _cursorIndexOfIsPinned = CursorUtil.getColumnIndexOrThrow(_cursor, "isPinned");
           final int _cursorIndexOfWordCount = CursorUtil.getColumnIndexOrThrow(_cursor, "wordCount");
+          final int _cursorIndexOfBackgroundColor = CursorUtil.getColumnIndexOrThrow(_cursor, "backgroundColor");
           final JournalEntryEntity _result;
           if (_cursor.moveToFirst()) {
             final long _tmpId;
@@ -598,7 +616,13 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
             _tmpIsPinned = _tmp_3 != 0;
             final int _tmpWordCount;
             _tmpWordCount = _cursor.getInt(_cursorIndexOfWordCount);
-            _result = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount);
+            final String _tmpBackgroundColor;
+            if (_cursor.isNull(_cursorIndexOfBackgroundColor)) {
+              _tmpBackgroundColor = null;
+            } else {
+              _tmpBackgroundColor = _cursor.getString(_cursorIndexOfBackgroundColor);
+            }
+            _result = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount,_tmpBackgroundColor);
           } else {
             _result = null;
           }
@@ -647,6 +671,7 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
             final int _cursorIndexOfIsDraft = CursorUtil.getColumnIndexOrThrow(_cursor, "isDraft");
             final int _cursorIndexOfIsPinned = CursorUtil.getColumnIndexOrThrow(_cursor, "isPinned");
             final int _cursorIndexOfWordCount = CursorUtil.getColumnIndexOrThrow(_cursor, "wordCount");
+            final int _cursorIndexOfBackgroundColor = CursorUtil.getColumnIndexOrThrow(_cursor, "backgroundColor");
             final LongSparseArray<CategoryEntity> _collectionCategory = new LongSparseArray<CategoryEntity>();
             final LongSparseArray<ArrayList<MediaEntity>> _collectionMedia = new LongSparseArray<ArrayList<MediaEntity>>();
             final LongSparseArray<ArrayList<TagEntity>> _collectionTags = new LongSparseArray<ArrayList<TagEntity>>();
@@ -756,7 +781,13 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
               _tmpIsPinned = _tmp_3 != 0;
               final int _tmpWordCount;
               _tmpWordCount = _cursor.getInt(_cursorIndexOfWordCount);
-              _tmpEntry = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount);
+              final String _tmpBackgroundColor;
+              if (_cursor.isNull(_cursorIndexOfBackgroundColor)) {
+                _tmpBackgroundColor = null;
+              } else {
+                _tmpBackgroundColor = _cursor.getString(_cursorIndexOfBackgroundColor);
+              }
+              _tmpEntry = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount,_tmpBackgroundColor);
               final CategoryEntity _tmpCategory;
               final Long _tmpKey_5;
               if (_cursor.isNull(_cursorIndexOfCategoryId)) {
@@ -834,6 +865,7 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
             final int _cursorIndexOfIsDraft = CursorUtil.getColumnIndexOrThrow(_cursor, "isDraft");
             final int _cursorIndexOfIsPinned = CursorUtil.getColumnIndexOrThrow(_cursor, "isPinned");
             final int _cursorIndexOfWordCount = CursorUtil.getColumnIndexOrThrow(_cursor, "wordCount");
+            final int _cursorIndexOfBackgroundColor = CursorUtil.getColumnIndexOrThrow(_cursor, "backgroundColor");
             final LongSparseArray<CategoryEntity> _collectionCategory = new LongSparseArray<CategoryEntity>();
             final LongSparseArray<ArrayList<MediaEntity>> _collectionMedia = new LongSparseArray<ArrayList<MediaEntity>>();
             final LongSparseArray<ArrayList<TagEntity>> _collectionTags = new LongSparseArray<ArrayList<TagEntity>>();
@@ -943,7 +975,13 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
               _tmpIsPinned = _tmp_3 != 0;
               final int _tmpWordCount;
               _tmpWordCount = _cursor.getInt(_cursorIndexOfWordCount);
-              _tmpEntry = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount);
+              final String _tmpBackgroundColor;
+              if (_cursor.isNull(_cursorIndexOfBackgroundColor)) {
+                _tmpBackgroundColor = null;
+              } else {
+                _tmpBackgroundColor = _cursor.getString(_cursorIndexOfBackgroundColor);
+              }
+              _tmpEntry = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount,_tmpBackgroundColor);
               final CategoryEntity _tmpCategory;
               final Long _tmpKey_5;
               if (_cursor.isNull(_cursorIndexOfCategoryId)) {
@@ -1023,6 +1061,7 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
           final int _cursorIndexOfIsDraft = CursorUtil.getColumnIndexOrThrow(_cursor, "isDraft");
           final int _cursorIndexOfIsPinned = CursorUtil.getColumnIndexOrThrow(_cursor, "isPinned");
           final int _cursorIndexOfWordCount = CursorUtil.getColumnIndexOrThrow(_cursor, "wordCount");
+          final int _cursorIndexOfBackgroundColor = CursorUtil.getColumnIndexOrThrow(_cursor, "backgroundColor");
           final List<JournalEntryEntity> _result = new ArrayList<JournalEntryEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final JournalEntryEntity _item;
@@ -1090,7 +1129,13 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
             _tmpIsPinned = _tmp_3 != 0;
             final int _tmpWordCount;
             _tmpWordCount = _cursor.getInt(_cursorIndexOfWordCount);
-            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount);
+            final String _tmpBackgroundColor;
+            if (_cursor.isNull(_cursorIndexOfBackgroundColor)) {
+              _tmpBackgroundColor = null;
+            } else {
+              _tmpBackgroundColor = _cursor.getString(_cursorIndexOfBackgroundColor);
+            }
+            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount,_tmpBackgroundColor);
             _result.add(_item);
           }
           return _result;
@@ -1140,6 +1185,7 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
             final int _cursorIndexOfIsDraft = CursorUtil.getColumnIndexOrThrow(_cursor, "isDraft");
             final int _cursorIndexOfIsPinned = CursorUtil.getColumnIndexOrThrow(_cursor, "isPinned");
             final int _cursorIndexOfWordCount = CursorUtil.getColumnIndexOrThrow(_cursor, "wordCount");
+            final int _cursorIndexOfBackgroundColor = CursorUtil.getColumnIndexOrThrow(_cursor, "backgroundColor");
             final LongSparseArray<CategoryEntity> _collectionCategory = new LongSparseArray<CategoryEntity>();
             final LongSparseArray<ArrayList<MediaEntity>> _collectionMedia = new LongSparseArray<ArrayList<MediaEntity>>();
             final LongSparseArray<ArrayList<TagEntity>> _collectionTags = new LongSparseArray<ArrayList<TagEntity>>();
@@ -1250,7 +1296,13 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
               _tmpIsPinned = _tmp_3 != 0;
               final int _tmpWordCount;
               _tmpWordCount = _cursor.getInt(_cursorIndexOfWordCount);
-              _tmpEntry = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount);
+              final String _tmpBackgroundColor;
+              if (_cursor.isNull(_cursorIndexOfBackgroundColor)) {
+                _tmpBackgroundColor = null;
+              } else {
+                _tmpBackgroundColor = _cursor.getString(_cursorIndexOfBackgroundColor);
+              }
+              _tmpEntry = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount,_tmpBackgroundColor);
               final CategoryEntity _tmpCategory;
               final Long _tmpKey_5;
               if (_cursor.isNull(_cursorIndexOfCategoryId)) {
@@ -1336,6 +1388,7 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
           final int _cursorIndexOfIsDraft = CursorUtil.getColumnIndexOrThrow(_cursor, "isDraft");
           final int _cursorIndexOfIsPinned = CursorUtil.getColumnIndexOrThrow(_cursor, "isPinned");
           final int _cursorIndexOfWordCount = CursorUtil.getColumnIndexOrThrow(_cursor, "wordCount");
+          final int _cursorIndexOfBackgroundColor = CursorUtil.getColumnIndexOrThrow(_cursor, "backgroundColor");
           final List<JournalEntryEntity> _result = new ArrayList<JournalEntryEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final JournalEntryEntity _item;
@@ -1403,7 +1456,13 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
             _tmpIsPinned = _tmp_3 != 0;
             final int _tmpWordCount;
             _tmpWordCount = _cursor.getInt(_cursorIndexOfWordCount);
-            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount);
+            final String _tmpBackgroundColor;
+            if (_cursor.isNull(_cursorIndexOfBackgroundColor)) {
+              _tmpBackgroundColor = null;
+            } else {
+              _tmpBackgroundColor = _cursor.getString(_cursorIndexOfBackgroundColor);
+            }
+            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount,_tmpBackgroundColor);
             _result.add(_item);
           }
           return _result;
@@ -1447,6 +1506,7 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
           final int _cursorIndexOfIsDraft = CursorUtil.getColumnIndexOrThrow(_cursor, "isDraft");
           final int _cursorIndexOfIsPinned = CursorUtil.getColumnIndexOrThrow(_cursor, "isPinned");
           final int _cursorIndexOfWordCount = CursorUtil.getColumnIndexOrThrow(_cursor, "wordCount");
+          final int _cursorIndexOfBackgroundColor = CursorUtil.getColumnIndexOrThrow(_cursor, "backgroundColor");
           final List<JournalEntryEntity> _result = new ArrayList<JournalEntryEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final JournalEntryEntity _item;
@@ -1514,7 +1574,13 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
             _tmpIsPinned = _tmp_3 != 0;
             final int _tmpWordCount;
             _tmpWordCount = _cursor.getInt(_cursorIndexOfWordCount);
-            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount);
+            final String _tmpBackgroundColor;
+            if (_cursor.isNull(_cursorIndexOfBackgroundColor)) {
+              _tmpBackgroundColor = null;
+            } else {
+              _tmpBackgroundColor = _cursor.getString(_cursorIndexOfBackgroundColor);
+            }
+            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount,_tmpBackgroundColor);
             _result.add(_item);
           }
           return _result;
@@ -1562,6 +1628,7 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
           final int _cursorIndexOfIsDraft = CursorUtil.getColumnIndexOrThrow(_cursor, "isDraft");
           final int _cursorIndexOfIsPinned = CursorUtil.getColumnIndexOrThrow(_cursor, "isPinned");
           final int _cursorIndexOfWordCount = CursorUtil.getColumnIndexOrThrow(_cursor, "wordCount");
+          final int _cursorIndexOfBackgroundColor = CursorUtil.getColumnIndexOrThrow(_cursor, "backgroundColor");
           final List<JournalEntryEntity> _result = new ArrayList<JournalEntryEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final JournalEntryEntity _item;
@@ -1629,7 +1696,13 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
             _tmpIsPinned = _tmp_3 != 0;
             final int _tmpWordCount;
             _tmpWordCount = _cursor.getInt(_cursorIndexOfWordCount);
-            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount);
+            final String _tmpBackgroundColor;
+            if (_cursor.isNull(_cursorIndexOfBackgroundColor)) {
+              _tmpBackgroundColor = null;
+            } else {
+              _tmpBackgroundColor = _cursor.getString(_cursorIndexOfBackgroundColor);
+            }
+            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount,_tmpBackgroundColor);
             _result.add(_item);
           }
           return _result;
@@ -1675,6 +1748,7 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
           final int _cursorIndexOfIsDraft = CursorUtil.getColumnIndexOrThrow(_cursor, "isDraft");
           final int _cursorIndexOfIsPinned = CursorUtil.getColumnIndexOrThrow(_cursor, "isPinned");
           final int _cursorIndexOfWordCount = CursorUtil.getColumnIndexOrThrow(_cursor, "wordCount");
+          final int _cursorIndexOfBackgroundColor = CursorUtil.getColumnIndexOrThrow(_cursor, "backgroundColor");
           final List<JournalEntryEntity> _result = new ArrayList<JournalEntryEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final JournalEntryEntity _item;
@@ -1742,7 +1816,13 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
             _tmpIsPinned = _tmp_3 != 0;
             final int _tmpWordCount;
             _tmpWordCount = _cursor.getInt(_cursorIndexOfWordCount);
-            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount);
+            final String _tmpBackgroundColor;
+            if (_cursor.isNull(_cursorIndexOfBackgroundColor)) {
+              _tmpBackgroundColor = null;
+            } else {
+              _tmpBackgroundColor = _cursor.getString(_cursorIndexOfBackgroundColor);
+            }
+            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount,_tmpBackgroundColor);
             _result.add(_item);
           }
           return _result;
@@ -1784,6 +1864,7 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
           final int _cursorIndexOfIsDraft = CursorUtil.getColumnIndexOrThrow(_cursor, "isDraft");
           final int _cursorIndexOfIsPinned = CursorUtil.getColumnIndexOrThrow(_cursor, "isPinned");
           final int _cursorIndexOfWordCount = CursorUtil.getColumnIndexOrThrow(_cursor, "wordCount");
+          final int _cursorIndexOfBackgroundColor = CursorUtil.getColumnIndexOrThrow(_cursor, "backgroundColor");
           final List<JournalEntryEntity> _result = new ArrayList<JournalEntryEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final JournalEntryEntity _item;
@@ -1851,7 +1932,13 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
             _tmpIsPinned = _tmp_3 != 0;
             final int _tmpWordCount;
             _tmpWordCount = _cursor.getInt(_cursorIndexOfWordCount);
-            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount);
+            final String _tmpBackgroundColor;
+            if (_cursor.isNull(_cursorIndexOfBackgroundColor)) {
+              _tmpBackgroundColor = null;
+            } else {
+              _tmpBackgroundColor = _cursor.getString(_cursorIndexOfBackgroundColor);
+            }
+            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount,_tmpBackgroundColor);
             _result.add(_item);
           }
           return _result;
@@ -1893,6 +1980,7 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
           final int _cursorIndexOfIsDraft = CursorUtil.getColumnIndexOrThrow(_cursor, "isDraft");
           final int _cursorIndexOfIsPinned = CursorUtil.getColumnIndexOrThrow(_cursor, "isPinned");
           final int _cursorIndexOfWordCount = CursorUtil.getColumnIndexOrThrow(_cursor, "wordCount");
+          final int _cursorIndexOfBackgroundColor = CursorUtil.getColumnIndexOrThrow(_cursor, "backgroundColor");
           final List<JournalEntryEntity> _result = new ArrayList<JournalEntryEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final JournalEntryEntity _item;
@@ -1960,7 +2048,13 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
             _tmpIsPinned = _tmp_3 != 0;
             final int _tmpWordCount;
             _tmpWordCount = _cursor.getInt(_cursorIndexOfWordCount);
-            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount);
+            final String _tmpBackgroundColor;
+            if (_cursor.isNull(_cursorIndexOfBackgroundColor)) {
+              _tmpBackgroundColor = null;
+            } else {
+              _tmpBackgroundColor = _cursor.getString(_cursorIndexOfBackgroundColor);
+            }
+            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount,_tmpBackgroundColor);
             _result.add(_item);
           }
           return _result;
@@ -2011,6 +2105,7 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
           final int _cursorIndexOfIsDraft = CursorUtil.getColumnIndexOrThrow(_cursor, "isDraft");
           final int _cursorIndexOfIsPinned = CursorUtil.getColumnIndexOrThrow(_cursor, "isPinned");
           final int _cursorIndexOfWordCount = CursorUtil.getColumnIndexOrThrow(_cursor, "wordCount");
+          final int _cursorIndexOfBackgroundColor = CursorUtil.getColumnIndexOrThrow(_cursor, "backgroundColor");
           final List<JournalEntryEntity> _result = new ArrayList<JournalEntryEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final JournalEntryEntity _item;
@@ -2078,7 +2173,13 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
             _tmpIsPinned = _tmp_3 != 0;
             final int _tmpWordCount;
             _tmpWordCount = _cursor.getInt(_cursorIndexOfWordCount);
-            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount);
+            final String _tmpBackgroundColor;
+            if (_cursor.isNull(_cursorIndexOfBackgroundColor)) {
+              _tmpBackgroundColor = null;
+            } else {
+              _tmpBackgroundColor = _cursor.getString(_cursorIndexOfBackgroundColor);
+            }
+            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount,_tmpBackgroundColor);
             _result.add(_item);
           }
           return _result;
@@ -2130,6 +2231,7 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
           final int _cursorIndexOfIsDraft = CursorUtil.getColumnIndexOrThrow(_cursor, "isDraft");
           final int _cursorIndexOfIsPinned = CursorUtil.getColumnIndexOrThrow(_cursor, "isPinned");
           final int _cursorIndexOfWordCount = CursorUtil.getColumnIndexOrThrow(_cursor, "wordCount");
+          final int _cursorIndexOfBackgroundColor = CursorUtil.getColumnIndexOrThrow(_cursor, "backgroundColor");
           final List<JournalEntryEntity> _result = new ArrayList<JournalEntryEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final JournalEntryEntity _item;
@@ -2197,7 +2299,13 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
             _tmpIsPinned = _tmp_3 != 0;
             final int _tmpWordCount;
             _tmpWordCount = _cursor.getInt(_cursorIndexOfWordCount);
-            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount);
+            final String _tmpBackgroundColor;
+            if (_cursor.isNull(_cursorIndexOfBackgroundColor)) {
+              _tmpBackgroundColor = null;
+            } else {
+              _tmpBackgroundColor = _cursor.getString(_cursorIndexOfBackgroundColor);
+            }
+            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount,_tmpBackgroundColor);
             _result.add(_item);
           }
           return _result;
@@ -2250,6 +2358,7 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
           final int _cursorIndexOfIsDraft = CursorUtil.getColumnIndexOrThrow(_cursor, "isDraft");
           final int _cursorIndexOfIsPinned = CursorUtil.getColumnIndexOrThrow(_cursor, "isPinned");
           final int _cursorIndexOfWordCount = CursorUtil.getColumnIndexOrThrow(_cursor, "wordCount");
+          final int _cursorIndexOfBackgroundColor = CursorUtil.getColumnIndexOrThrow(_cursor, "backgroundColor");
           final List<JournalEntryEntity> _result = new ArrayList<JournalEntryEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final JournalEntryEntity _item;
@@ -2317,7 +2426,13 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
             _tmpIsPinned = _tmp_3 != 0;
             final int _tmpWordCount;
             _tmpWordCount = _cursor.getInt(_cursorIndexOfWordCount);
-            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount);
+            final String _tmpBackgroundColor;
+            if (_cursor.isNull(_cursorIndexOfBackgroundColor)) {
+              _tmpBackgroundColor = null;
+            } else {
+              _tmpBackgroundColor = _cursor.getString(_cursorIndexOfBackgroundColor);
+            }
+            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount,_tmpBackgroundColor);
             _result.add(_item);
           }
           return _result;
@@ -2362,6 +2477,7 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
           final int _cursorIndexOfIsDraft = CursorUtil.getColumnIndexOrThrow(_cursor, "isDraft");
           final int _cursorIndexOfIsPinned = CursorUtil.getColumnIndexOrThrow(_cursor, "isPinned");
           final int _cursorIndexOfWordCount = CursorUtil.getColumnIndexOrThrow(_cursor, "wordCount");
+          final int _cursorIndexOfBackgroundColor = CursorUtil.getColumnIndexOrThrow(_cursor, "backgroundColor");
           final List<JournalEntryEntity> _result = new ArrayList<JournalEntryEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final JournalEntryEntity _item;
@@ -2429,7 +2545,13 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
             _tmpIsPinned = _tmp_3 != 0;
             final int _tmpWordCount;
             _tmpWordCount = _cursor.getInt(_cursorIndexOfWordCount);
-            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount);
+            final String _tmpBackgroundColor;
+            if (_cursor.isNull(_cursorIndexOfBackgroundColor)) {
+              _tmpBackgroundColor = null;
+            } else {
+              _tmpBackgroundColor = _cursor.getString(_cursorIndexOfBackgroundColor);
+            }
+            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount,_tmpBackgroundColor);
             _result.add(_item);
           }
           return _result;
@@ -2644,6 +2766,48 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
   }
 
   @Override
+  public Object getMoodDistributionSince(final long startTime,
+      final Continuation<? super List<MoodCount>> $completion) {
+    final String _sql = "\n"
+            + "        SELECT moodLevel, COUNT(*) as count \n"
+            + "        FROM journal_entries \n"
+            + "        WHERE moodLevel IS NOT NULL AND isArchived = 0 AND isDraft = 0\n"
+            + "        AND createdAt >= ?\n"
+            + "        GROUP BY moodLevel\n"
+            + "        ORDER BY moodLevel\n"
+            + "    ";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);
+    int _argIndex = 1;
+    _statement.bindLong(_argIndex, startTime);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<MoodCount>>() {
+      @Override
+      @NonNull
+      public List<MoodCount> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfMoodLevel = 0;
+          final int _cursorIndexOfCount = 1;
+          final List<MoodCount> _result = new ArrayList<MoodCount>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final MoodCount _item;
+            final int _tmpMoodLevel;
+            _tmpMoodLevel = _cursor.getInt(_cursorIndexOfMoodLevel);
+            final int _tmpCount;
+            _tmpCount = _cursor.getInt(_cursorIndexOfCount);
+            _item = new MoodCount(_tmpMoodLevel,_tmpCount);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
   public Object getDailyCounts(final long startTime,
       final Continuation<? super List<DateCount>> $completion) {
     final String _sql = "\n"
@@ -2724,6 +2888,48 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
   }
 
   @Override
+  public Object getHourlyDistributionSince(final long startTime,
+      final Continuation<? super List<HourCount>> $completion) {
+    final String _sql = "\n"
+            + "        SELECT CAST(strftime('%H', createdAt/1000, 'unixepoch', 'localtime') AS INTEGER) as hour, \n"
+            + "               COUNT(*) as count\n"
+            + "        FROM journal_entries\n"
+            + "        WHERE isArchived = 0 AND isDraft = 0 AND createdAt >= ?\n"
+            + "        GROUP BY hour\n"
+            + "        ORDER BY hour\n"
+            + "    ";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);
+    int _argIndex = 1;
+    _statement.bindLong(_argIndex, startTime);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<HourCount>>() {
+      @Override
+      @NonNull
+      public List<HourCount> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfHour = 0;
+          final int _cursorIndexOfCount = 1;
+          final List<HourCount> _result = new ArrayList<HourCount>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final HourCount _item;
+            final int _tmpHour;
+            _tmpHour = _cursor.getInt(_cursorIndexOfHour);
+            final int _tmpCount;
+            _tmpCount = _cursor.getInt(_cursorIndexOfCount);
+            _item = new HourCount(_tmpHour,_tmpCount);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
   public Object getWeekdayDistribution(final Continuation<? super List<WeekdayCount>> $completion) {
     final String _sql = "\n"
             + "        SELECT CAST(strftime('%w', createdAt/1000, 'unixepoch', 'localtime') AS INTEGER) as dayOfWeek,\n"
@@ -2734,6 +2940,48 @@ public final class JournalEntryDao_Impl implements JournalEntryDao {
             + "        ORDER BY dayOfWeek\n"
             + "    ";
     final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<WeekdayCount>>() {
+      @Override
+      @NonNull
+      public List<WeekdayCount> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfDayOfWeek = 0;
+          final int _cursorIndexOfCount = 1;
+          final List<WeekdayCount> _result = new ArrayList<WeekdayCount>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final WeekdayCount _item;
+            final int _tmpDayOfWeek;
+            _tmpDayOfWeek = _cursor.getInt(_cursorIndexOfDayOfWeek);
+            final int _tmpCount;
+            _tmpCount = _cursor.getInt(_cursorIndexOfCount);
+            _item = new WeekdayCount(_tmpDayOfWeek,_tmpCount);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object getWeekdayDistributionSince(final long startTime,
+      final Continuation<? super List<WeekdayCount>> $completion) {
+    final String _sql = "\n"
+            + "        SELECT CAST(strftime('%w', createdAt/1000, 'unixepoch', 'localtime') AS INTEGER) as dayOfWeek,\n"
+            + "               COUNT(*) as count\n"
+            + "        FROM journal_entries\n"
+            + "        WHERE isArchived = 0 AND isDraft = 0 AND createdAt >= ?\n"
+            + "        GROUP BY dayOfWeek\n"
+            + "        ORDER BY dayOfWeek\n"
+            + "    ";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);
+    int _argIndex = 1;
+    _statement.bindLong(_argIndex, startTime);
     final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
     return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<WeekdayCount>>() {
       @Override

@@ -1066,6 +1066,117 @@ public final class PersonDao_Impl implements PersonDao {
   }
 
   @Override
+  public Object getTopPeopleSince(final int limit, final long startTime,
+      final Continuation<? super List<PersonWithCount>> $completion) {
+    final String _sql = "\n"
+            + "        SELECT p.*, COUNT(ep.entryId) as entryCount \n"
+            + "        FROM people p\n"
+            + "        LEFT JOIN entry_people ep ON p.id = ep.personId\n"
+            + "        LEFT JOIN journal_entries e ON ep.entryId = e.id AND e.isArchived = 0 AND e.isDraft = 0\n"
+            + "            AND e.createdAt >= ?\n"
+            + "        GROUP BY p.id\n"
+            + "        ORDER BY entryCount DESC\n"
+            + "        LIMIT ?\n"
+            + "    ";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 2);
+    int _argIndex = 1;
+    _statement.bindLong(_argIndex, startTime);
+    _argIndex = 2;
+    _statement.bindLong(_argIndex, limit);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<PersonWithCount>>() {
+      @Override
+      @NonNull
+      public List<PersonWithCount> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfName = CursorUtil.getColumnIndexOrThrow(_cursor, "name");
+          final int _cursorIndexOfRelationship = CursorUtil.getColumnIndexOrThrow(_cursor, "relationship");
+          final int _cursorIndexOfPhotoUri = CursorUtil.getColumnIndexOrThrow(_cursor, "photoUri");
+          final int _cursorIndexOfNotes = CursorUtil.getColumnIndexOrThrow(_cursor, "notes");
+          final int _cursorIndexOfEmail = CursorUtil.getColumnIndexOrThrow(_cursor, "email");
+          final int _cursorIndexOfPhone = CursorUtil.getColumnIndexOrThrow(_cursor, "phone");
+          final int _cursorIndexOfBirthday = CursorUtil.getColumnIndexOrThrow(_cursor, "birthday");
+          final int _cursorIndexOfImportantDates = CursorUtil.getColumnIndexOrThrow(_cursor, "importantDates");
+          final int _cursorIndexOfIsFavorite = CursorUtil.getColumnIndexOrThrow(_cursor, "isFavorite");
+          final int _cursorIndexOfMentionCount = CursorUtil.getColumnIndexOrThrow(_cursor, "mentionCount");
+          final int _cursorIndexOfCreatedAt = CursorUtil.getColumnIndexOrThrow(_cursor, "createdAt");
+          final int _cursorIndexOfEntryCount = CursorUtil.getColumnIndexOrThrow(_cursor, "entryCount");
+          final List<PersonWithCount> _result = new ArrayList<PersonWithCount>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final PersonWithCount _item;
+            final int _tmpEntryCount;
+            _tmpEntryCount = _cursor.getInt(_cursorIndexOfEntryCount);
+            final PersonEntity _tmpPerson;
+            final long _tmpId;
+            _tmpId = _cursor.getLong(_cursorIndexOfId);
+            final String _tmpName;
+            _tmpName = _cursor.getString(_cursorIndexOfName);
+            final String _tmpRelationship;
+            if (_cursor.isNull(_cursorIndexOfRelationship)) {
+              _tmpRelationship = null;
+            } else {
+              _tmpRelationship = _cursor.getString(_cursorIndexOfRelationship);
+            }
+            final String _tmpPhotoUri;
+            if (_cursor.isNull(_cursorIndexOfPhotoUri)) {
+              _tmpPhotoUri = null;
+            } else {
+              _tmpPhotoUri = _cursor.getString(_cursorIndexOfPhotoUri);
+            }
+            final String _tmpNotes;
+            if (_cursor.isNull(_cursorIndexOfNotes)) {
+              _tmpNotes = null;
+            } else {
+              _tmpNotes = _cursor.getString(_cursorIndexOfNotes);
+            }
+            final String _tmpEmail;
+            if (_cursor.isNull(_cursorIndexOfEmail)) {
+              _tmpEmail = null;
+            } else {
+              _tmpEmail = _cursor.getString(_cursorIndexOfEmail);
+            }
+            final String _tmpPhone;
+            if (_cursor.isNull(_cursorIndexOfPhone)) {
+              _tmpPhone = null;
+            } else {
+              _tmpPhone = _cursor.getString(_cursorIndexOfPhone);
+            }
+            final Long _tmpBirthday;
+            if (_cursor.isNull(_cursorIndexOfBirthday)) {
+              _tmpBirthday = null;
+            } else {
+              _tmpBirthday = _cursor.getLong(_cursorIndexOfBirthday);
+            }
+            final String _tmpImportantDates;
+            if (_cursor.isNull(_cursorIndexOfImportantDates)) {
+              _tmpImportantDates = null;
+            } else {
+              _tmpImportantDates = _cursor.getString(_cursorIndexOfImportantDates);
+            }
+            final boolean _tmpIsFavorite;
+            final int _tmp;
+            _tmp = _cursor.getInt(_cursorIndexOfIsFavorite);
+            _tmpIsFavorite = _tmp != 0;
+            final int _tmpMentionCount;
+            _tmpMentionCount = _cursor.getInt(_cursorIndexOfMentionCount);
+            final long _tmpCreatedAt;
+            _tmpCreatedAt = _cursor.getLong(_cursorIndexOfCreatedAt);
+            _tmpPerson = new PersonEntity(_tmpId,_tmpName,_tmpRelationship,_tmpPhotoUri,_tmpNotes,_tmpEmail,_tmpPhone,_tmpBirthday,_tmpImportantDates,_tmpIsFavorite,_tmpMentionCount,_tmpCreatedAt);
+            _item = new PersonWithCount(_tmpPerson,_tmpEntryCount);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
   public Object getPeopleForEntry(final long entryId,
       final Continuation<? super List<PersonEntity>> $completion) {
     final String _sql = "\n"

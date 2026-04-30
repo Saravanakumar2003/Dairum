@@ -265,6 +265,8 @@ fun ManualExportScreen(
                                         text = when (format) {
                                             ExportFormat.TXT -> "Plain Text (.txt)"
                                             ExportFormat.PDF -> "PDF Document (.pdf)"
+                                            ExportFormat.JSON -> "JSON (.json)"
+                                            ExportFormat.CSV -> "CSV Spreadsheet (.csv)"
                                         },
                                         style = MaterialTheme.typography.bodyLarge
                                     )
@@ -272,6 +274,8 @@ fun ManualExportScreen(
                                         text = when (format) {
                                             ExportFormat.TXT -> "Clean text with all metadata"
                                             ExportFormat.PDF -> "Beautiful formatted document with photos, weather, mood, location, and all details"
+                                            ExportFormat.JSON -> "Structured data, ideal for import/export"
+                                            ExportFormat.CSV -> "Spreadsheet compatible, tabular data"
                                         },
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -363,6 +367,8 @@ fun ManualExportScreen(
                                     imageVector = when (history.format) {
                                         ExportFormat.PDF -> Icons.Default.PictureAsPdf
                                         ExportFormat.TXT -> Icons.Default.Description
+                                        ExportFormat.JSON -> Icons.Default.DataObject
+                                        ExportFormat.CSV -> Icons.Default.TableChart
                                     },
                                     contentDescription = null
                                 )

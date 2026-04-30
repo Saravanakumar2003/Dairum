@@ -44,6 +44,12 @@ class TagEntriesViewModel @Inject constructor(
                 }
         }
     }
+    
+    fun toggleFavorite(entryId: Long, isFavorite: Boolean) {
+        viewModelScope.launch {
+            journalRepository.toggleFavorite(entryId, !isFavorite)
+        }
+    }
 }
 
 data class TagEntriesUiState(

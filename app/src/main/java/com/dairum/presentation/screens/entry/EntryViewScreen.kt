@@ -2,6 +2,7 @@ package com.dairum.presentation.screens.entry
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -32,6 +33,9 @@ import coil.compose.AsyncImage
 import com.dairum.R
 import com.dairum.domain.model.*
 import com.dairum.presentation.components.*
+import com.dairum.presentation.screens.editor.TextFormatting
+import com.dairum.presentation.screens.editor.toAnnotatedString
+import com.dairum.presentation.theme.EntryBackgroundColors
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -159,10 +163,17 @@ fun EntryViewScreen(
             }
             else -> {
                 val entry = uiState.entry!!
+                val isDarkTheme = isSystemInDarkTheme()
+                
+                // Get the background color for this entry
+                val backgroundColor = entry.backgroundColor?.let { colorId ->
+                    EntryBackgroundColors.fromId(colorId, isDarkTheme)?.color
+                } ?: MaterialTheme.colorScheme.background
                 
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
+                        .background(backgroundColor)
                         .padding(paddingValues)
                         .verticalScroll(scrollState)
                 ) {
@@ -190,9 +201,16 @@ fun EntryViewScreen(
                             Spacer(modifier = Modifier.height(16.dp))
                         }
                         
-                        // Content text with improved typography
+                        // Content text with formatting applied
+                        val formatting = remember(entry.formattingJson) {
+                            TextFormatting.fromJson(entry.formattingJson)
+                        }
+                        val formattedText = remember(entry.plainContent, formatting) {
+                            formatting.toAnnotatedString(entry.plainContent)
+                        }
+                        
                         Text(
-                            text = entry.plainContent,
+                            text = formattedText,
                             style = MaterialTheme.typography.bodyLarge.copy(
                                 lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.4
                             ),

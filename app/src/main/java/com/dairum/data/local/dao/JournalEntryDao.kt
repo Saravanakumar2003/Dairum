@@ -170,6 +170,16 @@ interface JournalEntryDao {
     """)
     suspend fun getMoodDistribution(): List<MoodCount>
     
+    @Query("""
+        SELECT moodLevel, COUNT(*) as count 
+        FROM journal_entries 
+        WHERE moodLevel IS NOT NULL AND isArchived = 0 AND isDraft = 0
+        AND createdAt >= :startTime
+        GROUP BY moodLevel
+        ORDER BY moodLevel
+    """)
+    suspend fun getMoodDistributionSince(startTime: Long): List<MoodCount>
+    
     // Daily counts for charts
     @Query("""
         SELECT date(createdAt/1000, 'unixepoch', 'localtime') as date, COUNT(*) as count
@@ -191,6 +201,16 @@ interface JournalEntryDao {
     """)
     suspend fun getHourlyDistribution(): List<HourCount>
     
+    @Query("""
+        SELECT CAST(strftime('%H', createdAt/1000, 'unixepoch', 'localtime') AS INTEGER) as hour, 
+               COUNT(*) as count
+        FROM journal_entries
+        WHERE isArchived = 0 AND isDraft = 0 AND createdAt >= :startTime
+        GROUP BY hour
+        ORDER BY hour
+    """)
+    suspend fun getHourlyDistributionSince(startTime: Long): List<HourCount>
+    
     // Day of week distribution
     @Query("""
         SELECT CAST(strftime('%w', createdAt/1000, 'unixepoch', 'localtime') AS INTEGER) as dayOfWeek,
@@ -201,6 +221,16 @@ interface JournalEntryDao {
         ORDER BY dayOfWeek
     """)
     suspend fun getWeekdayDistribution(): List<WeekdayCount>
+    
+    @Query("""
+        SELECT CAST(strftime('%w', createdAt/1000, 'unixepoch', 'localtime') AS INTEGER) as dayOfWeek,
+               COUNT(*) as count
+        FROM journal_entries
+        WHERE isArchived = 0 AND isDraft = 0 AND createdAt >= :startTime
+        GROUP BY dayOfWeek
+        ORDER BY dayOfWeek
+    """)
+    suspend fun getWeekdayDistributionSince(startTime: Long): List<WeekdayCount>
     
     // Streak calculation helper - get distinct dates with entries
     @Query("""

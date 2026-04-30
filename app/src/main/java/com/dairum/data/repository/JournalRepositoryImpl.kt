@@ -136,23 +136,41 @@ class JournalRepositoryImpl @Inject constructor(
     }
 
     override suspend fun setTagsForEntry(entryId: Long, tagIds: List<Long>) {
-        // Remove existing tags
+        // Diff old vs new to correctly adjust usage counts
+        val oldTagIds = tagDao.getTagIdsForEntry(entryId).toSet()
+        val newTagIds = tagIds.toSet()
+        
+        val removed = oldTagIds - newTagIds
+        val added = newTagIds - oldTagIds
+        
+        // Remove old relationships
         tagDao.deleteAllTagsForEntry(entryId)
-        // Add new tags
+        // Insert new relationships
         tagIds.forEach { tagId ->
             tagDao.insertEntryTag(EntryTagCrossRef(entryId, tagId))
-            tagDao.incrementUsageCount(tagId)
         }
+        // Adjust counts
+        removed.forEach { tagDao.decrementUsageCount(it) }
+        added.forEach { tagDao.incrementUsageCount(it) }
     }
 
     override suspend fun setPeopleForEntry(entryId: Long, personIds: List<Long>) {
-        // Remove existing people
+        // Diff old vs new to correctly adjust mention counts
+        val oldPersonIds = personDao.getPeopleForEntry(entryId).map { it.id }.toSet()
+        val newPersonIds = personIds.toSet()
+        
+        val removed = oldPersonIds - newPersonIds
+        val added = newPersonIds - oldPersonIds
+        
+        // Remove old relationships
         personDao.deleteAllPeopleForEntry(entryId)
-        // Add new people
+        // Insert new relationships
         personIds.forEach { personId ->
             personDao.insertEntryPerson(EntryPersonCrossRef(entryId, personId))
-            personDao.incrementMentionCount(personId)
         }
+        // Adjust counts
+        removed.forEach { personDao.decrementMentionCount(it) }
+        added.forEach { personDao.incrementMentionCount(it) }
     }
 
     override suspend fun setTrackerValues(entryId: Long, values: Map<Long, String>) {
@@ -176,8 +194,9 @@ class JournalRepositoryImpl @Inject constructor(
         return JournalEntry(
             id = entry.id,
             title = entry.title,
-            content = RichContent(), // TODO: Parse JSON content
+            content = RichContent(),
             plainContent = entry.plainContent,
+            formattingJson = entry.content, // content field stores formatting JSON
             category = categoryDomain,
             createdAt = entry.createdAt.toLocalDateTime(),
             updatedAt = entry.updatedAt.toLocalDateTime(),
@@ -192,7 +211,8 @@ class JournalRepositoryImpl @Inject constructor(
             isArchived = entry.isArchived,
             isDraft = entry.isDraft,
             isPinned = entry.isPinned,
-            wordCount = entry.wordCount
+            wordCount = entry.wordCount,
+            backgroundColor = entry.backgroundColor
         )
     }
 
@@ -201,6 +221,7 @@ class JournalRepositoryImpl @Inject constructor(
             id = id,
             title = title,
             plainContent = plainContent,
+            formattingJson = content, // Load formatting JSON
             createdAt = createdAt.toLocalDateTime(),
             updatedAt = updatedAt.toLocalDateTime(),
             mood = moodLevel?.let { Mood.fromDb(it, moodIcon) },
@@ -210,7 +231,8 @@ class JournalRepositoryImpl @Inject constructor(
             isArchived = isArchived,
             isDraft = isDraft,
             isPinned = isPinned,
-            wordCount = wordCount
+            wordCount = wordCount,
+            backgroundColor = backgroundColor
         )
     }
 
@@ -218,7 +240,7 @@ class JournalRepositoryImpl @Inject constructor(
         return JournalEntryEntity(
             id = id,
             title = title,
-            content = "", // TODO: Serialize RichContent to JSON
+            content = formattingJson, // Store formatting JSON in content field
             plainContent = plainContent,
             categoryId = category?.id,
             createdAt = createdAt.toEpochMillis(),
@@ -231,7 +253,8 @@ class JournalRepositoryImpl @Inject constructor(
             isArchived = isArchived,
             isDraft = isDraft,
             isPinned = isPinned,
-            wordCount = wordCount
+            wordCount = wordCount,
+            backgroundColor = backgroundColor
         )
     }
 

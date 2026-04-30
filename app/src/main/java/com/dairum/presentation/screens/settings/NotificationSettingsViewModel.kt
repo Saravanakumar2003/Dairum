@@ -25,6 +25,7 @@ class NotificationSettingsViewModel @Inject constructor(
         loadReminders()
         loadSmartReminders()
         loadMoodCheckInConfig()
+        loadMultipleDailyReminders()
         checkNotificationPermission()
     }
     
@@ -255,6 +256,72 @@ class NotificationSettingsViewModel @Inject constructor(
         }
     }
     
+    // Multiple Daily Reminders
+    fun setMultipleDailyReminders(
+        enabled: Boolean,
+        times: List<Pair<Int, Int>>,
+        title: String,
+        message: String
+    ) {
+        viewModelScope.launch {
+            // Delete existing multiple daily reminder configs
+            _uiState.value.reminderConfigs
+                .filter { it.type == ReminderType.CUSTOM && it.name.startsWith("Daily Reminder #") }
+                .forEach { notificationRepository.deleteReminderConfig(it.id) }
+            
+            if (enabled && times.isNotEmpty()) {
+                // Create new reminder configs for each time
+                times.forEachIndexed { index, (hour, minute) ->
+                    notificationRepository.createReminderConfig(
+                        ReminderConfig(
+                            type = ReminderType.CUSTOM,
+                            name = "Daily Reminder #${index + 1}",
+                            description = "Multiple daily reminder at ${String.format("%02d:%02d", hour, minute)}",
+                            isEnabled = true,
+                            scheduleHour = hour,
+                            scheduleMinute = minute,
+                            scheduleDays = listOf(1, 2, 3, 4, 5, 6, 7),
+                            notificationTitle = title,
+                            notificationMessage = message
+                        )
+                    )
+                }
+            }
+            
+            _uiState.update { 
+                it.copy(
+                    multipleDailyRemindersEnabled = enabled,
+                    dailyReminderTimes = times,
+                    dailyReminderTitle = title,
+                    dailyReminderMessage = message
+                ) 
+            }
+        }
+    }
+    
+    private fun loadMultipleDailyReminders() {
+        viewModelScope.launch {
+            notificationRepository.getAllReminderConfigsFlow().collect { reminders ->
+                val dailyReminders = reminders
+                    .filter { it.type == ReminderType.CUSTOM && it.name.startsWith("Daily Reminder #") }
+                    .sortedBy { it.name }
+                
+                if (dailyReminders.isNotEmpty()) {
+                    val times = dailyReminders.map { Pair(it.scheduleHour, it.scheduleMinute) }
+                    val firstReminder = dailyReminders.first()
+                    _uiState.update { 
+                        it.copy(
+                            multipleDailyRemindersEnabled = dailyReminders.any { r -> r.isEnabled },
+                            dailyReminderTimes = times,
+                            dailyReminderTitle = firstReminder.notificationTitle ?: "Journal Reminder",
+                            dailyReminderMessage = firstReminder.notificationMessage ?: "Take a moment to write in your journal"
+                        ) 
+                    }
+                }
+            }
+        }
+    }
+    
     fun createGenericReminder(
         title: String,
         message: String,
@@ -288,5 +355,10 @@ data class NotificationSettingsUiState(
     val moodCheckInEnabled: Boolean = false,
     val moodCheckInIntervalHours: Int = 4,
     val moodCheckInStartHour: Int = 9,
-    val moodCheckInEndHour: Int = 22
+    val moodCheckInEndHour: Int = 22,
+    // Multiple Daily Reminders
+    val multipleDailyRemindersEnabled: Boolean = false,
+    val dailyReminderTimes: List<Pair<Int, Int>> = emptyList(),
+    val dailyReminderTitle: String = "Journal Reminder",
+    val dailyReminderMessage: String = "Take a moment to write in your journal"
 )

@@ -87,7 +87,7 @@ enum class BottomNavItem(
     val label: String
 ) {
     HOME(Screen.Home, "home", "Home"),
-    FILES(Screen.Files, "folder", "Files"),
+    FAVORITES(Screen.Favorites, "favorite", "Favorites"),
     MEMORIES(Screen.Memories, "collections_bookmark", "Memories"),
     STATS(Screen.Stats, "bar_chart", "Stats"),
     MORE(Screen.More, "more_horiz", "More")

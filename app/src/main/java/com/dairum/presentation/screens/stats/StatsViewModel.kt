@@ -3,12 +3,15 @@ package com.dairum.presentation.screens.stats
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dairum.data.local.dao.JournalEntryDao
+import com.dairum.data.local.dao.PersonDao
+import com.dairum.data.local.dao.TagDao
 import com.dairum.domain.model.*
 import com.dairum.domain.repository.MediaRepository
 import com.dairum.domain.repository.PersonRepository
 import com.dairum.domain.repository.TagRepository
 import com.dairum.domain.repository.TrackerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,6 +26,8 @@ import javax.inject.Inject
 @HiltViewModel
 class StatsViewModel @Inject constructor(
     private val entryDao: JournalEntryDao,
+    private val tagDao: TagDao,
+    private val personDao: PersonDao,
     private val tagRepository: TagRepository,
     private val personRepository: PersonRepository,
     private val mediaRepository: MediaRepository,
@@ -31,37 +36,74 @@ class StatsViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(StatsUiState())
     val uiState: StateFlow<StatsUiState> = _uiState.asStateFlow()
+    
+    // Current selected time range
+    private var currentTimeRange: TimeRange = TimeRange.ALL_TIME
+    private var trackerCollectorJob: Job? = null
 
     init {
         loadStats()
     }
+    
+    /**
+     * Get the start timestamp for the given time range
+     */
+    private fun getStartTimeForRange(range: TimeRange): Long {
+        val today = LocalDate.now()
+        return when (range) {
+            TimeRange.WEEK -> today.minusWeeks(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            TimeRange.MONTH -> today.minusMonths(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            TimeRange.YEAR -> today.minusYears(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            TimeRange.ALL_TIME -> 0L
+            TimeRange.CUSTOM -> customRangeStart
+        }
+    }
 
     private fun loadStats() {
         viewModelScope.launch {
-            loadJournalStats()
-            loadMoodStats()
-            loadActivityStats()
-            loadTagStats()
-            loadPeopleStats()
+            loadJournalStats(currentTimeRange)
+            loadMoodStats(currentTimeRange)
+            loadActivityStats(currentTimeRange)
+            loadTagStats(currentTimeRange)
+            loadPeopleStats(currentTimeRange)
             loadTrackerStats()
         }
     }
 
-    private suspend fun loadJournalStats() {
+    private suspend fun loadJournalStats(range: TimeRange) {
         val now = System.currentTimeMillis()
-        val weekAgo = LocalDate.now().minusWeeks(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val monthAgo = LocalDate.now().minusMonths(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val yearAgo = LocalDate.now().minusYears(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val today = LocalDate.now()
+        val rangeStartTime = getStartTimeForRange(range)
+        val weekAgo = today.minusWeeks(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val monthAgo = today.minusMonths(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val twoMonthsAgo = today.minusMonths(2).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val yearAgo = today.minusYears(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        
+        // Debug logging
+        android.util.Log.d("StatsViewModel", "Today: $today, WeekAgo millis: $weekAgo, MonthAgo millis: $monthAgo")
+        
+        // Get entries within the selected time range
+        val entriesInRange = if (range == TimeRange.ALL_TIME) {
+            entryDao.getTotalCount()
+        } else {
+            entryDao.getCountSince(rangeStartTime)
+        }
 
+        // Calculate other metrics relative to the selected range
         val totalEntries = entryDao.getTotalCount()
         val entriesThisWeek = entryDao.getCountSince(weekAgo)
         val entriesThisMonth = entryDao.getCountSince(monthAgo)
         val entriesThisYear = entryDao.getCountSince(yearAgo)
+        val entriesLastMonth = entryDao.getEntryCountBetween(twoMonthsAgo, monthAgo)
         val avgWordCount = entryDao.getAverageWordCount() ?: 0.0
         val totalWordCount = entryDao.getTotalWordCount() ?: 0
+        
+        // Debug logging - entry counts and dates
+        android.util.Log.d("StatsViewModel", "Total: $totalEntries, ThisWeek: $entriesThisWeek, ThisMonth: $entriesThisMonth")
 
         // Calculate streaks
         val dates = entryDao.getDistinctEntryDates()
+        android.util.Log.d("StatsViewModel", "Distinct entry dates: $dates")
         val (currentStreak, longestStreak) = calculateStreaks(dates)
 
         // Media counts
@@ -70,6 +112,58 @@ class StatsViewModel @Inject constructor(
         val totalVoiceNotes = mediaRepository.getCountByType(MediaType.VOICE)
         val totalAttachments = mediaRepository.getCountByType(MediaType.ATTACHMENT)
         val totalStorage = mediaRepository.getTotalSize()
+        
+        // Calculate new insights
+        val totalDaysJournaling = dates.size
+        
+        // Average entries per week (based on all-time data)
+        val firstEntryDate = dates.lastOrNull()?.let { LocalDate.parse(it) }
+        val weeksJournaling = if (firstEntryDate != null) {
+            ChronoUnit.WEEKS.between(firstEntryDate, today).coerceAtLeast(1)
+        } else 1
+        val averageEntriesPerWeek = totalEntries.toDouble() / weeksJournaling
+        
+        // Consistency score: percentage of last 30 days with entries
+        val last30Days = (0 until 30).map { today.minusDays(it.toLong()).toString() }
+        val daysWithEntries = dates.count { it in last30Days }
+        val consistencyScore = daysWithEntries.toFloat() / 30f
+        
+        // Days since last entry
+        val lastEntryDate = dates.firstOrNull()?.let { LocalDate.parse(it) }
+        val daysSinceLastEntry = if (lastEntryDate != null) {
+            ChronoUnit.DAYS.between(lastEntryDate, today).toInt()
+        } else 0
+        
+        // Monthly growth
+        val monthlyGrowth = if (entriesLastMonth > 0) {
+            ((entriesThisMonth - entriesLastMonth).toFloat() / entriesLastMonth) * 100f
+        } else if (entriesThisMonth > 0) {
+            100f
+        } else 0f
+        
+        // Best writing day and writing time preference
+        val hourlyDist = entryDao.getHourlyDistribution().associate { it.hour to it.count }
+        val weekdayDist = entryDao.getWeekdayDistribution().associate { it.dayOfWeek to it.count }
+        val bestWritingDay = weekdayDist.maxByOrNull { it.value }?.key
+        
+        // Calculate writing time preference
+        val morningEntries = (5 until 11).sumOf { hourlyDist.getOrDefault(it, 0) }
+        val afternoonEntries = (11 until 17).sumOf { hourlyDist.getOrDefault(it, 0) }
+        val eveningEntries = (17 until 23).sumOf { hourlyDist.getOrDefault(it, 0) }
+        val lateNightEntries = (listOf(23, 0, 1, 2, 3, 4)).sumOf { hourlyDist.getOrDefault(it, 0) }
+        
+        val writingTimePreference = when {
+            morningEntries >= afternoonEntries && morningEntries >= eveningEntries && morningEntries >= lateNightEntries -> 
+                com.dairum.domain.model.WritingTimePreference.EARLY_BIRD
+            afternoonEntries >= morningEntries && afternoonEntries >= eveningEntries && afternoonEntries >= lateNightEntries -> 
+                com.dairum.domain.model.WritingTimePreference.AFTERNOON
+            eveningEntries >= morningEntries && eveningEntries >= afternoonEntries && eveningEntries >= lateNightEntries -> 
+                com.dairum.domain.model.WritingTimePreference.NIGHT_OWL
+            lateNightEntries > 0 -> 
+                com.dairum.domain.model.WritingTimePreference.LATE_NIGHT
+            else -> 
+                com.dairum.domain.model.WritingTimePreference.UNKNOWN
+        }
 
         _uiState.update {
             it.copy(
@@ -78,6 +172,7 @@ class StatsViewModel @Inject constructor(
                     entriesThisWeek = entriesThisWeek,
                     entriesThisMonth = entriesThisMonth,
                     entriesThisYear = entriesThisYear,
+                    entriesInCustomRange = 0, // Not applicable for preset ranges
                     currentStreak = currentStreak,
                     longestStreak = longestStreak,
                     averageWordCount = avgWordCount,
@@ -86,15 +181,31 @@ class StatsViewModel @Inject constructor(
                     totalVideos = totalVideos,
                     totalVoiceNotes = totalVoiceNotes,
                     totalAttachments = totalAttachments,
-                    storageUsed = totalStorage
+                    storageUsed = totalStorage,
+                    totalStorageUsed = totalStorage,
+                    comparisonToLastMonth = monthlyGrowth,
+                    // New insights
+                    averageEntriesPerWeek = averageEntriesPerWeek,
+                    consistencyScore = consistencyScore,
+                    daysSinceLastEntry = daysSinceLastEntry,
+                    bestWritingDayOfWeek = bestWritingDay,
+                    writingTimePreference = writingTimePreference,
+                    totalDaysJournaling = totalDaysJournaling,
+                    entriesLastMonth = entriesLastMonth,
+                    monthlyGrowth = monthlyGrowth
                 ),
                 isLoading = false
             )
         }
     }
 
-    private suspend fun loadMoodStats() {
-        val moodCounts = entryDao.getMoodDistribution()
+    private suspend fun loadMoodStats(range: TimeRange) {
+        val rangeStartTime = getStartTimeForRange(range)
+        val moodCounts = if (range == TimeRange.ALL_TIME) {
+            entryDao.getMoodDistribution()
+        } else {
+            entryDao.getMoodDistributionSince(rangeStartTime)
+        }
         val totalWithMood = moodCounts.sumOf { it.count }
         
         if (totalWithMood == 0) {
@@ -126,9 +237,18 @@ class StatsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun loadActivityStats() {
-        val hourlyDist = entryDao.getHourlyDistribution().associate { it.hour to it.count }
-        val weekdayDist = entryDao.getWeekdayDistribution().associate { it.dayOfWeek to it.count }
+    private suspend fun loadActivityStats(range: TimeRange) {
+        val rangeStartTime = getStartTimeForRange(range)
+        val hourlyDist = if (range == TimeRange.ALL_TIME) {
+            entryDao.getHourlyDistribution()
+        } else {
+            entryDao.getHourlyDistributionSince(rangeStartTime)
+        }.associate { it.hour to it.count }
+        val weekdayDist = if (range == TimeRange.ALL_TIME) {
+            entryDao.getWeekdayDistribution()
+        } else {
+            entryDao.getWeekdayDistributionSince(rangeStartTime)
+        }.associate { it.dayOfWeek to it.count }
 
         val mostActiveHour = hourlyDist.maxByOrNull { it.value }?.key
         val mostActiveDay = weekdayDist.maxByOrNull { it.value }?.key
@@ -146,15 +266,29 @@ class StatsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun loadTagStats() {
-        val topTags = tagRepository.getTopTags(20)
-        val totalEntries = entryDao.getTotalCount()
+    private suspend fun loadTagStats(range: TimeRange) {
+        val rangeStartTime = getStartTimeForRange(range)
+        val topTags = if (range == TimeRange.ALL_TIME) {
+            tagDao.getTopTags(20)
+        } else {
+            tagDao.getTopTagsSince(20, rangeStartTime)
+        }
+        val totalEntries = if (range == TimeRange.ALL_TIME) {
+            entryDao.getTotalCount()
+        } else {
+            entryDao.getCountSince(rangeStartTime)
+        }
 
-        val tagUsage = topTags.map { tag ->
+        val tagUsage = topTags.map { tagWithCount ->
             TagUsage(
-                tag = tag,
-                count = tag.usageCount,
-                percentage = if (totalEntries > 0) tag.usageCount.toFloat() / totalEntries else 0f
+                tag = Tag(
+                    id = tagWithCount.tag.id,
+                    name = tagWithCount.tag.name,
+                    color = tagWithCount.tag.color,
+                    usageCount = tagWithCount.tag.usageCount
+                ),
+                count = tagWithCount.entryCount,
+                percentage = if (totalEntries > 0) tagWithCount.entryCount.toFloat() / totalEntries else 0f
             )
         }
 
@@ -169,16 +303,33 @@ class StatsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun loadPeopleStats() {
-        val topPeople = personRepository.getTopPeople(20)
+    private suspend fun loadPeopleStats(range: TimeRange) {
+        val rangeStartTime = getStartTimeForRange(range)
+        val topPeople = if (range == TimeRange.ALL_TIME) {
+            personDao.getTopPeople(20)
+        } else {
+            personDao.getTopPeopleSince(20, rangeStartTime)
+        }
         val allPeople = personRepository.getAllFlow().firstOrNull() ?: emptyList()
-        val totalEntries = entryDao.getTotalCount()
+        val totalEntries = if (range == TimeRange.ALL_TIME) {
+            entryDao.getTotalCount()
+        } else {
+            entryDao.getCountSince(rangeStartTime)
+        }
 
-        val peopleMentions = topPeople.map { person ->
+        val peopleMentions = topPeople.map { personWithCount ->
             PersonMention(
-                person = person,
-                count = person.mentionCount,
-                percentage = if (totalEntries > 0) person.mentionCount.toFloat() / totalEntries else 0f
+                person = Person(
+                    id = personWithCount.person.id,
+                    name = personWithCount.person.name,
+                    relationship = personWithCount.person.relationship,
+                    photoUri = personWithCount.person.photoUri,
+                    notes = personWithCount.person.notes,
+                    isFavorite = personWithCount.person.isFavorite,
+                    mentionCount = personWithCount.person.mentionCount
+                ),
+                count = personWithCount.entryCount,
+                percentage = if (totalEntries > 0) personWithCount.entryCount.toFloat() / totalEntries else 0f
             )
         }
 
@@ -193,14 +344,18 @@ class StatsViewModel @Inject constructor(
     }
 
     private suspend fun loadTrackerStats() {
-        trackerRepository.getActiveTrackersFlow().collect { trackers ->
-            val stats = trackers.mapNotNull { tracker ->
-                if (tracker.type == TrackerType.NUMBER || tracker.type == TrackerType.WEIGHT) {
-                    trackerRepository.getTrackerStats(tracker.id)
-                } else null
+        // Cancel any prior collector to avoid accumulating duplicate collectors (Issue #11)
+        trackerCollectorJob?.cancel()
+        trackerCollectorJob = viewModelScope.launch {
+            trackerRepository.getActiveTrackersFlow().collect { trackers ->
+                val stats = trackers.mapNotNull { tracker ->
+                    if (tracker.type == TrackerType.NUMBER || tracker.type == TrackerType.WEIGHT) {
+                        trackerRepository.getTrackerStats(tracker.id)
+                    } else null
+                }
+                
+                _uiState.update { it.copy(trackerStats = stats) }
             }
-            
-            _uiState.update { it.copy(trackerStats = stats) }
         }
     }
     
@@ -208,21 +363,129 @@ class StatsViewModel @Inject constructor(
      * Load stats for a specific time range
      */
     fun loadStatsForRange(range: TimeRange) {
+        currentTimeRange = range
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isLoading = true, selectedTimeRange = range) }
             
-            // Calculate time bounds based on range
-            val now = System.currentTimeMillis()
-            val startTime = when (range) {
-                TimeRange.WEEK -> LocalDate.now().minusWeeks(1)
-                TimeRange.MONTH -> LocalDate.now().minusMonths(1)
-                TimeRange.YEAR -> LocalDate.now().minusYears(1)
-                TimeRange.ALL_TIME -> LocalDate.of(2000, 1, 1)
-            }.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            // Reload all stats with the new time range filter
+            loadJournalStats(range)
+            loadMoodStats(range)
+            loadActivityStats(range)
+            loadTagStats(range)
+            loadPeopleStats(range)
+            loadTrackerStats()
             
-            // Reload all stats with the time filter
-            // For now, simply reload all stats (time filtering to be enhanced)
-            loadStats()
+            _uiState.update { it.copy(isLoading = false) }
+        }
+    }
+    
+    /**
+     * Load stats for a custom date range
+     */
+    fun loadStatsForCustomRange(startMillis: Long, endMillis: Long) {
+        currentTimeRange = TimeRange.CUSTOM
+        customRangeStart = startMillis
+        customRangeEnd = endMillis
+        viewModelScope.launch {
+            try {
+                _uiState.update { it.copy(isLoading = true, selectedTimeRange = TimeRange.CUSTOM) }
+                
+                // Load journal stats for custom range
+                loadJournalStatsCustom(startMillis, endMillis)
+                loadMoodStats(TimeRange.CUSTOM)
+                loadActivityStats(TimeRange.CUSTOM)
+                loadTagStats(TimeRange.CUSTOM)
+                loadPeopleStats(TimeRange.CUSTOM)
+                loadTrackerStats()
+            } catch (e: Exception) {
+                android.util.Log.e("StatsViewModel", "Error loading custom stats: ${e.message}", e)
+            } finally {
+                _uiState.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+    
+    private var customRangeStart: Long = 0
+    private var customRangeEnd: Long = System.currentTimeMillis()
+    
+    private suspend fun loadJournalStatsCustom(startMillis: Long, endMillis: Long) {
+        try {
+            val today = LocalDate.now()
+            val weekAgo = today.minusWeeks(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val monthAgo = today.minusMonths(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val twoMonthsAgo = today.minusMonths(2).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val yearAgo = today.minusYears(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            
+            // Get entries within custom range
+            val entriesInRange = entryDao.getEntryCountBetween(startMillis, endMillis)
+
+            val totalEntries = entryDao.getTotalCount()
+            val entriesThisWeek = entryDao.getCountSince(weekAgo)
+            val entriesThisMonth = entryDao.getCountSince(monthAgo)
+            val entriesThisYear = entryDao.getCountSince(yearAgo)
+            val entriesLastMonth = entryDao.getEntryCountBetween(twoMonthsAgo, monthAgo)
+            val avgWordCount = entryDao.getAverageWordCount() ?: 0.0
+            val totalWordCount = entryDao.getTotalWordCount() ?: 0
+
+            val dates = entryDao.getDistinctEntryDates()
+            val (currentStreak, longestStreak) = calculateStreaks(dates)
+
+            val totalPhotos = mediaRepository.getCountByType(MediaType.PHOTO)
+            val totalVideos = mediaRepository.getCountByType(MediaType.VIDEO)
+            val totalVoiceNotes = mediaRepository.getCountByType(MediaType.VOICE)
+            val totalAttachments = mediaRepository.getCountByType(MediaType.ATTACHMENT)
+            val totalStorage = mediaRepository.getTotalSize()
+            
+            val totalDaysJournaling = dates.size
+            val firstEntryDate = dates.lastOrNull()?.let { LocalDate.parse(it) }
+            val weeksJournaling = if (firstEntryDate != null) {
+                ChronoUnit.WEEKS.between(firstEntryDate, today).coerceAtLeast(1)
+            } else 1
+            val averageEntriesPerWeek = totalEntries.toDouble() / weeksJournaling
+            
+            val last30Days = (0 until 30).map { today.minusDays(it.toLong()).toString() }
+            val daysWithEntries = dates.count { it in last30Days }
+            val consistencyScore = daysWithEntries.toFloat() / 30f
+            
+            val lastEntryDate = dates.firstOrNull()?.let { LocalDate.parse(it) }
+            val daysSinceLastEntry = if (lastEntryDate != null) {
+                ChronoUnit.DAYS.between(lastEntryDate, today).toInt()
+            } else 0
+
+            val comparisonPercentage = if (entriesLastMonth > 0) {
+                ((entriesThisMonth - entriesLastMonth).toFloat() / entriesLastMonth) * 100f
+            } else if (entriesThisMonth > 0) {
+                100f
+            } else 0f
+
+            _uiState.update {
+                it.copy(
+                    journalStats = JournalStats(
+                        totalEntries = totalEntries,
+                        entriesThisWeek = entriesThisWeek,
+                        entriesThisMonth = entriesThisMonth,
+                        entriesThisYear = entriesThisYear,
+                        entriesInCustomRange = entriesInRange,
+                        averageWordCount = avgWordCount,
+                        totalWordCount = totalWordCount,
+                        currentStreak = currentStreak,
+                        longestStreak = longestStreak,
+                        totalPhotos = totalPhotos,
+                        totalVideos = totalVideos,
+                        totalVoiceNotes = totalVoiceNotes,
+                        totalAttachments = totalAttachments,
+                        storageUsed = totalStorage,
+                        totalStorageUsed = totalStorage,
+                        comparisonToLastMonth = comparisonPercentage,
+                        totalDaysJournaling = totalDaysJournaling,
+                        averageEntriesPerWeek = averageEntriesPerWeek,
+                        consistencyScore = consistencyScore,
+                        daysSinceLastEntry = daysSinceLastEntry
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("StatsViewModel", "Error in loadJournalStatsCustom: ${e.message}", e)
         }
     }
 
@@ -268,5 +531,6 @@ data class StatsUiState(
     val peopleStats: PeopleStats? = null,
     val trackerStats: List<TrackerStats> = emptyList(),
     val isLoading: Boolean = true,
-    val error: String? = null
+    val error: String? = null,
+    val selectedTimeRange: TimeRange = TimeRange.ALL_TIME
 )

@@ -7,19 +7,100 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.CollectionsBookmark
+import androidx.compose.material.icons.outlined.CollectionsBookmark
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.dairum.R
 import com.dairum.domain.model.JournalEntry
+import com.dairum.domain.model.Memory
 import java.time.format.DateTimeFormatter
 
+enum class FavoritesTab(val title: String) {
+    ENTRIES("Entries"),
+    MEMORIES("Memories")
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FavoritesScreen(
+    onEntryClick: (Long) -> Unit,
+    onMemoryClick: (Long) -> Unit = {},
+    viewModel: FavoritesViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    var selectedTab by remember { mutableStateOf(FavoritesTab.ENTRIES) }
+    
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Favorites") }
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            // Tab row for switching between entries and memories
+            TabRow(
+                selectedTabIndex = selectedTab.ordinal,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                FavoritesTab.values().forEach { tab ->
+                    Tab(
+                        selected = selectedTab == tab,
+                        onClick = { selectedTab = tab },
+                        text = { 
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = when (tab) {
+                                        FavoritesTab.ENTRIES -> Icons.Outlined.EditNote
+                                        FavoritesTab.MEMORIES -> Icons.Outlined.CollectionsBookmark
+                                    },
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Text(tab.title) 
+                            }
+                        }
+                    )
+                }
+            }
+            
+            when (selectedTab) {
+                FavoritesTab.ENTRIES -> FavoriteEntriesContent(
+                    entries = uiState.entries,
+                    isLoading = uiState.isLoading,
+                    onEntryClick = onEntryClick,
+                    onToggleFavorite = { viewModel.toggleFavorite(it) }
+                )
+                FavoritesTab.MEMORIES -> FavoriteMemoriesContent(
+                    memories = uiState.favoriteMemories,
+                    isLoading = uiState.isLoading,
+                    onMemoryClick = onMemoryClick,
+                    onToggleFavorite = { viewModel.toggleMemoryFavorite(it) }
+                )
+            }
+        }
+    }
+}
+
+// Legacy overload for backward compatibility with old navigation
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoritesScreen(
@@ -27,68 +108,124 @@ fun FavoritesScreen(
     onEntryClick: (Long) -> Unit,
     viewModel: FavoritesViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Favorites") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
+    FavoritesScreen(
+        onEntryClick = onEntryClick,
+        onMemoryClick = {},
+        viewModel = viewModel
+    )
+}
+
+@Composable
+private fun FavoriteEntriesContent(
+    entries: List<JournalEntry>,
+    isLoading: Boolean,
+    onEntryClick: (Long) -> Unit,
+    onToggleFavorite: (Long) -> Unit
+) {
+    if (isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
         }
-    ) { innerPadding ->
-        if (uiState.entries.isEmpty()) {
-            // Empty state
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentAlignment = Alignment.Center
+    } else if (entries.isEmpty()) {
+        // Empty state
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Icon(
-                        Icons.Outlined.FavoriteBorder,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        "No favorites yet",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        "Tap the heart icon on entries to add them here",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                Icon(
+                    Icons.Outlined.FavoriteBorder,
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    "No favorite entries yet",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    "Tap the heart icon on entries to add them here",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+        }
+    } else {
+        LazyColumn(
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(entries, key = { it.id }) { entry ->
+                FavoriteEntryCard(
+                    entry = entry,
+                    onClick = { onEntryClick(entry.id) },
+                    onToggleFavorite = { onToggleFavorite(entry.id) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FavoriteMemoriesContent(
+    memories: List<Memory>,
+    isLoading: Boolean,
+    onMemoryClick: (Long) -> Unit,
+    onToggleFavorite: (Long) -> Unit
+) {
+    if (isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+    } else if (memories.isEmpty()) {
+        // Empty state
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(uiState.entries, key = { it.id }) { entry ->
-                    FavoriteEntryCard(
-                        entry = entry,
-                        onClick = { onEntryClick(entry.id) },
-                        onToggleFavorite = { viewModel.toggleFavorite(entry.id) }
-                    )
-                }
+                Icon(
+                    Icons.Outlined.CollectionsBookmark,
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    "No favorite memories yet",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    "Mark memories as favorites to see them here",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    } else {
+        LazyColumn(
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(memories, key = { it.id }) { memory ->
+                FavoriteMemoryCard(
+                    memory = memory,
+                    onClick = { onMemoryClick(memory.id) },
+                    onToggleFavorite = { onToggleFavorite(memory.id) }
+                )
             }
         }
     }
@@ -174,6 +311,85 @@ private fun FavoriteEntryCard(
                     text = entry.createdAt.format(dateFormatter),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FavoriteMemoryCard(
+    memory: Memory,
+    onClick: () -> Unit,
+    onToggleFavorite: () -> Unit
+) {
+    val dateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy")
+    
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Memory title
+                Text(
+                    text = memory.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                
+                IconButton(
+                    onClick = onToggleFavorite,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.Favorite,
+                        contentDescription = "Remove from favorites",
+                        tint = Color.Red
+                    )
+                }
+            }
+            
+            // Description
+            memory.description?.let { desc ->
+                if (desc.isNotBlank()) {
+                    Text(
+                        text = desc.take(150) + if (desc.length > 150) "..." else "",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+            
+            // Date range and entry count
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${memory.startDate?.format(dateFormatter) ?: ""} - ${memory.endDate?.format(dateFormatter) ?: ""}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                Text(
+                    text = "${memory.entryCount} entries",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }

@@ -24,7 +24,7 @@ import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * Tasker/Locale/MacroDroid plugin configuration activity.
- * This activity is shown when the user selects Dairum as an action in their automation app.
+ * This activity is shown when the user selects Diarum as an action in their automation app.
  * The user can configure export settings which are then saved and passed back to the automation app.
  */
 @AndroidEntryPoint
@@ -40,6 +40,7 @@ class PluginEditActivity : ComponentActivity() {
         val initialFormat = existingBundle?.getString(BUNDLE_FORMAT) ?: "pdf"
         val initialPeriod = existingBundle?.getString(BUNDLE_PERIOD) ?: "all"
         val initialIncludeMedia = existingBundle?.getBoolean(BUNDLE_INCLUDE_MEDIA, true) ?: true
+        val initialExportPath = existingBundle?.getString(BUNDLE_EXPORT_PATH) ?: ""
         
         setContent {
             DairumTheme {
@@ -48,8 +49,9 @@ class PluginEditActivity : ComponentActivity() {
                     initialFormat = initialFormat,
                     initialPeriod = initialPeriod,
                     initialIncludeMedia = initialIncludeMedia,
-                    onSave = { action, format, period, includeMedia ->
-                        saveConfiguration(action, format, period, includeMedia)
+                    initialExportPath = initialExportPath,
+                    onSave = { action, format, period, includeMedia, exportPath ->
+                        saveConfiguration(action, format, period, includeMedia, exportPath)
                     },
                     onCancel = {
                         setResult(Activity.RESULT_CANCELED)
@@ -64,7 +66,8 @@ class PluginEditActivity : ComponentActivity() {
         action: String,
         format: String,
         period: String,
-        includeMedia: Boolean
+        includeMedia: Boolean,
+        exportPath: String
     ) {
         // Create the bundle that will be passed back to the automation app
         val resultBundle = Bundle().apply {
@@ -72,10 +75,13 @@ class PluginEditActivity : ComponentActivity() {
             putString(BUNDLE_FORMAT, format)
             putString(BUNDLE_PERIOD, period)
             putBoolean(BUNDLE_INCLUDE_MEDIA, includeMedia)
+            if (exportPath.isNotBlank()) {
+                putString(BUNDLE_EXPORT_PATH, exportPath)
+            }
         }
         
         // Generate the blurb (description shown in the automation app)
-        val blurb = generateBlurb(action, format, period, includeMedia)
+        val blurb = generateBlurb(action, format, period, includeMedia, exportPath)
         
         // Create the result intent
         val resultIntent = Intent().apply {
@@ -91,7 +97,8 @@ class PluginEditActivity : ComponentActivity() {
         action: String,
         format: String,
         period: String,
-        includeMedia: Boolean
+        includeMedia: Boolean,
+        exportPath: String
     ): String {
         return when (action) {
             ACTION_EXPORT -> {
@@ -103,13 +110,15 @@ class PluginEditActivity : ComponentActivity() {
                     else -> "all entries"
                 }
                 val mediaStr = if (includeMedia && format == "pdf") " with photos" else ""
-                "Export $periodStr to $formatStr$mediaStr"
+                val pathStr = if (exportPath.isNotBlank()) " → $exportPath" else ""
+                "Export $periodStr to $formatStr$mediaStr$pathStr"
             }
             ACTION_BACKUP -> {
                 val mediaStr = if (includeMedia) " with media" else ""
-                "Create backup$mediaStr"
+                val pathStr = if (exportPath.isNotBlank()) " → $exportPath" else ""
+                "Create backup$mediaStr$pathStr"
             }
-            else -> "Dairum Action"
+            else -> "Diarum Action"
         }
     }
 
@@ -123,6 +132,7 @@ class PluginEditActivity : ComponentActivity() {
         const val BUNDLE_FORMAT = "format"
         const val BUNDLE_PERIOD = "period"
         const val BUNDLE_INCLUDE_MEDIA = "include_media"
+        const val BUNDLE_EXPORT_PATH = "export_path"
         
         // Actions
         const val ACTION_EXPORT = "export"
@@ -137,18 +147,20 @@ fun PluginEditScreen(
     initialFormat: String,
     initialPeriod: String,
     initialIncludeMedia: Boolean,
-    onSave: (action: String, format: String, period: String, includeMedia: Boolean) -> Unit,
+    initialExportPath: String,
+    onSave: (action: String, format: String, period: String, includeMedia: Boolean, exportPath: String) -> Unit,
     onCancel: () -> Unit
 ) {
     var selectedAction by remember { mutableStateOf(initialAction) }
     var selectedFormat by remember { mutableStateOf(initialFormat) }
     var selectedPeriod by remember { mutableStateOf(initialPeriod) }
     var includeMedia by remember { mutableStateOf(initialIncludeMedia) }
+    var exportPath by remember { mutableStateOf(initialExportPath) }
     
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Configure Dairum Action") },
+                title = { Text("Configure Diarum Action") },
                 navigationIcon = {
                     IconButton(onClick = onCancel) {
                         Icon(Icons.Default.Close, contentDescription = "Cancel")
@@ -156,7 +168,7 @@ fun PluginEditScreen(
                 },
                 actions = {
                     TextButton(
-                        onClick = { onSave(selectedAction, selectedFormat, selectedPeriod, includeMedia) }
+                        onClick = { onSave(selectedAction, selectedFormat, selectedPeriod, includeMedia, exportPath) }
                     ) {
                         Text("Save", color = MaterialTheme.colorScheme.primary)
                     }
@@ -183,7 +195,7 @@ fun PluginEditScreen(
                 Column {
                     ActionOption(
                         title = "Export Journal",
-                        description = "Export entries to TXT or PDF file",
+                        description = "Export entries to TXT, PDF, JSON, or CSV",
                         icon = Icons.Default.FileDownload,
                         selected = selectedAction == PluginEditActivity.ACTION_EXPORT,
                         onClick = { selectedAction = PluginEditActivity.ACTION_EXPORT }
@@ -227,6 +239,27 @@ fun PluginEditScreen(
                         onClick = { selectedFormat = "pdf" },
                         label = { Text("PDF") },
                         leadingIcon = if (selectedFormat == "pdf") {
+                            { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                        } else null
+                    )
+                }
+                
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = selectedFormat == "json",
+                        onClick = { selectedFormat = "json" },
+                        label = { Text("JSON") },
+                        leadingIcon = if (selectedFormat == "json") {
+                            { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                        } else null
+                    )
+                    FilterChip(
+                        selected = selectedFormat == "csv",
+                        onClick = { selectedFormat = "csv" },
+                        label = { Text("CSV") },
+                        leadingIcon = if (selectedFormat == "csv") {
                             { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
                         } else null
                     )
@@ -299,6 +332,26 @@ fun PluginEditScreen(
                 }
             }
             
+            // Custom Export Path
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "Export Location",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
+            
+            OutlinedTextField(
+                value = exportPath,
+                onValueChange = { exportPath = it },
+                label = { Text("Custom path (optional)") },
+                placeholder = { Text("e.g. /storage/emulated/0/Documents/MyExports") },
+                supportingText = { Text("Leave empty to use default (Documents/diarum)") },
+                leadingIcon = { Icon(Icons.Default.Folder, contentDescription = null) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            
             // Preview Card
             Spacer(modifier = Modifier.height(16.dp))
             
@@ -325,7 +378,7 @@ fun PluginEditScreen(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = generatePreviewText(selectedAction, selectedFormat, selectedPeriod, includeMedia),
+                        text = generatePreviewText(selectedAction, selectedFormat, selectedPeriod, includeMedia, exportPath),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
@@ -355,7 +408,7 @@ fun PluginEditScreen(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "When this action runs, Dairum will automatically perform the configured operation in the background. Exports are saved to the app's export folder and can be shared from within Dairum.",
+                        text = "When this action runs, Diarum will automatically perform the configured operation in the background. Exports are saved to the specified location or the app's default export folder (Documents/diarum).",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -417,11 +470,17 @@ private fun generatePreviewText(
     action: String,
     format: String,
     period: String,
-    includeMedia: Boolean
+    includeMedia: Boolean,
+    exportPath: String
 ): String {
     return when (action) {
         PluginEditActivity.ACTION_EXPORT -> {
-            val formatStr = if (format == "pdf") "PDF" else "plain text"
+            val formatStr = when (format) {
+                "pdf" -> "PDF"
+                "json" -> "JSON"
+                "csv" -> "CSV"
+                else -> "plain text"
+            }
             val periodStr = when (period) {
                 "day" -> "from the last day"
                 "week" -> "from the last week"
@@ -429,11 +488,13 @@ private fun generatePreviewText(
                 else -> "(all entries)"
             }
             val mediaStr = if (includeMedia && format == "pdf") "\nPhotos will be embedded in the PDF." else ""
-            "Export journal entries $periodStr to $formatStr format.$mediaStr"
+            val pathStr = if (exportPath.isNotBlank()) "\nSaved to: $exportPath" else "\nSaved to: Documents/diarum (default)"
+            "Export journal entries $periodStr to $formatStr format.$mediaStr$pathStr"
         }
         PluginEditActivity.ACTION_BACKUP -> {
             val mediaStr = if (includeMedia) "including all photos and media files" else "without media files"
-            "Create a complete backup of all journal data, $mediaStr."
+            val pathStr = if (exportPath.isNotBlank()) "\nSaved to: $exportPath" else ""
+            "Create a complete backup of all journal data, $mediaStr.$pathStr"
         }
         else -> "Unknown action"
     }

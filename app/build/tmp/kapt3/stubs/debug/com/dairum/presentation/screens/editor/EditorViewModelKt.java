@@ -8,6 +8,8 @@ import com.dairum.data.service.LocationService;
 import com.dairum.data.service.VoiceRecorderService;
 import com.dairum.domain.model.*;
 import com.dairum.domain.repository.*;
+import com.dairum.presentation.theme.EntryBackgroundColor;
+import com.dairum.presentation.theme.EntryBackgroundColors;
 import com.dairum.widget.TodayWidgetProvider;
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import dagger.hilt.android.qualifiers.ApplicationContext;

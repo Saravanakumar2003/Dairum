@@ -50,30 +50,31 @@ class SmartReminderWorker @AssistedInject constructor(
     }
 
     private suspend fun checkBirthdaysAndAnniversaries() {
-        val now = System.currentTimeMillis()
-        val weekFromNow = now + TimeUnit.DAYS.toMillis(7)
+        val today = LocalDate.now()
         
-        val upcomingReminders = notificationDao.getUpcomingSmartReminders(now, weekFromNow)
+        // Fetch ALL enabled reminders so we can do recurrence expansion
+        // before filtering by date (fixes yearly reminders stored in past years).
+        val allReminders = notificationDao.getAllEnabledSmartReminders()
         
-        for (reminder in upcomingReminders) {
+        for (reminder in allReminders) {
             val reminderDate = LocalDateTime.ofInstant(
                 Instant.ofEpochMilli(reminder.reminderDate),
                 ZoneId.systemDefault()
-            )
-            
-            val today = LocalDate.now()
-            val reminderLocalDate = reminderDate.toLocalDate()
+            ).toLocalDate()
             
             // Adjust for yearly repeating reminders
             val effectiveDate = if (reminder.repeatYearly) {
-                reminderLocalDate.withYear(today.year).let { 
+                reminderDate.withYear(today.year).let { 
                     if (it.isBefore(today)) it.plusYears(1) else it
                 }
             } else {
-                reminderLocalDate
+                reminderDate
             }
             
             val daysUntil = ChronoUnit.DAYS.between(today, effectiveDate)
+            
+            // Only consider reminders within the next 7 days
+            if (daysUntil < 0 || daysUntil > 7) continue
             
             // Check if we should notify based on notifyDaysBefore
             if (daysUntil == reminder.notifyDaysBefore.toLong()) {

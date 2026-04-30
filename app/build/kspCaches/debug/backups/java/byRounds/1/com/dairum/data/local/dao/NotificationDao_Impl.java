@@ -1676,6 +1676,100 @@ public final class NotificationDao_Impl implements NotificationDao {
   }
 
   @Override
+  public Object getAllEnabledSmartReminders(
+      final Continuation<? super List<SmartReminderEntity>> $completion) {
+    final String _sql = "\n"
+            + "        SELECT * FROM smart_reminders \n"
+            + "        WHERE isEnabled = 1\n"
+            + "        ORDER BY reminderDate ASC\n"
+            + "    ";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<SmartReminderEntity>>() {
+      @Override
+      @NonNull
+      public List<SmartReminderEntity> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfReminderType = CursorUtil.getColumnIndexOrThrow(_cursor, "reminderType");
+          final int _cursorIndexOfTitle = CursorUtil.getColumnIndexOrThrow(_cursor, "title");
+          final int _cursorIndexOfDescription = CursorUtil.getColumnIndexOrThrow(_cursor, "description");
+          final int _cursorIndexOfReminderDate = CursorUtil.getColumnIndexOrThrow(_cursor, "reminderDate");
+          final int _cursorIndexOfRepeatYearly = CursorUtil.getColumnIndexOrThrow(_cursor, "repeatYearly");
+          final int _cursorIndexOfRelatedPersonId = CursorUtil.getColumnIndexOrThrow(_cursor, "relatedPersonId");
+          final int _cursorIndexOfRelatedEntryId = CursorUtil.getColumnIndexOrThrow(_cursor, "relatedEntryId");
+          final int _cursorIndexOfIsEnabled = CursorUtil.getColumnIndexOrThrow(_cursor, "isEnabled");
+          final int _cursorIndexOfNotifyDaysBefore = CursorUtil.getColumnIndexOrThrow(_cursor, "notifyDaysBefore");
+          final int _cursorIndexOfLastNotifiedAt = CursorUtil.getColumnIndexOrThrow(_cursor, "lastNotifiedAt");
+          final int _cursorIndexOfMetadata = CursorUtil.getColumnIndexOrThrow(_cursor, "metadata");
+          final int _cursorIndexOfCreatedAt = CursorUtil.getColumnIndexOrThrow(_cursor, "createdAt");
+          final List<SmartReminderEntity> _result = new ArrayList<SmartReminderEntity>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final SmartReminderEntity _item;
+            final long _tmpId;
+            _tmpId = _cursor.getLong(_cursorIndexOfId);
+            final SmartReminderType _tmpReminderType;
+            _tmpReminderType = __SmartReminderType_stringToEnum(_cursor.getString(_cursorIndexOfReminderType));
+            final String _tmpTitle;
+            _tmpTitle = _cursor.getString(_cursorIndexOfTitle);
+            final String _tmpDescription;
+            if (_cursor.isNull(_cursorIndexOfDescription)) {
+              _tmpDescription = null;
+            } else {
+              _tmpDescription = _cursor.getString(_cursorIndexOfDescription);
+            }
+            final long _tmpReminderDate;
+            _tmpReminderDate = _cursor.getLong(_cursorIndexOfReminderDate);
+            final boolean _tmpRepeatYearly;
+            final int _tmp;
+            _tmp = _cursor.getInt(_cursorIndexOfRepeatYearly);
+            _tmpRepeatYearly = _tmp != 0;
+            final Long _tmpRelatedPersonId;
+            if (_cursor.isNull(_cursorIndexOfRelatedPersonId)) {
+              _tmpRelatedPersonId = null;
+            } else {
+              _tmpRelatedPersonId = _cursor.getLong(_cursorIndexOfRelatedPersonId);
+            }
+            final Long _tmpRelatedEntryId;
+            if (_cursor.isNull(_cursorIndexOfRelatedEntryId)) {
+              _tmpRelatedEntryId = null;
+            } else {
+              _tmpRelatedEntryId = _cursor.getLong(_cursorIndexOfRelatedEntryId);
+            }
+            final boolean _tmpIsEnabled;
+            final int _tmp_1;
+            _tmp_1 = _cursor.getInt(_cursorIndexOfIsEnabled);
+            _tmpIsEnabled = _tmp_1 != 0;
+            final int _tmpNotifyDaysBefore;
+            _tmpNotifyDaysBefore = _cursor.getInt(_cursorIndexOfNotifyDaysBefore);
+            final Long _tmpLastNotifiedAt;
+            if (_cursor.isNull(_cursorIndexOfLastNotifiedAt)) {
+              _tmpLastNotifiedAt = null;
+            } else {
+              _tmpLastNotifiedAt = _cursor.getLong(_cursorIndexOfLastNotifiedAt);
+            }
+            final String _tmpMetadata;
+            if (_cursor.isNull(_cursorIndexOfMetadata)) {
+              _tmpMetadata = null;
+            } else {
+              _tmpMetadata = _cursor.getString(_cursorIndexOfMetadata);
+            }
+            final long _tmpCreatedAt;
+            _tmpCreatedAt = _cursor.getLong(_cursorIndexOfCreatedAt);
+            _item = new SmartReminderEntity(_tmpId,_tmpReminderType,_tmpTitle,_tmpDescription,_tmpReminderDate,_tmpRepeatYearly,_tmpRelatedPersonId,_tmpRelatedEntryId,_tmpIsEnabled,_tmpNotifyDaysBefore,_tmpLastNotifiedAt,_tmpMetadata,_tmpCreatedAt);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
   public Object getRecentNotificationHistory(final int limit,
       final Continuation<? super List<NotificationHistoryEntity>> $completion) {
     final String _sql = "SELECT * FROM notification_history ORDER BY sentAt DESC LIMIT ?";

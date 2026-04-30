@@ -54,6 +54,18 @@ interface PersonDao {
     """)
     suspend fun getTopPeople(limit: Int): List<PersonWithCount>
     
+    @Query("""
+        SELECT p.*, COUNT(ep.entryId) as entryCount 
+        FROM people p
+        LEFT JOIN entry_people ep ON p.id = ep.personId
+        LEFT JOIN journal_entries e ON ep.entryId = e.id AND e.isArchived = 0 AND e.isDraft = 0
+            AND e.createdAt >= :startTime
+        GROUP BY p.id
+        ORDER BY entryCount DESC
+        LIMIT :limit
+    """)
+    suspend fun getTopPeopleSince(limit: Int, startTime: Long): List<PersonWithCount>
+    
     @Query("UPDATE people SET mentionCount = mentionCount + 1 WHERE id = :id")
     suspend fun incrementMentionCount(id: Long)
     

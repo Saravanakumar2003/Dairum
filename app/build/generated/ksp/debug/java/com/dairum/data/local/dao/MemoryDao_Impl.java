@@ -1602,6 +1602,7 @@ public final class MemoryDao_Impl implements MemoryDao {
           final int _cursorIndexOfIsDraft = CursorUtil.getColumnIndexOrThrow(_cursor, "isDraft");
           final int _cursorIndexOfIsPinned = CursorUtil.getColumnIndexOrThrow(_cursor, "isPinned");
           final int _cursorIndexOfWordCount = CursorUtil.getColumnIndexOrThrow(_cursor, "wordCount");
+          final int _cursorIndexOfBackgroundColor = CursorUtil.getColumnIndexOrThrow(_cursor, "backgroundColor");
           final List<JournalEntryEntity> _result = new ArrayList<JournalEntryEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final JournalEntryEntity _item;
@@ -1669,7 +1670,13 @@ public final class MemoryDao_Impl implements MemoryDao {
             _tmpIsPinned = _tmp_3 != 0;
             final int _tmpWordCount;
             _tmpWordCount = _cursor.getInt(_cursorIndexOfWordCount);
-            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount);
+            final String _tmpBackgroundColor;
+            if (_cursor.isNull(_cursorIndexOfBackgroundColor)) {
+              _tmpBackgroundColor = null;
+            } else {
+              _tmpBackgroundColor = _cursor.getString(_cursorIndexOfBackgroundColor);
+            }
+            _item = new JournalEntryEntity(_tmpId,_tmpTitle,_tmpContent,_tmpPlainContent,_tmpCategoryId,_tmpCreatedAt,_tmpUpdatedAt,_tmpMoodLevel,_tmpMoodIcon,_tmpWeatherData,_tmpLocationData,_tmpIsFavorite,_tmpIsArchived,_tmpIsDraft,_tmpIsPinned,_tmpWordCount,_tmpBackgroundColor);
             _result.add(_item);
           }
           return _result;
