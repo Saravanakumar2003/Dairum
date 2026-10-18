@@ -1,14 +1,21 @@
 /.DS_Store
+.DS_Store
 /.gradle
 /.vscode
 /Dairum-debug.apk
 /build
 /local.properties
 /.idea
-/.iml
+*.iml
+/captures
 
 /app/build
 /app/.cxx
 /app/.externalNativeBuild
 /app/.gradle
 
+# Real or scrubbed database fixtures for androidTest. Never commit these: even a scrubbed
+# copy is derived from a personal diary. See app/src/androidTest/assets/fixtures/README.md.
+/app/src/androidTest/assets/fixtures/*.db
+/app/src/androidTest/assets/fixtures/*.db-*
+/app/src/androidTest/assets/fixtures/*.counts.tsv

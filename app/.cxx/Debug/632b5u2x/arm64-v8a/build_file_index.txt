@@ -1,1 +1,0 @@
-/Users/saravan-zpt0121/Documents/Code/Dairum/app/src/main/cpp/CMakeLists.txt
