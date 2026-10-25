@@ -5,10 +5,11 @@ Android journaling app (Kotlin, Compose, Room, Hilt). Package `com.dairum`; the 
 
 ## Build and test
 
-- JDK 17 is required. `gradle.properties` pins the Gradle daemon to Homebrew openjdk@17. The
-  `./gradlew` client still needs a `JAVA_HOME`, e.g.
-  `export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home`.
-  Android Studio's bundled JDK is 25 and breaks the Kotlin 1.9 compiler.
+- JDK 17 is required. The Gradle daemon JDK is pinned per machine in `~/.gradle/gradle.properties`
+  (`org.gradle.java.home=<path to a JDK 17>`), not in the repo. On this Mac:
+  `/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home`. The `./gradlew` client JVM can be
+  any JDK (Android Studio's bundled Java 25 works), but Gradle 8.5 and Kotlin 1.9 cannot run the
+  build itself on Java 25.
 - Compile instrumented tests: `./gradlew :app:compileDebugAndroidTestKotlin`
 - Run them on a device or emulator: `./gradlew :app:connectedDebugAndroidTest`
   (emulator `dairum_test`, Pixel 7, Android 15; set `ANDROID_SERIAL` if several devices are attached).
