@@ -121,7 +121,25 @@ fun DairumNavGraph(
         composable(Screen.AIChat.route) {
             ChatScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToModels = { navController.navigate(Screen.AISettings.route) }
+                onNavigateToModels = { navController.navigate(Screen.AISettings.route) },
+                onNavigateToGuardrails = { navController.navigate(Screen.AIGuardrails.route) }
+            )
+        }
+        
+        // AI Guardrails - view/edit the system prompt and guardrail rules
+        composable(Screen.AIGuardrails.route) {
+            com.dairum.presentation.screens.ai.AIGuardrailsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        
+        // Contextual Search - find entries by memory/keyword/person/location/date
+        composable(Screen.ContextualSearch.route) {
+            com.dairum.presentation.screens.search.ContextualSearchScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onEntryClick = { entryId ->
+                    navController.navigate(Screen.EntryDetail.createRoute(entryId))
+                }
             )
         }
         
@@ -195,6 +213,69 @@ fun DairumNavGraph(
             )
         }
         
+        // Gratia
+        composable(Screen.Gratia.route) {
+            com.dairum.presentation.screens.gratia.GratiaScreen(
+                onWriteEntry = { prompt ->
+                    navController.navigate(Screen.EntryEditor.createRoute(prompt = prompt))
+                },
+                onPlayAffirmation = { folderId ->
+                    navController.navigate(Screen.AffirmationPlay.createRoute(folderId))
+                },
+                onNavigateToBreathing = {
+                    navController.navigate(Screen.BreathingExercise.route)
+                }
+            )
+        }
+        
+        composable(
+            route = Screen.GratitudeFolderDetail.route,
+            arguments = listOf(navArgument("folderId") { type = NavType.LongType })
+        ) {
+            com.dairum.presentation.screens.gratia.GratitudeFolderDetailScreen(
+                onBackClick = { navController.popBackStack() },
+                onWriteClick = { prompt ->
+                    navController.navigate(Screen.EntryEditor.createRoute(prompt = prompt))
+                }
+            )
+        }
+        
+        composable(
+            route = Screen.AffirmationFolderDetail.route,
+            arguments = listOf(navArgument("folderId") { type = NavType.LongType })
+        ) {
+            com.dairum.presentation.screens.gratia.AffirmationFolderDetailScreen(
+                onBackClick = { navController.popBackStack() },
+                onPlayClick = { folderId ->
+                    navController.navigate(Screen.AffirmationPlay.createRoute(folderId))
+                }
+            )
+        }
+        
+        composable(
+            route = Screen.AffirmationPlay.route,
+            arguments = listOf(navArgument("folderId") { type = NavType.LongType })
+        ) {
+            com.dairum.presentation.screens.gratia.AffirmationPlayScreen(
+                onBackClick = { navController.popBackStack() },
+                onWriteJournal = { prompt ->
+                    navController.navigate(Screen.EntryEditor.createRoute(prompt = prompt))
+                }
+            )
+        }
+        
+        composable(Screen.GratiaSettings.route) {
+            com.dairum.presentation.screens.gratia.GratiaSettingsScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        
+        composable(Screen.BreathingExercise.route) {
+            com.dairum.presentation.screens.gratia.BreathingExerciseScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        
         composable(Screen.Stats.route) {
             StatsScreen()
         }
@@ -236,6 +317,45 @@ fun DairumNavGraph(
                 },
                 onNavigateToAISettings = {
                     navController.navigate(Screen.AISettings.route)
+                },
+                onNavigateToAIGuardrails = {
+                    navController.navigate(Screen.AIGuardrails.route)
+                },
+                onNavigateToContextualSearch = {
+                    navController.navigate(Screen.ContextualSearch.route)
+                },
+                onNavigateToTemplates = {
+                    navController.navigate(Screen.ManageTemplates.route)
+                },
+                onNavigateToExport = {
+                    navController.navigate(Screen.ExportSettings.route)
+                },
+                onNavigateToBackupRestore = {
+                    navController.navigate(Screen.BackupRestore.route)
+                },
+                onNavigateToAutomation = {
+                    navController.navigate(Screen.TaskerIntegration.route)
+                },
+                onNavigateToSecurity = {
+                    navController.navigate(Screen.SecuritySettings.route)
+                },
+                onNavigateToNotifications = {
+                    navController.navigate(Screen.NotificationSettings.route)
+                },
+                onNavigateToApiKeys = {
+                    navController.navigate(Screen.ApiKeySettings.route)
+                },
+                onNavigateToAbout = {
+                    navController.navigate(Screen.AboutScreen.route)
+                },
+                onNavigateToTrash = {
+                    navController.navigate(Screen.Trash.route)
+                },
+                onNavigateToGratiaSettings = {
+                    navController.navigate(Screen.GratiaSettings.route)
+                },
+                onNavigateToSearch = {
+                    navController.navigate(Screen.Search.route)
                 }
             )
         }
@@ -248,6 +368,21 @@ fun DairumNavGraph(
                 },
                 onMemoryClick = { memoryId ->
                     navController.navigate(Screen.MemoryDetail.createRoute(memoryId))
+                }
+            )
+        }
+        
+        composable(Screen.Trash.route) {
+            com.dairum.presentation.screens.trash.TrashScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        
+        composable(Screen.Search.route) {
+            com.dairum.presentation.screens.search.SearchScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onEntryClick = { entryId ->
+                    navController.navigate(Screen.EntryDetail.createRoute(entryId))
                 }
             )
         }
@@ -303,12 +438,21 @@ fun DairumNavGraph(
                 navArgument("entryId") {
                     type = NavType.LongType
                     defaultValue = -1L
+                },
+                navArgument("prompt") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                    nullable = true
                 }
             )
         ) { backStackEntry ->
             val entryId = backStackEntry.arguments?.getLong("entryId")?.takeIf { it != -1L }
+            val prompt = backStackEntry.arguments?.getString("prompt")
+                ?.takeIf { it.isNotEmpty() }
+                ?.let { java.net.URLDecoder.decode(it, "UTF-8") }
             EditorScreen(
                 entryId = entryId,
+                initialPrompt = prompt,
                 onBackClick = { navController.popBackStack() },
                 onEntrySaved = { navController.popBackStack() }
             )
@@ -368,16 +512,6 @@ fun DairumNavGraph(
             val moodLevel = backStackEntry.arguments?.getInt("moodLevel") ?: return@composable
             // MoodEntriesScreen(
             //     moodLevel = moodLevel,
-            //     onEntryClick = { entryId ->
-            //         navController.navigate(Screen.EntryDetail.createRoute(entryId))
-            //     },
-            //     onBackClick = { navController.popBackStack() }
-            // )
-        }
-        
-        // Search
-        composable(Screen.Search.route) {
-            // SearchScreen(
             //     onEntryClick = { entryId ->
             //         navController.navigate(Screen.EntryDetail.createRoute(entryId))
             //     },

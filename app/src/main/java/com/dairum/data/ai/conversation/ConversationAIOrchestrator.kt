@@ -35,35 +35,22 @@ class ConversationAIOrchestrator @Inject constructor(
     private val reflectionService: ReflectionGenerationService,
     private val chatSessionRepository: ChatSessionRepository,
     private val chatMessageRepository: ChatMessageRepository,
-    private val conversationContextRepository: ConversationContextRepository
+    private val conversationContextRepository: ConversationContextRepository,
+    private val guardrailsRepository: AIGuardrailsRepository
 ) {
     
     companion object {
         private const val TAG = "ConversationAIOrchestrator"
         
-        // System instruction for the AI companion
-        private const val SYSTEM_INSTRUCTION = """You are a thoughtful, reflective AI companion. Engage deeply with the user's ideas, especially around ethics, philosophy, emotions, life experiences, and meaningful topics.
-
-Your approach:
-- Be genuinely curious and ask thoughtful follow-up questions
-- Explore ideas together rather than just answering questions
-- Recognize patterns in the user's thinking and gently reflect them back
-- Be clear, honest, and nuanced in your responses
-- Remember context from the conversation and reference it naturally
-- Avoid generic responses - be specific and personal
-- When appropriate, share relevant perspectives or gentle challenges
-
-You have access to:
-- Recent conversation context
-- Relevant past discussions and journal reflections
-- Insights about the user's values, concerns, and thinking patterns
-
-Use this context to provide continuity and depth, but don't explicitly mention "memory" or "context" - integrate it naturally."""
-        
         // Maximum tokens for context and generation
         private const val MAX_CONTEXT_TOKENS = 1800
         private const val MAX_GENERATION_TOKENS = 400
         private const val MEMORY_SNIPPET_MAX_CHARS = 120
+        
+        // Kotlin-side safety net: the native streaming path is the primary enforcement point
+        // (see llama_jni.cpp), but these are also checked here so guardrails stay effective
+        // even if the native model produces an unusual variant of a turn marker.
+        private val TURN_BOUNDARY_MARKERS = listOf("\nUser:", "\nHuman:", "\n---", "User:", "Human:")
     }
     
     /**
@@ -163,7 +150,8 @@ Use this context to provide continuity and depth, but don't explicitly mention "
                 generationTimeMs = elapsedTime,
                 metadata = MessageMetadata(
                     sourceEntryIds = memories.journalEntries.map { it.entry.id },
-                    sourceReflectionIds = memories.reflectionMemories.map { it.reflection.id }
+                    sourceReflectionIds = memories.reflectionMemories.map { it.reflection.id },
+                    promptUsed = prompt.build()
                 ),
                 createdAt = LocalDateTime.now()
             )
@@ -238,10 +226,15 @@ Use this context to provide continuity and depth, but don't explicitly mention "
             // Build prompt
             val prompt = buildConversationPrompt(userMessage, memories, MemoryRetrievalConfig())
             
-            emit(ConversationStreamEvent.GenerationStarted)
+            emit(ConversationStreamEvent.GenerationStarted(prompt.build()))
             
-            // Stream generation
+            // Stream generation, with a Kotlin-side safety net that stops as soon as the model
+            // starts fabricating a new "User:"/"Assistant:" turn or exceeds the token budget -
+            // this backs up the native-level enforcement in case a model produces an unusual
+            // variant of a stop marker.
             val responseBuilder = StringBuilder()
+            var tokenCount = 0
+            var stoppedEarly = false
             localLLM.generateStream(
                 prompt = prompt.build(),
                 maxTokens = MAX_GENERATION_TOKENS,
@@ -250,8 +243,26 @@ Use this context to provide continuity and depth, but don't explicitly mention "
                 repeatPenalty = 1.15f,
                 stopTokens = listOf("User:", "Human:", "---")
             ).collect { token ->
+                if (stoppedEarly) return@collect
+                
                 responseBuilder.append(token)
+                tokenCount++
+                
+                val marker = TURN_BOUNDARY_MARKERS.firstOrNull { responseBuilder.contains(it) }
+                if (marker != null) {
+                    val cutIndex = responseBuilder.indexOf(marker)
+                    responseBuilder.setLength(cutIndex.coerceAtLeast(0))
+                    stoppedEarly = true
+                    localLLM.cancelGeneration()
+                    return@collect
+                }
+                
                 emit(ConversationStreamEvent.Token(token))
+                
+                if (tokenCount >= MAX_GENERATION_TOKENS) {
+                    stoppedEarly = true
+                    localLLM.cancelGeneration()
+                }
             }
             
             val elapsedTime = System.currentTimeMillis() - startTime
@@ -266,7 +277,8 @@ Use this context to provide continuity and depth, but don't explicitly mention "
                 generationTimeMs = elapsedTime,
                 metadata = MessageMetadata(
                     sourceEntryIds = memories.journalEntries.map { it.entry.id },
-                    sourceReflectionIds = memories.reflectionMemories.map { it.reflection.id }
+                    sourceReflectionIds = memories.reflectionMemories.map { it.reflection.id },
+                    promptUsed = prompt.build()
                 ),
                 createdAt = LocalDateTime.now()
             )
@@ -283,12 +295,23 @@ Use this context to provide continuity and depth, but don't explicitly mention "
     /**
      * Build the conversation prompt with memory context
      */
-    private fun buildConversationPrompt(
+    private suspend fun buildConversationPrompt(
         userQuestion: String,
         memories: MemoryRetrievalResult,
         config: MemoryRetrievalConfig
     ): ConversationPrompt {
-        var tokensUsed = estimateTokens(SYSTEM_INSTRUCTION) + estimateTokens(userQuestion)
+        val guardrails = guardrailsRepository.getSettings()
+        val systemInstruction = buildString {
+            append(guardrails.systemPrompt)
+            val rulesBlock = guardrails.buildGuardrailsBlock()
+            if (rulesBlock.isNotBlank()) {
+                appendLine()
+                appendLine()
+                append(rulesBlock)
+            }
+        }
+        
+        var tokensUsed = estimateTokens(systemInstruction) + estimateTokens(userQuestion)
         
         // Build recent conversation section
         val recentConversation = buildString {
@@ -302,10 +325,16 @@ Use this context to provide continuity and depth, but don't explicitly mention "
         
         // Build relevant memories section
         val relevantMemories = buildString {
-            // Add reflections first (most persistent)
+            // Add reflections first (most persistent) - user-provided ones are labelled as known
+            // facts, AI-inferred ones as insights, so the model doesn't confuse the two.
             if (memories.reflectionMemories.isNotEmpty()) {
                 memories.reflectionMemories.forEach { scored ->
-                    val snippet = "• ${scored.reflection.content.take(MEMORY_SNIPPET_MAX_CHARS)}"
+                    val prefix = if (scored.reflection.category == ReflectionCategory.USER_PROVIDED) {
+                        "Known fact about the user"
+                    } else {
+                        "Insight"
+                    }
+                    val snippet = "• $prefix: ${scored.reflection.content.take(MEMORY_SNIPPET_MAX_CHARS)}"
                     if (tokensUsed + estimateTokens(snippet) < config.availableContextTokens) {
                         appendLine(snippet)
                         tokensUsed += estimateTokens(snippet)
@@ -313,13 +342,13 @@ Use this context to provide continuity and depth, but don't explicitly mention "
                 }
             }
             
-            // Add journal entries
+            // Add journal entries, including tags/people/location so the AI can answer
+            // location/person/date-specific questions instead of only seeing raw text
             if (memories.journalEntries.isNotEmpty()) {
                 appendLine()
                 appendLine("From journal:")
                 memories.journalEntries.forEach { result ->
-                    val entry = result.entry
-                    val snippet = "• [${entry.createdAt.toLocalDate()}] ${entry.plainContent.take(MEMORY_SNIPPET_MAX_CHARS)}"
+                    val snippet = "• ${buildJournalSnippet(result.entry)}"
                     if (tokensUsed + estimateTokens(snippet) < config.availableContextTokens) {
                         appendLine(snippet)
                         tokensUsed += estimateTokens(snippet)
@@ -344,12 +373,35 @@ Use this context to provide continuity and depth, but don't explicitly mention "
         }.trim()
         
         return ConversationPrompt(
-            systemInstruction = SYSTEM_INSTRUCTION,
+            systemInstruction = systemInstruction,
             recentConversation = recentConversation,
             relevantMemories = relevantMemories,
             userQuestion = userQuestion,
             totalTokens = tokensUsed
         )
+    }
+    
+    /**
+     * Builds a single journal entry snippet including its date, location(s), people, and tags -
+     * without this, the AI only ever saw a truncated text excerpt and had no reliable way to
+     * answer questions like "when was I in Thanjavur?" unless that place name happened to fall
+     * within the first ~120 characters of the entry.
+     */
+    private fun buildJournalSnippet(entry: JournalEntry): String {
+        return buildString {
+            append("[${entry.createdAt.toLocalDate()}] ")
+            val locations = listOfNotNull(entry.location) + entry.additionalLocations
+            if (locations.isNotEmpty()) {
+                append("📍${locations.joinToString(", ") { it.placeName ?: it.address ?: "" }} ")
+            }
+            if (entry.people.isNotEmpty()) {
+                append("with ${entry.people.joinToString(", ") { it.name }} ")
+            }
+            if (entry.tags.isNotEmpty()) {
+                append("(${entry.tags.joinToString(", ") { it.name }}) ")
+            }
+            append(entry.plainContent.take(MEMORY_SNIPPET_MAX_CHARS))
+        }
     }
     
     /**
@@ -442,7 +494,7 @@ Title:"""
 sealed class ConversationStreamEvent {
     data class Processing(val status: String) : ConversationStreamEvent()
     data class UserMessageSaved(val message: ChatMessage) : ConversationStreamEvent()
-    data object GenerationStarted : ConversationStreamEvent()
+    data class GenerationStarted(val promptUsed: String) : ConversationStreamEvent()
     data class Token(val token: String) : ConversationStreamEvent()
     data class Complete(val message: ChatMessage) : ConversationStreamEvent()
     data class Error(val message: String) : ConversationStreamEvent()

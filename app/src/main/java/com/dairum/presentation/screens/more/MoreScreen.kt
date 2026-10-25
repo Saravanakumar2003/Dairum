@@ -1,8 +1,10 @@
 package com.dairum.presentation.screens.more
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -10,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -18,7 +21,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun MoreScreen(
     onNavigateToFiles: () -> Unit,
-    onNavigateToSettings: () -> Unit,
+    @Suppress("UNUSED_PARAMETER") onNavigateToSettings: () -> Unit,
     onNavigateToLocationMap: () -> Unit,
     onNavigateToCategories: () -> Unit,
     onNavigateToTags: () -> Unit,
@@ -28,7 +31,20 @@ fun MoreScreen(
     onNavigateToAIChat: () -> Unit = {},
     onNavigateToAIReflections: () -> Unit = {},
     onNavigateToAIPatterns: () -> Unit = {},
-    onNavigateToAISettings: () -> Unit = {}
+    onNavigateToAISettings: () -> Unit = {},
+    onNavigateToAIGuardrails: () -> Unit = {},
+    onNavigateToContextualSearch: () -> Unit = {},
+    onNavigateToTemplates: () -> Unit = {},
+    onNavigateToExport: () -> Unit = {},
+    onNavigateToBackupRestore: () -> Unit = {},
+    onNavigateToAutomation: () -> Unit = {},
+    onNavigateToSecurity: () -> Unit = {},
+    onNavigateToNotifications: () -> Unit = {},
+    onNavigateToApiKeys: () -> Unit = {},
+    onNavigateToAbout: () -> Unit = {},
+    onNavigateToTrash: () -> Unit = {},
+    onNavigateToGratiaSettings: () -> Unit = {},
+    onNavigateToSearch: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -91,6 +107,15 @@ fun MoreScreen(
             }
             
             item {
+                MoreMenuItem(
+                    icon = Icons.Outlined.Shield,
+                    title = "AI Guardrails",
+                    subtitle = "Edit the system prompt and hallucination guardrails",
+                    onClick = onNavigateToAIGuardrails
+                )
+            }
+            
+            item {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             }
             
@@ -110,6 +135,24 @@ fun MoreScreen(
                     title = "Favorites",
                     subtitle = "Your hearted and bookmarked entries",
                     onClick = onNavigateToFavorites
+                )
+            }
+            
+            item {
+                MoreMenuItem(
+                    icon = Icons.Outlined.ManageSearch,
+                    title = "Advanced Search",
+                    subtitle = "Search by text, tags, people, dates, mood & more",
+                    onClick = onNavigateToSearch
+                )
+            }
+            
+            item {
+                MoreMenuItem(
+                    icon = Icons.Outlined.TravelExplore,
+                    title = "Contextual Search",
+                    subtitle = "Find entries by memory, key event, person, or place",
+                    onClick = onNavigateToContextualSearch
                 )
             }
             
@@ -185,10 +228,10 @@ fun MoreScreen(
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             }
             
-            // ============ SETTINGS ============
+            // ============ TEMPLATES & EXPORT ============
             item {
                 Text(
-                    "Settings & Preferences",
+                    "Templates & Export",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(vertical = 8.dp)
@@ -197,10 +240,105 @@ fun MoreScreen(
             
             item {
                 MoreMenuItem(
-                    icon = Icons.Outlined.Settings,
-                    title = "Settings",
-                    subtitle = "Templates, backup, security & more",
-                    onClick = onNavigateToSettings
+                    icon = Icons.Outlined.Description,
+                    title = "Custom Templates",
+                    subtitle = "Create your own journal templates",
+                    onClick = onNavigateToTemplates
+                )
+            }
+            
+            item {
+                MoreMenuItem(
+                    icon = Icons.Outlined.FileDownload,
+                    title = "Export Entries",
+                    subtitle = "Export to PDF or Text file",
+                    onClick = onNavigateToExport
+                )
+            }
+            
+            item {
+                MoreMenuItem(
+                    icon = Icons.Outlined.Backup,
+                    title = "Backup & Restore",
+                    subtitle = "Full app data backup",
+                    onClick = onNavigateToBackupRestore
+                )
+            }
+            
+            item {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            }
+            
+            // ============ SETTINGS ============
+            item {
+                Text(
+                    "Settings",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            
+            item {
+                MoreMenuItem(
+                    icon = Icons.Outlined.SelfImprovement,
+                    title = "TTS & Media Settings",
+                    subtitle = "TTS voice, speed, background music",
+                    onClick = onNavigateToGratiaSettings
+                )
+            }
+            
+            item {
+                MoreMenuItem(
+                    icon = Icons.Outlined.AutoAwesome,
+                    title = "Automation",
+                    subtitle = "Tasker, MacroDroid integration",
+                    onClick = onNavigateToAutomation
+                )
+            }
+            
+            item {
+                MoreMenuItem(
+                    icon = Icons.Outlined.Lock,
+                    title = "Security",
+                    subtitle = "App lock, biometric authentication",
+                    onClick = onNavigateToSecurity
+                )
+            }
+            
+            item {
+                MoreMenuItem(
+                    icon = Icons.Outlined.Notifications,
+                    title = "Notifications",
+                    subtitle = "Reminders, birthdays, anniversaries",
+                    onClick = onNavigateToNotifications
+                )
+            }
+            
+            item {
+                MoreMenuItem(
+                    icon = Icons.Outlined.Key,
+                    title = "API Keys",
+                    subtitle = "Configure Maps and Calendar API keys",
+                    onClick = onNavigateToApiKeys
+                )
+            }
+            
+            item {
+                MoreMenuItem(
+                    icon = Icons.Outlined.Info,
+                    title = "About",
+                    subtitle = "Version info and credits",
+                    onClick = onNavigateToAbout
+                )
+            }
+            
+            item {
+                MoreMenuItem(
+                    icon = Icons.Outlined.Delete,
+                    title = "Trash",
+                    subtitle = "Recently deleted entries",
+                    onClick = onNavigateToTrash
                 )
             }
         }
@@ -214,30 +352,44 @@ private fun MoreMenuItem(
     subtitle: String,
     onClick: () -> Unit
 ) {
-    ElevatedCard(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(32.dp)
-            )
+            // Icon in a tinted container
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
             
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold
                 )
                 Text(
                     subtitle,
@@ -249,7 +401,8 @@ private fun MoreMenuItem(
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                modifier = Modifier.size(20.dp)
             )
         }
     }

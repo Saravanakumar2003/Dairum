@@ -1271,11 +1271,11 @@ private fun downloadFile(context: android.content.Context, uri: String, fileName
         
         // Use MediaStore for Android 10+ (API 29)
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-            // Save to Documents/dairum folder using MediaStore
+            // Save to Documents/Data Exports/Dairum folder using MediaStore
             val contentValues = android.content.ContentValues().apply {
                 put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, "Dairum_$fileName")
                 put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, 
-                    android.os.Environment.DIRECTORY_DOCUMENTS + "/dairum")
+                    android.os.Environment.DIRECTORY_DOCUMENTS + "/Data Exports/Dairum")
             }
             
             // Determine mime type
@@ -1310,7 +1310,7 @@ private fun downloadFile(context: android.content.Context, uri: String, fileName
                 }
                 android.widget.Toast.makeText(
                     context,
-                    "Saved to Documents/dairum: Dairum_$fileName",
+                    "Saved to Documents/Data Exports/Dairum: Dairum_$fileName",
                     android.widget.Toast.LENGTH_SHORT
                 ).show()
             } else {
@@ -1326,7 +1326,7 @@ private fun downloadFile(context: android.content.Context, uri: String, fileName
             val documentsDir = android.os.Environment.getExternalStoragePublicDirectory(
                 android.os.Environment.DIRECTORY_DOCUMENTS
             )
-            val dairumDir = java.io.File(documentsDir, "dairum").also { it.mkdirs() }
+            val dairumDir = java.io.File(java.io.File(documentsDir, "Data Exports"), "Dairum").also { it.mkdirs() }
             val destFile = java.io.File(dairumDir, "Dairum_$fileName")
             
             inputStream.use { input ->
@@ -1337,7 +1337,7 @@ private fun downloadFile(context: android.content.Context, uri: String, fileName
             
             android.widget.Toast.makeText(
                 context,
-                "Saved to Documents/dairum: ${destFile.name}",
+                "Saved to Documents/Data Exports/Dairum: ${destFile.name}",
                 android.widget.Toast.LENGTH_SHORT
             ).show()
         }

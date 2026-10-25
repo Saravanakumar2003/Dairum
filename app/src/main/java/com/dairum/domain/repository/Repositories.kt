@@ -39,6 +39,12 @@ interface JournalRepository {
     suspend fun togglePin(id: Long, isPinned: Boolean)
     suspend fun archiveEntry(id: Long, isArchived: Boolean)
     
+    // Soft delete / Trash
+    suspend fun softDelete(id: Long)
+    suspend fun restoreEntry(id: Long)
+    fun getDeletedEntries(): Flow<List<JournalEntry>>
+    suspend fun emptyTrash()
+    
     // Tags for entry
     suspend fun setTagsForEntry(entryId: Long, tagIds: List<Long>)
     
@@ -120,6 +126,14 @@ interface PersonRepository {
     suspend fun getTopPeople(limit: Int): List<Person>
     suspend fun getPeopleForEntry(entryId: Long): List<Person>
     suspend fun toggleFavorite(id: Long, isFavorite: Boolean)
+}
+
+/** Persistent, entry-independent nicknames for locations (e.g. "Grandma's House"). */
+interface LocationNicknameRepository {
+    fun getAllFlow(): Flow<List<LocationNickname>>
+    suspend fun getAll(): List<LocationNickname>
+    suspend fun setNickname(location: Location, nickname: String)
+    suspend fun removeNickname(location: Location)
 }
 
 interface TrackerRepository {

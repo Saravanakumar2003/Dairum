@@ -1,3 +1,0 @@
-/Users/saravan-zpt0121/Documents/Code/Dairum/app/.cxx/Debug/632b5u2x/x86_64/CMakeFiles/llama-android.dir
-/Users/saravan-zpt0121/Documents/Code/Dairum/app/.cxx/Debug/632b5u2x/x86_64/CMakeFiles/edit_cache.dir
-/Users/saravan-zpt0121/Documents/Code/Dairum/app/.cxx/Debug/632b5u2x/x86_64/CMakeFiles/rebuild_cache.dir

@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "d2d98dd1ca3a5bdd53fa85267eab944c",
+    "identityHash": "5977a7b8b227c643ddad005b653bf637",
     "entities": [
       {
         "tableName": "journal_entries",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT, `content` TEXT NOT NULL, `plainContent` TEXT NOT NULL, `categoryId` INTEGER, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `moodLevel` INTEGER, `moodIcon` TEXT, `weatherData` TEXT, `locationData` TEXT, `isFavorite` INTEGER NOT NULL, `isArchived` INTEGER NOT NULL, `isDraft` INTEGER NOT NULL, `isPinned` INTEGER NOT NULL, `wordCount` INTEGER NOT NULL, `backgroundColor` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT, `content` TEXT NOT NULL, `plainContent` TEXT NOT NULL, `categoryId` INTEGER, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `moodLevel` INTEGER, `moodIcon` TEXT, `weatherData` TEXT, `locationData` TEXT, `isFavorite` INTEGER NOT NULL, `isArchived` INTEGER NOT NULL, `isDraft` INTEGER NOT NULL, `isPinned` INTEGER NOT NULL, `wordCount` INTEGER NOT NULL, `backgroundColor` TEXT, `deletedAt` INTEGER)",
         "fields": [
           {
             "fieldPath": "id",
@@ -108,6 +108,12 @@
             "fieldPath": "backgroundColor",
             "columnName": "backgroundColor",
             "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deletedAt",
+            "affinity": "INTEGER",
             "notNull": false
           }
         ],
@@ -2877,7 +2883,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd2d98dd1ca3a5bdd53fa85267eab944c')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '5977a7b8b227c643ddad005b653bf637')"
     ]
   }
 }

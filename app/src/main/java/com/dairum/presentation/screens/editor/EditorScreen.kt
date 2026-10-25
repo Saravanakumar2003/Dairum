@@ -77,6 +77,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun EditorScreen(
     entryId: Long?,
+    initialPrompt: String? = null,
     onBackClick: () -> Unit,
     onEntrySaved: () -> Unit,
     viewModel: EditorViewModel = hiltViewModel()
@@ -85,6 +86,13 @@ fun EditorScreen(
     val scrollState = rememberScrollState()
     val contentFocusRequester = remember { FocusRequester() }
     val context = LocalContext.current
+    
+    // Pre-fill content with prompt if provided
+    LaunchedEffect(initialPrompt) {
+        if (initialPrompt != null && entryId == null) {
+            viewModel.updateContent(androidx.compose.ui.text.input.TextFieldValue(initialPrompt))
+        }
+    }
     
     var showCategoryDialog by remember { mutableStateOf(false) }
     var showMoodDialog by remember { mutableStateOf(false) }
@@ -119,6 +127,13 @@ fun EditorScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let { viewModel.addMedia(it, MediaType.VIDEO) }
+    }
+    
+    // Inserts the picked photo inline at the cursor position, instead of the attachments strip
+    val inlineImagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let { viewModel.insertInlineImage(it) }
     }
     
     val filePickerLauncher = rememberLauncherForActivityResult(
@@ -259,6 +274,7 @@ fun EditorScreen(
                 // Info bar below TopAppBar showing word count and autosave status
                 val wordCount = uiState.content.text.split("\\s+".toRegex())
                     .filter { it.isNotBlank() }.size
+                val charCount = uiState.content.text.length
                 
                 Surface(
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
@@ -283,7 +299,7 @@ fun EditorScreen(
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "$wordCount words",
+                                text = "$wordCount words · $charCount chars",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -360,6 +376,22 @@ fun EditorScreen(
                 modifier = Modifier.imePadding()
             ) {
                 Column {
+                    // @-mention suggestions (person/location/tag/emotion), shown while typing "@..."
+                    AnimatedVisibility(
+                        visible = uiState.mentionQuery != null,
+                        enter = fadeIn() + slideInVertically { it },
+                        exit = fadeOut() + slideOutVertically { it }
+                    ) {
+                        MentionSuggestionsBar(
+                            query = uiState.mentionQuery.orEmpty(),
+                            candidates = uiState.mentionCandidates,
+                            onCandidateSelected = { viewModel.selectMentionCandidate(it) },
+                            onCreateTag = { viewModel.createMentionTagAndInsert(it) },
+                            onCreatePerson = { viewModel.createMentionPersonAndInsert(it) },
+                            onDismiss = { viewModel.dismissMentionPopup() }
+                        )
+                    }
+                    
                     // Media & trackers bar
                     Row(
                         modifier = Modifier
@@ -386,6 +418,17 @@ fun EditorScreen(
                             Icon(
                                 imageVector = Icons.Outlined.Photo,
                                 contentDescription = stringResource(R.string.entry_add_photo)
+                            )
+                        }
+                        
+                        // Insert image inline within the text
+                        IconButton(
+                            onClick = { inlineImagePickerLauncher.launch("image/*") },
+                            modifier = Modifier.semantics { contentDescription = "Insert image inline" }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.AddPhotoAlternate,
+                                contentDescription = "Insert image inline"
                             )
                         }
                         
@@ -559,10 +602,39 @@ fun EditorScreen(
             // Location Box
             LocationInfoBox(
                 location = uiState.location,
+                displayName = uiState.location?.let { uiState.displayNameFor(it) },
                 isLoading = uiState.isLoadingLocation,
                 onRefresh = { requestLocationWithPermission() },
-                onEdit = { viewModel.toggleLocationPicker() }
+                onEdit = { viewModel.toggleLocationPicker() },
+                onSetNickname = { uiState.location?.let { viewModel.showNicknameDialog(it) } }
             )
+            
+            // Additional locations (feature: more than one location per entry)
+            if (uiState.additionalLocations.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    uiState.additionalLocations.forEach { extraLocation ->
+                        AdditionalLocationChip(
+                            location = extraLocation,
+                            displayName = uiState.displayNameFor(extraLocation),
+                            onRemove = { viewModel.removeAdditionalLocation(extraLocation) },
+                            onClick = { viewModel.showNicknameDialog(extraLocation) }
+                        )
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            TextButton(onClick = { viewModel.toggleAdditionalLocationPicker() }) {
+                Icon(Icons.Outlined.AddLocationAlt, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Add another location", style = MaterialTheme.typography.labelMedium)
+            }
             
             Spacer(modifier = Modifier.height(8.dp))
             
@@ -631,9 +703,17 @@ fun EditorScreen(
             Spacer(modifier = Modifier.height(16.dp))
             
             // Content input with visual formatting
-            val formattedText = remember(uiState.content.text, uiState.textFormatting) {
-                uiState.textFormatting.toAnnotatedString(uiState.content.text)
+            val effectiveFormatting = remember(uiState.content.text, uiState.textFormatting) {
+                uiState.textFormatting.withDetectedTimestamps(uiState.content.text)
             }
+            val formattedText = remember(uiState.content.text, effectiveFormatting) {
+                effectiveFormatting.toAnnotatedString(uiState.content.text)
+            }
+            val isDarkTheme = isSystemInDarkTheme()
+            val chipBackgrounds = remember(effectiveFormatting, isDarkTheme) {
+                effectiveFormatting.chipBackgrounds(isDarkTheme)
+            }
+            var contentTextLayout by remember { mutableStateOf<androidx.compose.ui.text.TextLayoutResult?>(null) }
             
             Box(
                 modifier = Modifier
@@ -655,7 +735,10 @@ fun EditorScreen(
                     style = MaterialTheme.typography.bodyLarge.copy(
                         color = MaterialTheme.colorScheme.onSurface
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    onTextLayout = { contentTextLayout = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .drawChipBackgrounds(contentTextLayout, chipBackgrounds)
                 )
                 
                 // Invisible text field for input handling
@@ -779,7 +862,8 @@ fun EditorScreen(
                     tracker = tracker,
                     value = uiState.trackerValues[tracker.id] ?: "",
                     onValueChange = { viewModel.updateTrackerValue(tracker.id, it) },
-                    onRemove = { viewModel.removeTracker(tracker) }
+                    onRemove = { viewModel.removeTracker(tracker) },
+                    availablePeople = uiState.availablePeople
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -976,6 +1060,42 @@ fun EditorScreen(
         )
     }
     
+    // Additional location picker dialog (feature: more than one location per entry)
+    if (uiState.showAdditionalLocationPicker) {
+        LocationPickerDialog(
+            currentLocation = null,
+            searchResults = uiState.locationSearchResults,
+            isLoading = uiState.isLoadingLocation,
+            onSearch = { viewModel.searchLocations(it) },
+            onLocationSelected = {
+                viewModel.addLocation(it)
+                viewModel.clearLocationSearch()
+                viewModel.toggleAdditionalLocationPicker()
+            },
+            onLocationPickedFromMap = { lat, lng ->
+                viewModel.addLocationFromCoordinatesAsAdditional(lat, lng)
+                viewModel.toggleAdditionalLocationPicker()
+            },
+            onGetCurrentLocation = { viewModel.addCurrentLocationAsAdditional() },
+            onRemoveLocation = { },
+            onDismiss = {
+                viewModel.clearLocationSearch()
+                viewModel.toggleAdditionalLocationPicker()
+            }
+        )
+    }
+    
+    // Nickname editor dialog (persists across all entries referencing this place)
+    uiState.showNicknameDialogFor?.let { location ->
+        LocationNicknameDialog(
+            location = location,
+            currentNickname = uiState.locationNicknames[location.nicknameKey()],
+            onSave = { viewModel.setLocationNickname(location, it) },
+            onRemove = { viewModel.removeLocationNickname(location) },
+            onDismiss = { viewModel.dismissNicknameDialog() }
+        )
+    }
+    
     // Template picker dialog
     if (uiState.showTemplateDialog) {
         TemplatePickerDialog(
@@ -1082,6 +1202,104 @@ private fun MediaThumbnail(
 }
 
 @Composable
+private fun LocationNicknameDialog(
+    location: Location,
+    currentNickname: String?,
+    onSave: (String) -> Unit,
+    onRemove: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    var text by remember { mutableStateOf(currentNickname.orEmpty()) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Nickname this location") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = location.placeName ?: location.address ?: "${location.latitude}, ${location.longitude}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "This nickname will be used everywhere this place appears, in every entry.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    placeholder = { Text("e.g. Grandma's House") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onSave(text) }, enabled = text.isNotBlank()) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            Row {
+                if (currentNickname != null) {
+                    TextButton(onClick = onRemove) {
+                        Text("Remove")
+                    }
+                }
+                TextButton(onClick = onDismiss) {
+                    Text("Cancel")
+                }
+            }
+        }
+    )
+}
+
+@Composable
+private fun AdditionalLocationChip(
+    location: Location,
+    onRemove: () -> Unit,
+    displayName: String = location.placeName ?: location.address ?: "${location.latitude}, ${location.longitude}",
+    onClick: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    val locationColor = Color(0xFF4CAF50)
+    Surface(
+        modifier = modifier.clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        color = locationColor.copy(alpha = 0.12f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, locationColor.copy(alpha = 0.3f))
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 10.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Filled.LocationOn,
+                contentDescription = null,
+                tint = locationColor,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = displayName,
+                style = MaterialTheme.typography.labelMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.widthIn(max = 140.dp)
+            )
+            IconButton(onClick = onRemove, modifier = Modifier.size(20.dp)) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Remove location",
+                    tint = locationColor,
+                    modifier = Modifier.size(14.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun PersonChip(
     person: Person,
     onRemove: () -> Unit,
@@ -1148,6 +1366,7 @@ private fun TrackerInput(
     value: String,
     onValueChange: (String) -> Unit,
     onRemove: () -> Unit,
+    availablePeople: List<Person> = emptyList(),
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -1278,6 +1497,50 @@ private fun TrackerInput(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
+                }
+                TrackerType.PEOPLE -> {
+                    // value stores comma-separated person names
+                    val selectedNames = remember(value) {
+                        value.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                    }
+                    var showPeoplePicker by remember { mutableStateOf(false) }
+                    
+                    Column {
+                        if (selectedNames.isNotEmpty()) {
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                selectedNames.forEach { name ->
+                                    InputChip(
+                                        selected = true,
+                                        onClick = {
+                                            val updated = selectedNames.filter { it != name }.joinToString(", ")
+                                            onValueChange(updated)
+                                        },
+                                        label = { Text(name) },
+                                        leadingIcon = { Icon(Icons.Outlined.Person, contentDescription = null, modifier = Modifier.size(16.dp)) },
+                                        trailingIcon = { Icon(Icons.Default.Close, contentDescription = "Remove", modifier = Modifier.size(16.dp)) }
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                        }
+                        AssistChip(
+                            onClick = { showPeoplePicker = true },
+                            label = { Text(if (selectedNames.isEmpty()) "Select people" else "Add more") },
+                            leadingIcon = { Icon(Icons.Outlined.PersonAdd, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                        )
+                    }
+                    
+                    if (showPeoplePicker) {
+                        TrackerPeoplePickerDialog(
+                            availablePeople = availablePeople,
+                            selectedNames = selectedNames,
+                            onSelectionChange = { names -> onValueChange(names.joinToString(", ")) },
+                            onDismiss = { showPeoplePicker = false }
+                        )
+                    }
                 }
                 else -> {
                     OutlinedTextField(
@@ -2241,11 +2504,119 @@ private fun formatDuration(millis: Long): String {
 }
 
 @Composable
+private fun MentionSuggestionsBar(
+    query: String,
+    candidates: List<MentionCandidate>,
+    onCandidateSelected: (MentionCandidate) -> Unit,
+    onCreateTag: (String) -> Unit,
+    onCreatePerson: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+    ) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 2.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Mention a person, location, tag, or emotion",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "Dismiss suggestions",
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+            
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (candidates.isEmpty() && query.isNotBlank()) {
+                    item {
+                        AssistChip(
+                            onClick = { onCreateTag(query) },
+                            label = { Text("Create tag \"$query\"") },
+                            leadingIcon = {
+                                Icon(Icons.Outlined.Sell, contentDescription = null, modifier = Modifier.size(16.dp))
+                            }
+                        )
+                    }
+                    item {
+                        AssistChip(
+                            onClick = { onCreatePerson(query) },
+                            label = { Text("Add person \"$query\"") },
+                            leadingIcon = {
+                                Icon(Icons.Outlined.Person, contentDescription = null, modifier = Modifier.size(16.dp))
+                            }
+                        )
+                    }
+                } else {
+                    items(candidates) { candidate ->
+                        MentionCandidateChip(candidate = candidate, onClick = { onCandidateSelected(candidate) })
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MentionCandidateChip(candidate: MentionCandidate, onClick: () -> Unit) {
+    if (!candidate.isAvailable) {
+        AssistChip(
+            onClick = { },
+            enabled = false,
+            label = {
+                Text("\"${candidate.displayName}\" not added to this entry")
+            },
+            leadingIcon = {
+                Icon(
+                    Icons.Outlined.LocationOff,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        )
+        return
+    }
+    val (icon, color) = when (candidate.type) {
+        MentionType.PERSON -> Icons.Outlined.Person to Color(0xFF1565C0)
+        MentionType.LOCATION -> Icons.Outlined.Place to Color(0xFF2E7D32)
+        MentionType.TAG -> Icons.Outlined.Sell to Color(0xFF6A1B9A)
+        MentionType.EMOTION -> Icons.Outlined.Mood to Color(0xFFAD1457)
+    }
+    AssistChip(
+        onClick = onClick,
+        label = {
+            Text(candidate.emoji?.let { "$it ${candidate.displayName}" } ?: candidate.displayName)
+        },
+        leadingIcon = {
+            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
+        }
+    )
+}
+
+@Composable
 private fun LocationInfoBox(
     location: Location?,
     isLoading: Boolean,
     onRefresh: () -> Unit,
     onEdit: () -> Unit,
+    displayName: String? = null,
+    onSetNickname: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val locationColor = Color(0xFF4CAF50) // Green for location
@@ -2293,7 +2664,7 @@ private fun LocationInfoBox(
                 )
                 if (location != null) {
                     Text(
-                        text = location.placeName ?: location.address ?: "${location.latitude}, ${location.longitude}",
+                        text = displayName ?: location.placeName ?: location.address ?: "${location.latitude}, ${location.longitude}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1
@@ -2323,6 +2694,16 @@ private fun LocationInfoBox(
                         tint = locationColor,
                         modifier = Modifier.size(20.dp)
                     )
+                }
+                if (location != null) {
+                    IconButton(onClick = onSetNickname, modifier = Modifier.size(32.dp)) {
+                        Icon(
+                            imageVector = Icons.Outlined.Label,
+                            contentDescription = "Set nickname",
+                            tint = locationColor,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
                 IconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
                     Icon(
@@ -2984,6 +3365,86 @@ fun FontPickerDialog(
             TextButton(onClick = onDismiss) {
                 Text("Cancel")
             }
+        }
+    )
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun TrackerPeoplePickerDialog(
+    availablePeople: List<Person>,
+    selectedNames: List<String>,
+    onSelectionChange: (List<String>) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var searchQuery by remember { mutableStateOf("") }
+    var currentSelection by remember(selectedNames) { mutableStateOf(selectedNames.toMutableList()) }
+    
+    val filteredPeople = remember(availablePeople, searchQuery) {
+        if (searchQuery.isBlank()) availablePeople
+        else availablePeople.filter { it.name.contains(searchQuery, ignoreCase = true) }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Select People") },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("Search people...") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(Icons.Default.Close, contentDescription = "Clear")
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                    items(filteredPeople, key = { it.id }) { person ->
+                        val isSelected = person.name in currentSelection
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    currentSelection = if (isSelected) {
+                                        currentSelection.filter { it != person.name }.toMutableList()
+                                    } else {
+                                        (currentSelection + person.name).toMutableList()
+                                    }
+                                }
+                                .padding(vertical = 10.dp, horizontal = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Checkbox(checked = isSelected, onCheckedChange = {
+                                currentSelection = if (isSelected) {
+                                    currentSelection.filter { it != person.name }.toMutableList()
+                                } else {
+                                    (currentSelection + person.name).toMutableList()
+                                }
+                            })
+                            Icon(Icons.Outlined.Person, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Text(person.name, style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onSelectionChange(currentSelection)
+                onDismiss()
+            }) { Text("Done") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
         }
     )
 }

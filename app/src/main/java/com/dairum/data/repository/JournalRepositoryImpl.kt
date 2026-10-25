@@ -135,6 +135,24 @@ class JournalRepositoryImpl @Inject constructor(
         entryDao.updatePinned(id, isPinned)
     }
 
+    override suspend fun softDelete(id: Long) {
+        entryDao.softDelete(id)
+    }
+
+    override suspend fun restoreEntry(id: Long) {
+        entryDao.restoreEntry(id)
+    }
+
+    override fun getDeletedEntries(): Flow<List<JournalEntry>> {
+        return entryDao.getDeletedEntriesFlow().map { list ->
+            list.map { it.toDomainBasic() }
+        }
+    }
+
+    override suspend fun emptyTrash() {
+        entryDao.emptyTrash()
+    }
+
     override suspend fun setTagsForEntry(entryId: Long, tagIds: List<Long>) {
         // Diff old vs new to correctly adjust usage counts
         val oldTagIds = tagDao.getTagIdsForEntry(entryId).toSet()
@@ -203,6 +221,7 @@ class JournalRepositoryImpl @Inject constructor(
             mood = entry.moodLevel?.let { Mood.fromDb(it, entry.moodIcon) },
             weather = entry.weatherData?.let { parseWeatherJson(it) },
             location = entry.locationData?.let { parseLocationJson(it) },
+            additionalLocations = entry.additionalLocationsData?.let { parseLocationsListJson(it) } ?: emptyList(),
             media = media.map { it.toDomain() },
             tags = tags.map { it.toDomain() },
             people = people.map { it.toDomain() },
@@ -227,6 +246,7 @@ class JournalRepositoryImpl @Inject constructor(
             mood = moodLevel?.let { Mood.fromDb(it, moodIcon) },
             weather = weatherData?.let { parseWeatherJson(it) },
             location = locationData?.let { parseLocationJson(it) },
+            additionalLocations = additionalLocationsData?.let { parseLocationsListJson(it) } ?: emptyList(),
             isFavorite = isFavorite,
             isArchived = isArchived,
             isDraft = isDraft,
@@ -249,6 +269,7 @@ class JournalRepositoryImpl @Inject constructor(
             moodIcon = mood?.icon,
             weatherData = weather?.let { serializeWeatherJson(it) },
             locationData = location?.let { serializeLocationJson(it) },
+            additionalLocationsData = additionalLocations.takeIf { it.isNotEmpty() }?.let { serializeLocationsListJson(it) },
             isFavorite = isFavorite,
             isArchived = isArchived,
             isDraft = isDraft,
@@ -292,7 +313,8 @@ class JournalRepositoryImpl @Inject constructor(
             width = width,
             height = height,
             caption = caption,
-            sortOrder = sortOrder
+            sortOrder = sortOrder,
+            inlineKey = inlineKey
         )
     }
 
@@ -402,6 +424,26 @@ class JournalRepositoryImpl @Inject constructor(
         }.toString()
         android.util.Log.d("JournalRepo", "Serializing location: ${location.latitude},${location.longitude} -> $json")
         return json
+    }
+
+    private fun parseLocationsListJson(json: String): List<Location> {
+        return try {
+            if (json.isBlank()) return emptyList()
+            val array = org.json.JSONArray(json)
+            (0 until array.length()).mapNotNull { index ->
+                parseLocationJson(array.getJSONObject(index).toString())
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun serializeLocationsListJson(locations: List<Location>): String {
+        val array = org.json.JSONArray()
+        locations.forEach { location ->
+            array.put(org.json.JSONObject(serializeLocationJson(location)))
+        }
+        return array.toString()
     }
 
     // Time conversion helpers

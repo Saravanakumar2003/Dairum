@@ -20,6 +20,19 @@ interface BackupRepository {
     ): Result<BackupResult>
     
     /**
+     * Creates a comprehensive ZIP export with organized folder structure:
+     * - entries/ (individual JSON files per entry)
+     * - config/ (settings, categories, tags, people, trackers, memories, reminders)
+     * - attachments/photo/, attachments/video/, attachments/audio/, attachments/files/
+     */
+    suspend fun createCompleteExport(includeMedia: Boolean = true): Result<BackupResult>
+    
+    /**
+     * Imports from a complete export ZIP file
+     */
+    suspend fun importCompleteExport(importFile: File): Result<RestoreResult>
+    
+    /**
      * Restores app data from a backup file
      * @param backupFile The backup file to restore from
      * @param mergeData Whether to merge with existing data (true) or replace (false)

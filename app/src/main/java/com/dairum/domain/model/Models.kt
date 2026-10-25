@@ -17,6 +17,7 @@ data class JournalEntry(
     val mood: Mood? = null,
     val weather: Weather? = null,
     val location: Location? = null,
+    val additionalLocations: List<Location> = emptyList(),
     val media: List<Media> = emptyList(),
     val tags: List<Tag> = emptyList(),
     val people: List<Person> = emptyList(),
@@ -231,6 +232,20 @@ enum class MoodOption(
         
         fun getByCategory(category: MoodCategory): List<MoodOption> = 
             values().filter { it.category == category }
+        
+        /**
+         * Maps a mood ID to a normalized 1-5 scale based on category.
+         * POSITIVE -> 5, NEUTRAL -> 3, MIXED -> 2.5, NEGATIVE -> 1
+         */
+        fun normalizedScore(moodId: Int): Float {
+            val option = fromId(moodId) ?: return 3f
+            return when (option.category) {
+                MoodCategory.POSITIVE -> 5f
+                MoodCategory.NEUTRAL -> 3f
+                MoodCategory.MIXED -> 2.5f
+                MoodCategory.NEGATIVE -> 1f
+            }
+        }
     }
 }
 
@@ -266,6 +281,32 @@ data class Location(
 )
 
 /**
+ * A stable-ish identity for "the same place" used to persist a nickname across entries and
+ * visits - prefers the place name/address over raw coordinates since GPS fixes for revisiting
+ * the same physical place are rarely bit-identical.
+ */
+fun Location.nicknameKey(): String {
+    val place = placeName?.trim()?.lowercase()
+    if (!place.isNullOrBlank()) return "place:$place"
+    val addr = address?.trim()?.lowercase()
+    if (!addr.isNullOrBlank()) return "addr:$addr"
+    return "geo:${"%.3f".format(latitude)},${"%.3f".format(longitude)}"
+}
+
+/**
+ * A user-assigned nickname for a location, persistent across all entries (e.g. "Grandma's House").
+ */
+data class LocationNickname(
+    val id: Long = 0,
+    val locationKey: String,
+    val nickname: String,
+    val latitude: Double,
+    val longitude: Double,
+    val placeName: String? = null,
+    val address: String? = null
+)
+
+/**
  * Media domain model
  */
 data class Media(
@@ -281,7 +322,8 @@ data class Media(
     val width: Int? = null,
     val height: Int? = null,
     val caption: String? = null,
-    val sortOrder: Int = 0
+    val sortOrder: Int = 0,
+    val inlineKey: String? = null // Set when this media is embedded inline within the entry text
 )
 
 enum class MediaType {

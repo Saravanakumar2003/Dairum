@@ -3,6 +3,7 @@ package com.dairum.presentation.screens.stats
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dairum.data.local.dao.JournalEntryDao
+import com.dairum.data.local.dao.GratiaDao
 import com.dairum.data.local.dao.PersonDao
 import com.dairum.data.local.dao.TagDao
 import com.dairum.domain.model.*
@@ -28,6 +29,7 @@ class StatsViewModel @Inject constructor(
     private val entryDao: JournalEntryDao,
     private val tagDao: TagDao,
     private val personDao: PersonDao,
+    private val gratiaDao: GratiaDao,
     private val tagRepository: TagRepository,
     private val personRepository: PersonRepository,
     private val mediaRepository: MediaRepository,
@@ -67,6 +69,7 @@ class StatsViewModel @Inject constructor(
             loadTagStats(currentTimeRange)
             loadPeopleStats(currentTimeRange)
             loadTrackerStats()
+            loadGratiaStats()
         }
     }
 
@@ -221,7 +224,9 @@ class StatsViewModel @Inject constructor(
             )
         }
 
-        val average = moodCounts.sumOf { it.moodLevel * it.count }.toDouble() / totalWithMood
+        val average = moodCounts.sumOf { 
+            (MoodOption.normalizedScore(it.moodLevel) * it.count).toDouble() 
+        } / totalWithMood
         val mostCommon = moodCounts.maxByOrNull { it.count }?.moodLevel
 
         _uiState.update {
@@ -229,9 +234,9 @@ class StatsViewModel @Inject constructor(
                 moodStats = MoodStats(
                     distribution = distribution,
                     averageMood = average,
-                    moodTrend = emptyList(), // TODO: Calculate trend
+                    moodTrend = calculateMoodTrend(rangeStartTime),
                     mostCommonMood = mostCommon,
-                    moodByDayOfWeek = emptyMap() // TODO: Calculate
+                    moodByDayOfWeek = calculateMoodByDayOfWeek(rangeStartTime)
                 )
             )
         }
@@ -256,7 +261,7 @@ class StatsViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 activityStats = EntryActivityStats(
-                    dailyCounts = emptyList(), // TODO: Load daily counts
+                    dailyCounts = calculateDailyCounts(rangeStartTime),
                     hourlyDistribution = hourlyDist,
                     weekdayDistribution = weekdayDist,
                     mostActiveHour = mostActiveHour,
@@ -357,6 +362,16 @@ class StatsViewModel @Inject constructor(
                 _uiState.update { it.copy(trackerStats = stats) }
             }
         }
+    }
+
+    private suspend fun loadGratiaStats() {
+        val stats = GratiaStats(
+            gratitudeFolderCount = gratiaDao.getGratitudeFolderCount(),
+            gratitudePromptCount = gratiaDao.getGratitudePromptCount(),
+            affirmationFolderCount = gratiaDao.getAffirmationFolderCount(),
+            affirmationCount = gratiaDao.getAffirmationCount()
+        )
+        _uiState.update { it.copy(gratiaStats = stats) }
     }
     
     /**
@@ -521,6 +536,54 @@ class StatsViewModel @Inject constructor(
         
         return currentStreak to longestStreak
     }
+    
+    private suspend fun calculateMoodTrend(rangeStartTime: Long): List<MoodTrendPoint> {
+        val entries = if (rangeStartTime == 0L) {
+            entryDao.getEntriesInDateRangeSync(0, System.currentTimeMillis())
+        } else {
+            entryDao.getEntriesInDateRangeSync(rangeStartTime, System.currentTimeMillis())
+        }
+        
+        // Group by date, calculate average mood per day
+        return entries
+            .filter { it.moodLevel != null }
+            .groupBy { java.time.Instant.ofEpochMilli(it.createdAt).atZone(ZoneId.systemDefault()).toLocalDate() }
+            .map { (date, dayEntries) ->
+                MoodTrendPoint(
+                    date = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                    averageMood = dayEntries.mapNotNull { it.moodLevel }.map { MoodOption.normalizedScore(it).toDouble() }.average()
+                )
+            }
+            .sortedBy { it.date }
+    }
+    
+    private suspend fun calculateMoodByDayOfWeek(rangeStartTime: Long): Map<Int, Double> {
+        val entries = if (rangeStartTime == 0L) {
+            entryDao.getEntriesInDateRangeSync(0, System.currentTimeMillis())
+        } else {
+            entryDao.getEntriesInDateRangeSync(rangeStartTime, System.currentTimeMillis())
+        }
+        
+        return entries
+            .filter { it.moodLevel != null }
+            .groupBy { java.time.Instant.ofEpochMilli(it.createdAt).atZone(ZoneId.systemDefault()).dayOfWeek.value }
+            .mapValues { (_, dayEntries) -> dayEntries.mapNotNull { it.moodLevel }.map { MoodOption.normalizedScore(it).toDouble() }.average() }
+    }
+    
+    private suspend fun calculateDailyCounts(rangeStartTime: Long): List<DailyCount> {
+        val startTime = if (rangeStartTime == 0L) {
+            LocalDate.now().minusMonths(3).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        } else {
+            rangeStartTime
+        }
+        
+        return entryDao.getDailyCounts(startTime).map { dateCount ->
+            DailyCount(
+                date = LocalDate.parse(dateCount.date).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                count = dateCount.count
+            )
+        }
+    }
 }
 
 data class StatsUiState(
@@ -530,6 +593,7 @@ data class StatsUiState(
     val tagStats: TagStats? = null,
     val peopleStats: PeopleStats? = null,
     val trackerStats: List<TrackerStats> = emptyList(),
+    val gratiaStats: GratiaStats? = null,
     val isLoading: Boolean = true,
     val error: String? = null,
     val selectedTimeRange: TimeRange = TimeRange.ALL_TIME

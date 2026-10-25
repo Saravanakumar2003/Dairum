@@ -1,6 +1,7 @@
 package com.dairum.data.ai.retrieval
 
 import com.dairum.data.ai.embedding.EmbeddingService
+import com.dairum.data.search.ContextualSearchService
 import com.dairum.domain.model.*
 import com.dairum.domain.repository.*
 import kotlinx.coroutines.Dispatchers
@@ -26,7 +27,8 @@ class ConversationMemoryService @Inject constructor(
     private val chatEmbeddingRepository: ChatEmbeddingRepository,
     private val reflectionMemoryRepository: ReflectionMemoryRepository,
     private val journalRepository: JournalRepository,
-    private val embeddingRepository: EmbeddingRepository
+    private val embeddingRepository: EmbeddingRepository,
+    private val contextualSearchService: ContextualSearchService
 ) {
     
     companion object {
@@ -54,19 +56,19 @@ class ConversationMemoryService @Inject constructor(
             val queryEmbedding = embeddingService.generateEmbedding(query).getOrNull()
             if (queryEmbedding == null) {
                 Timber.w("Failed to generate query embedding, using fallback retrieval")
-                return@withContext fallbackRetrieval(sessionId, config)
+                return@withContext fallbackRetrieval(sessionId, query, config)
             }
             
             // Run retrievals in parallel
             val shortTermDeferred = async { getShortTermMemory(sessionId, config.shortTermLimit) }
             val longTermChatDeferred = async { getLongTermChatMemory(queryEmbedding, sessionId, config) }
-            val journalDeferred = async { getJournalMemory(queryEmbedding, config) }
+            val journalDeferred = async { getJournalMemory(query, queryEmbedding, config) }
             val reflectionDeferred = async { getReflectionMemory(queryEmbedding, config) }
             
             val shortTermMessages = shortTermDeferred.await()
             val longTermChatMessages = longTermChatDeferred.await()
             val journalEntries = journalDeferred.await()
-            val reflectionMemories = reflectionDeferred.await()
+            val reflectionMemories = withUserProvidedMemories(reflectionDeferred.await())
             
             // Calculate token estimate
             val tokenEstimate = calculateTokenEstimate(
@@ -158,9 +160,34 @@ class ConversationMemoryService @Inject constructor(
     }
     
     /**
-     * Layer 2b: Get relevant journal entries via semantic search
+     * Layer 2b: Get relevant journal entries via hybrid retrieval - semantic similarity plus a
+     * keyword/entity match (tags, people, locations, dates), merged and deduped. Semantic-only
+     * search often misses proper nouns like place names on small on-device embedding models.
      */
     private suspend fun getJournalMemory(
+        query: String,
+        queryEmbedding: FloatArray?,
+        config: MemoryRetrievalConfig
+    ): List<RetrievalResult> {
+        val semanticResults = if (queryEmbedding != null) {
+            getJournalMemoryBySimilarity(queryEmbedding, config)
+        } else {
+            emptyList()
+        }
+        
+        val keywordResults = contextualSearchService.search(query, config.journalLimit * 2).map { match ->
+            RetrievalResult(entry = match.entry, score = (match.score / 10f).coerceIn(0f, 1f), relevanceRank = 0)
+        }
+        
+        return (semanticResults + keywordResults)
+            .groupBy { it.entry.id }
+            .map { (_, group) -> group.maxByOrNull { it.score }!! }
+            .sortedByDescending { it.score }
+            .take(config.journalLimit.coerceAtLeast(3))
+            .mapIndexed { index, result -> result.copy(relevanceRank = index + 1) }
+    }
+    
+    private suspend fun getJournalMemoryBySimilarity(
         queryEmbedding: FloatArray,
         config: MemoryRetrievalConfig
     ): List<RetrievalResult> {
@@ -236,28 +263,50 @@ class ConversationMemoryService @Inject constructor(
     }
     
     /**
-     * Fallback retrieval when embedding service is unavailable
+     * Fallback retrieval when embedding service is unavailable - still surfaces journal entries
+     * via keyword/entity matching (previously this returned zero journal entries at all).
      */
     private suspend fun fallbackRetrieval(
         sessionId: String,
+        query: String,
         config: MemoryRetrievalConfig
     ): Result<MemoryRetrievalResult> {
         val shortTermMessages = getShortTermMemory(sessionId, config.shortTermLimit)
-        val recentReflections = reflectionMemoryRepository.getHighConfidenceReflections(0.7f)
-            .take(config.reflectionLimit)
-            .mapIndexed { index, reflection ->
-                ScoredReflection(reflection, 0.8f, index + 1)
-            }
+        val journalEntries = contextualSearchService.search(query, config.journalLimit).mapIndexed { index, match ->
+            RetrievalResult(entry = match.entry, score = (match.score / 10f).coerceIn(0f, 1f), relevanceRank = index + 1)
+        }
+        val recentReflections = withUserProvidedMemories(
+            reflectionMemoryRepository.getHighConfidenceReflections(0.7f)
+                .take(config.reflectionLimit)
+                .mapIndexed { index, reflection ->
+                    ScoredReflection(reflection, 0.8f, index + 1)
+                }
+        )
         
         return Result.success(MemoryRetrievalResult(
             shortTermMessages = shortTermMessages,
             longTermChatMessages = emptyList(),
-            journalEntries = emptyList(),
+            journalEntries = journalEntries,
             reflectionMemories = recentReflections,
             totalTokenEstimate = calculateTokenEstimate(
-                shortTermMessages, emptyList(), emptyList(), recentReflections
+                shortTermMessages, emptyList(), journalEntries, recentReflections
             )
         ))
+    }
+    
+    /**
+     * Manually-added user memories (see ReflectionCategory.USER_PROVIDED) are always included in
+     * the context regardless of semantic similarity to the current question, since the whole
+     * point is that the user wants them remembered for *any* future conversation.
+     */
+    private suspend fun withUserProvidedMemories(base: List<ScoredReflection>): List<ScoredReflection> {
+        val userProvided = reflectionMemoryRepository.getReflectionsByCategoryList(ReflectionCategory.USER_PROVIDED)
+        if (userProvided.isEmpty()) return base
+        val alreadyIncluded = base.map { it.reflection.id }.toSet()
+        val extra = userProvided
+            .filter { it.id !in alreadyIncluded }
+            .map { ScoredReflection(it, 1f, 0) }
+        return (extra + base).mapIndexed { index, scored -> scored.copy(rank = index + 1) }
     }
     
     /**
@@ -336,6 +385,41 @@ class ConversationMemoryService @Inject constructor(
             Result.success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "Failed to generate reflection embedding")
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Manually adds a memory/personal fact the user wants remembered for future conversations
+     * (e.g. "My sister's name is Priya"). Always surfaced regardless of similarity to the
+     * current question - see ReflectionCategory.USER_PROVIDED and withUserProvidedMemories().
+     */
+    suspend fun addUserProvidedMemory(content: String): Result<ReflectionMemory> = withContext(Dispatchers.Default) {
+        try {
+            val reflection = ReflectionMemory(
+                content = content.trim(),
+                category = ReflectionCategory.USER_PROVIDED,
+                confidence = 1f,
+                occurrenceCount = 1
+            )
+            val id = reflectionMemoryRepository.saveReflection(reflection)
+            val saved = reflection.copy(id = id)
+            if (embeddingService.isModelLoaded()) {
+                generateReflectionEmbedding(saved)
+            }
+            Result.success(saved)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to add user-provided memory")
+            Result.failure(e)
+        }
+    }
+    
+    suspend fun deleteUserProvidedMemory(id: Long): Result<Unit> = withContext(Dispatchers.Default) {
+        try {
+            reflectionMemoryRepository.deleteReflection(id)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to delete memory")
             Result.failure(e)
         }
     }

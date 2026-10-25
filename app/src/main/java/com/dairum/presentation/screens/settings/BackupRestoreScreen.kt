@@ -49,6 +49,13 @@ fun BackupRestoreScreen(
         uri?.let { viewModel.restoreFromUri(it, context) }
     }
     
+    // File picker for complete import
+    val importFilePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let { viewModel.importCompleteExport(it, context) }
+    }
+    
     // Handle share backup
     LaunchedEffect(uiState.shareBackupPath) {
         uiState.shareBackupPath?.let { path ->
@@ -87,6 +94,26 @@ fun BackupRestoreScreen(
             snackbarHostState.showSnackbar("Error: $error")
             viewModel.clearMessages()
         }
+    }
+
+    // Restoring replaces the live database file out from under the running app, so the process
+    // must restart before any screen tries to read from it again.
+    if (uiState.requiresRestart) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text("Restart required") },
+            text = { Text("Restore complete. Dairum needs to restart to load the restored data.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+                    intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context.startActivity(intent)
+                    Runtime.getRuntime().exit(0)
+                }) {
+                    Text("Restart Now")
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -177,6 +204,72 @@ fun BackupRestoreScreen(
             }
             
             // Restore Section
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Complete Export / Import",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            
+            item {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Export everything in a portable ZIP format with organized folders:",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Column(modifier = Modifier.padding(start = 8.dp)) {
+                            Text("• entries/ — All journal entries & database", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("• config/ — Settings, preferences, DataStore", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("• attachments/photo/ — Photos", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("• attachments/video/ — Videos", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("• attachments/audio/ — Voice notes", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("• attachments/files/ — Other attachments", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Button(
+                                onClick = { viewModel.createCompleteExport() },
+                                modifier = Modifier.weight(1f),
+                                enabled = !uiState.isBackingUp
+                            ) {
+                                if (uiState.isBackingUp) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(18.dp),
+                                        strokeWidth = 2.dp,
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                }
+                                Icon(Icons.Default.FolderZip, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Export ZIP")
+                            }
+                            
+                            OutlinedButton(
+                                onClick = { importFilePicker.launch(arrayOf("application/zip")) },
+                                modifier = Modifier.weight(1f),
+                                enabled = !uiState.isRestoring
+                            ) {
+                                Icon(Icons.Default.Upload, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Import ZIP")
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Restore from backup Section
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(

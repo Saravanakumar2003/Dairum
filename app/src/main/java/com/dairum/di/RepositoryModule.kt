@@ -44,6 +44,12 @@ abstract class RepositoryModule {
     
     @Binds
     @Singleton
+    abstract fun bindLocationNicknameRepository(
+        impl: LocationNicknameRepositoryImpl
+    ): LocationNicknameRepository
+    
+    @Binds
+    @Singleton
     abstract fun bindTrackerRepository(
         impl: TrackerRepositoryImpl
     ): TrackerRepository
@@ -89,4 +95,10 @@ abstract class RepositoryModule {
     abstract fun bindBackupRepository(
         impl: BackupRepositoryImpl
     ): BackupRepository
+    
+    @Binds
+    @Singleton
+    abstract fun bindGratiaRepository(
+        impl: GratiaRepositoryImpl
+    ): GratiaRepository
 }

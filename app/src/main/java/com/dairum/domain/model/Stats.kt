@@ -125,3 +125,10 @@ data class CategoryUsage(
     val count: Int,
     val percentage: Float
 )
+
+data class GratiaStats(
+    val gratitudeFolderCount: Int = 0,
+    val gratitudePromptCount: Int = 0,
+    val affirmationFolderCount: Int = 0,
+    val affirmationCount: Int = 0
+)

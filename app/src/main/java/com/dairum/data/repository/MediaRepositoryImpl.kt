@@ -219,7 +219,8 @@ class MediaRepositoryImpl @Inject constructor(
             width = width,
             height = height,
             caption = caption,
-            sortOrder = sortOrder
+            sortOrder = sortOrder,
+            inlineKey = inlineKey
         )
     }
 
@@ -245,7 +246,8 @@ class MediaRepositoryImpl @Inject constructor(
             width = width,
             height = height,
             caption = caption,
-            sortOrder = sortOrder
+            sortOrder = sortOrder,
+            inlineKey = inlineKey
         )
     }
 

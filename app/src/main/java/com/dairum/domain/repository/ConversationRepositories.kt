@@ -304,6 +304,21 @@ interface ReflectionMemoryRepository {
 }
 
 /**
+ * Repository for the user-editable AI system prompt and guardrail rules.
+ */
+interface AIGuardrailsRepository {
+    fun getSettingsFlow(): Flow<AIGuardrailSettings>
+    suspend fun getSettings(): AIGuardrailSettings
+    suspend fun updateSystemPrompt(prompt: String)
+    suspend fun resetSystemPrompt()
+    suspend fun addRule(text: String)
+    suspend fun removeRule(id: String)
+    suspend fun setRuleEnabled(id: String, isEnabled: Boolean)
+    suspend fun updateRuleText(id: String, text: String)
+    suspend fun resetToDefaults()
+}
+
+/**
  * Repository for conversation context
  */
 interface ConversationContextRepository {

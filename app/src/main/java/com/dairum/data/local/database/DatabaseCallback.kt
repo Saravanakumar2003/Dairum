@@ -5,8 +5,6 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.dairum.data.local.entity.CategoryEntity
-import com.dairum.data.local.entity.CustomTrackerEntity
-import com.dairum.data.local.entity.TrackerType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -33,13 +31,6 @@ class DatabaseCallback(
             val defaultCategories = getDefaultCategories()
             defaultCategories.forEachIndexed { index, category ->
                 categoryDao.insert(category.copy(sortOrder = index))
-            }
-            
-            // Insert built-in trackers
-            val trackerDao = database.trackerDao()
-            val builtInTrackers = getBuiltInTrackers()
-            builtInTrackers.forEachIndexed { index, tracker ->
-                trackerDao.insertTracker(tracker.copy(sortOrder = index))
             }
         }
     }
@@ -75,24 +66,6 @@ class DatabaseCallback(
             name = "Goals",
             color = 0xFFE29578.toInt(), // Peach
             icon = "flag"
-        )
-    )
-    
-    private fun getBuiltInTrackers(): List<CustomTrackerEntity> = listOf(
-        CustomTrackerEntity(
-            name = "People",
-            type = TrackerType.PEOPLE,
-            icon = "group",
-            isBuiltIn = true
-        ),
-        CustomTrackerEntity(
-            name = "Weight",
-            type = TrackerType.WEIGHT,
-            icon = "monitor_weight",
-            unit = "kg",
-            minValue = 20.0,
-            maxValue = 300.0,
-            isBuiltIn = true
         )
     )
 }

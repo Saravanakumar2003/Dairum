@@ -55,7 +55,8 @@ data class MessageMetadata(
     val sourceReflectionIds: List<Long> = emptyList(),
     val relevanceScores: Map<Long, Float> = emptyMap(),
     val emotionalTone: String? = null,
-    val conversationTopics: List<String> = emptyList()
+    val conversationTopics: List<String> = emptyList(),
+    val promptUsed: String? = null // Exact prompt sent to the LLM, kept for user transparency
 )
 
 /**
@@ -98,7 +99,8 @@ enum class ReflectionCategory {
     RELATIONSHIP,  // Social connections
     EMOTIONAL,     // Emotional patterns and triggers
     INTELLECTUAL,  // Thinking patterns, intellectual interests
-    PHILOSOPHICAL  // Deep reflections on life, ethics, meaning
+    PHILOSOPHICAL, // Deep reflections on life, ethics, meaning
+    USER_PROVIDED  // Manually added by the user (always included in chat context)
 }
 
 /**
@@ -195,6 +197,69 @@ data class MemoryRetrievalConfig(
 ) {
     val availableContextTokens: Int
         get() = maxTotalTokens - tokenReserveForGeneration
+}
+
+/**
+ * A single guardrail rule appended to the system prompt to constrain the AI's behavior.
+ * Built-in rules ship enabled by default but can be disabled or removed like any other rule.
+ */
+data class GuardrailRule(
+    val id: String,
+    val text: String,
+    val isEnabled: Boolean = true,
+    val isBuiltIn: Boolean = false
+)
+
+/**
+ * User-editable AI behavior settings: the base system prompt plus the active guardrail rules.
+ */
+data class AIGuardrailSettings(
+    val systemPrompt: String = AIGuardrailDefaults.DEFAULT_SYSTEM_PROMPT,
+    val rules: List<GuardrailRule> = AIGuardrailDefaults.DEFAULT_RULES
+) {
+    /** Guardrail text block appended after the system prompt, only for enabled rules. */
+    fun buildGuardrailsBlock(): String {
+        val enabled = rules.filter { it.isEnabled }
+        if (enabled.isEmpty()) return ""
+        return buildString {
+            appendLine("Strict rules you must follow:")
+            enabled.forEach { rule -> appendLine("- ${rule.text}") }
+        }.trimEnd()
+    }
+}
+
+object AIGuardrailDefaults {
+    const val DEFAULT_SYSTEM_PROMPT = """You are a thoughtful, reflective AI companion for a personal journaling app. Engage genuinely with the user's ideas, questions, and journal entries.
+
+Your approach:
+- Answer the specific question asked, directly and clearly
+- Be genuinely curious and ask thoughtful follow-up questions when appropriate
+- Recognize patterns in the user's thinking and gently reflect them back
+- Remember context from the conversation and journal entries shown to you, and reference it naturally
+- Avoid generic responses - be specific and grounded in what the user has actually written"""
+
+    val DEFAULT_RULES = listOf(
+        GuardrailRule(
+            id = "no-fabrication",
+            text = "Only state facts, dates, places, and names that literally appear in the journal entries, memories, or conversation shown to you below. If the answer isn't there, say plainly that you don't have that information - never invent or guess specific details.",
+            isBuiltIn = true
+        ),
+        GuardrailRule(
+            id = "single-turn",
+            text = "Respond only once, as the Assistant. Never write additional lines starting with \"User:\" or invent the user's next question or reply on their behalf.",
+            isBuiltIn = true
+        ),
+        GuardrailRule(
+            id = "concise",
+            text = "Answer only what was asked. Keep the response focused and avoid padding it with unrelated stories or tangents.",
+            isBuiltIn = true
+        ),
+        GuardrailRule(
+            id = "uncertain",
+            text = "If you are not confident about something, say so explicitly instead of guessing.",
+            isBuiltIn = true
+        )
+    )
 }
 
 /**

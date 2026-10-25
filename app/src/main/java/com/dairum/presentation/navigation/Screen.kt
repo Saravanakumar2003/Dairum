@@ -17,11 +17,12 @@ sealed class Screen(val route: String) {
     object EntryDetail : Screen("entry/{entryId}") {
         fun createRoute(entryId: Long) = "entry/$entryId"
     }
-    object EntryEditor : Screen("editor?entryId={entryId}") {
-        fun createRoute(entryId: Long? = null) = if (entryId != null) {
-            "editor?entryId=$entryId"
-        } else {
-            "editor"
+    object EntryEditor : Screen("editor?entryId={entryId}&prompt={prompt}") {
+        fun createRoute(entryId: Long? = null, prompt: String? = null): String {
+            val params = mutableListOf<String>()
+            if (entryId != null) params.add("entryId=$entryId")
+            if (prompt != null) params.add("prompt=${java.net.URLEncoder.encode(prompt, "UTF-8")}")
+            return if (params.isEmpty()) "editor" else "editor?${params.joinToString("&")}"
         }
     }
     
@@ -71,11 +72,32 @@ sealed class Screen(val route: String) {
     // Search
     object Search : Screen("search")
     
+    // Trash
+    object Trash : Screen("trash")
+    
+    // Gratia
+    object Gratia : Screen("gratia")
+    object GratitudeFolderDetail : Screen("gratia/gratitude/{folderId}") {
+        fun createRoute(folderId: Long) = "gratia/gratitude/$folderId"
+    }
+    object AffirmationFolderDetail : Screen("gratia/affirmation/{folderId}") {
+        fun createRoute(folderId: Long) = "gratia/affirmation/$folderId"
+    }
+    object AffirmationPlay : Screen("gratia/affirmation/{folderId}/play") {
+        fun createRoute(folderId: Long) = "gratia/affirmation/$folderId/play"
+    }
+    object GratiaSettings : Screen("gratia/settings")
+    object BreathingExercise : Screen("gratia/breathing")
+    
     // AI sub-screens (accessed from More)
     object AIChat : Screen("ai/chat")
     object AIReflections : Screen("ai/reflections")
     object AIPatterns : Screen("ai/patterns")
     object AISettings : Screen("ai/settings")
+    object AIGuardrails : Screen("ai/guardrails")
+    
+    // Contextual Search (accessed from More)
+    object ContextualSearch : Screen("search/contextual")
 }
 
 /**

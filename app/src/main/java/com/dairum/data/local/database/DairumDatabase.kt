@@ -40,9 +40,16 @@ import com.dairum.data.local.entity.*
         ChatMessageEntity::class,
         ChatEmbeddingEntity::class,
         ReflectionMemoryEntity::class,
-        ConversationContextEntity::class
+        ConversationContextEntity::class,
+        // Gratia entities
+        GratitudeFolderEntity::class,
+        GratitudePromptEntity::class,
+        AffirmationFolderEntity::class,
+        AffirmationEntity::class,
+        // Location nicknames
+        LocationNicknameEntity::class
     ],
-    version = 1,
+    version = 5,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -72,6 +79,11 @@ abstract class DairumDatabase : RoomDatabase() {
     abstract fun chatEmbeddingDao(): ChatEmbeddingDao
     abstract fun reflectionMemoryDao(): ReflectionMemoryDao
     abstract fun conversationContextDao(): ConversationContextDao
+    
+    // Gratia DAOs
+    abstract fun gratiaDao(): GratiaDao
+    
+    abstract fun locationNicknameDao(): LocationNicknameDao
     
     companion object {
         const val DATABASE_NAME = "dairum.db"

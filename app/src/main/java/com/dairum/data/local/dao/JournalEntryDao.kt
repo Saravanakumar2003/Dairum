@@ -38,7 +38,7 @@ interface JournalEntryDao {
     // Timeline view - all entries sorted by date
     @Query("""
         SELECT * FROM journal_entries 
-        WHERE isArchived = 0 AND isDraft = 0
+        WHERE isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL
         ORDER BY createdAt DESC
     """)
     fun getAllEntriesFlow(): Flow<List<JournalEntryEntity>>
@@ -46,14 +46,14 @@ interface JournalEntryDao {
     @Transaction
     @Query("""
         SELECT * FROM journal_entries 
-        WHERE isArchived = 0 AND isDraft = 0
+        WHERE isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL
         ORDER BY createdAt DESC
     """)
     fun getAllEntriesWithDetailsFlow(): Flow<List<EntryWithDetails>>
     
     @Query("""
         SELECT * FROM journal_entries 
-        WHERE isArchived = 0 AND isDraft = 0
+        WHERE isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL
         ORDER BY createdAt DESC
         LIMIT :limit OFFSET :offset
     """)
@@ -62,7 +62,7 @@ interface JournalEntryDao {
     // Category view
     @Query("""
         SELECT * FROM journal_entries 
-        WHERE categoryId = :categoryId AND isArchived = 0 AND isDraft = 0
+        WHERE categoryId = :categoryId AND isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL
         ORDER BY createdAt DESC
     """)
     fun getEntriesByCategoryFlow(categoryId: Long): Flow<List<JournalEntryEntity>>
@@ -70,7 +70,7 @@ interface JournalEntryDao {
     // Mood view
     @Query("""
         SELECT * FROM journal_entries 
-        WHERE moodLevel = :moodLevel AND isArchived = 0 AND isDraft = 0
+        WHERE moodLevel = :moodLevel AND isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL
         ORDER BY createdAt DESC
     """)
     fun getEntriesByMoodFlow(moodLevel: Int): Flow<List<JournalEntryEntity>>
@@ -78,7 +78,7 @@ interface JournalEntryDao {
     // Favorites
     @Query("""
         SELECT * FROM journal_entries 
-        WHERE isFavorite = 1 AND isArchived = 0 AND isDraft = 0
+        WHERE isFavorite = 1 AND isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL
         ORDER BY createdAt DESC
     """)
     fun getFavoriteEntriesFlow(): Flow<List<JournalEntryEntity>>
@@ -87,11 +87,11 @@ interface JournalEntryDao {
     suspend fun updateFavorite(id: Long, isFavorite: Boolean)
     
     // Drafts
-    @Query("SELECT * FROM journal_entries WHERE isDraft = 1 ORDER BY updatedAt DESC")
+    @Query("SELECT * FROM journal_entries WHERE isDraft = 1 AND deletedAt IS NULL ORDER BY updatedAt DESC")
     fun getDraftsFlow(): Flow<List<JournalEntryEntity>>
     
     // Archived
-    @Query("SELECT * FROM journal_entries WHERE isArchived = 1 ORDER BY updatedAt DESC")
+    @Query("SELECT * FROM journal_entries WHERE isArchived = 1 AND deletedAt IS NULL ORDER BY updatedAt DESC")
     fun getArchivedEntriesFlow(): Flow<List<JournalEntryEntity>>
     
     @Query("UPDATE journal_entries SET isArchived = :isArchived WHERE id = :id")
@@ -104,7 +104,7 @@ interface JournalEntryDao {
     @Query("""
         SELECT * FROM journal_entries 
         WHERE (title LIKE '%' || :query || '%' OR plainContent LIKE '%' || :query || '%')
-        AND isArchived = 0 AND isDraft = 0
+        AND isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL
         ORDER BY createdAt DESC
     """)
     fun searchEntries(query: String): Flow<List<JournalEntryEntity>>
@@ -113,7 +113,7 @@ interface JournalEntryDao {
     @Query("""
         SELECT * FROM journal_entries 
         WHERE createdAt >= :startTime AND createdAt < :endTime
-        AND isArchived = 0 AND isDraft = 0
+        AND isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL
         ORDER BY createdAt DESC
     """)
     fun getEntriesInDateRange(startTime: Long, endTime: Long): Flow<List<JournalEntryEntity>>
@@ -121,7 +121,7 @@ interface JournalEntryDao {
     @Query("""
         SELECT * FROM journal_entries 
         WHERE createdAt >= :startTime AND createdAt < :endTime
-        AND isArchived = 0 AND isDraft = 0
+        AND isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL
         ORDER BY createdAt DESC
     """)
     suspend fun getEntriesInDateRangeSync(startTime: Long, endTime: Long): List<JournalEntryEntity>
@@ -130,13 +130,13 @@ interface JournalEntryDao {
     @Query("""
         SELECT * FROM journal_entries 
         WHERE strftime('%m-%d', createdAt/1000, 'unixepoch', 'localtime') = :monthDay
-        AND isArchived = 0 AND isDraft = 0
+        AND isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL
         ORDER BY createdAt DESC
     """)
     fun getEntriesOnThisDay(monthDay: String): Flow<List<JournalEntryEntity>>
     
     // Statistics
-    @Query("SELECT COUNT(*) FROM journal_entries WHERE isArchived = 0 AND isDraft = 0")
+    @Query("SELECT COUNT(*) FROM journal_entries WHERE isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL")
     suspend fun getTotalCount(): Int
     
     @Query("SELECT COUNT(*) FROM journal_entries")
@@ -144,19 +144,19 @@ interface JournalEntryDao {
     
     @Query("""
         SELECT COUNT(*) FROM journal_entries 
-        WHERE createdAt >= :startTime AND isArchived = 0 AND isDraft = 0
+        WHERE createdAt >= :startTime AND isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL
     """)
     suspend fun getCountSince(startTime: Long): Int
     
     @Query("""
         SELECT AVG(wordCount) FROM journal_entries 
-        WHERE isArchived = 0 AND isDraft = 0
+        WHERE isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL
     """)
     suspend fun getAverageWordCount(): Double?
     
     @Query("""
         SELECT SUM(wordCount) FROM journal_entries 
-        WHERE isArchived = 0 AND isDraft = 0
+        WHERE isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL
     """)
     suspend fun getTotalWordCount(): Int?
     
@@ -164,7 +164,7 @@ interface JournalEntryDao {
     @Query("""
         SELECT moodLevel, COUNT(*) as count 
         FROM journal_entries 
-        WHERE moodLevel IS NOT NULL AND isArchived = 0 AND isDraft = 0
+        WHERE moodLevel IS NOT NULL AND isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL
         GROUP BY moodLevel
         ORDER BY moodLevel
     """)
@@ -173,7 +173,7 @@ interface JournalEntryDao {
     @Query("""
         SELECT moodLevel, COUNT(*) as count 
         FROM journal_entries 
-        WHERE moodLevel IS NOT NULL AND isArchived = 0 AND isDraft = 0
+        WHERE moodLevel IS NOT NULL AND isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL
         AND createdAt >= :startTime
         GROUP BY moodLevel
         ORDER BY moodLevel
@@ -184,7 +184,7 @@ interface JournalEntryDao {
     @Query("""
         SELECT date(createdAt/1000, 'unixepoch', 'localtime') as date, COUNT(*) as count
         FROM journal_entries
-        WHERE createdAt >= :startTime AND isArchived = 0 AND isDraft = 0
+        WHERE createdAt >= :startTime AND isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL
         GROUP BY date
         ORDER BY date
     """)
@@ -195,7 +195,7 @@ interface JournalEntryDao {
         SELECT CAST(strftime('%H', createdAt/1000, 'unixepoch', 'localtime') AS INTEGER) as hour, 
                COUNT(*) as count
         FROM journal_entries
-        WHERE isArchived = 0 AND isDraft = 0
+        WHERE isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL
         GROUP BY hour
         ORDER BY hour
     """)
@@ -205,7 +205,7 @@ interface JournalEntryDao {
         SELECT CAST(strftime('%H', createdAt/1000, 'unixepoch', 'localtime') AS INTEGER) as hour, 
                COUNT(*) as count
         FROM journal_entries
-        WHERE isArchived = 0 AND isDraft = 0 AND createdAt >= :startTime
+        WHERE isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL AND createdAt >= :startTime
         GROUP BY hour
         ORDER BY hour
     """)
@@ -216,7 +216,7 @@ interface JournalEntryDao {
         SELECT CAST(strftime('%w', createdAt/1000, 'unixepoch', 'localtime') AS INTEGER) as dayOfWeek,
                COUNT(*) as count
         FROM journal_entries
-        WHERE isArchived = 0 AND isDraft = 0
+        WHERE isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL
         GROUP BY dayOfWeek
         ORDER BY dayOfWeek
     """)
@@ -226,7 +226,7 @@ interface JournalEntryDao {
         SELECT CAST(strftime('%w', createdAt/1000, 'unixepoch', 'localtime') AS INTEGER) as dayOfWeek,
                COUNT(*) as count
         FROM journal_entries
-        WHERE isArchived = 0 AND isDraft = 0 AND createdAt >= :startTime
+        WHERE isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL AND createdAt >= :startTime
         GROUP BY dayOfWeek
         ORDER BY dayOfWeek
     """)
@@ -236,7 +236,7 @@ interface JournalEntryDao {
     @Query("""
         SELECT DISTINCT date(createdAt/1000, 'unixepoch', 'localtime') as date
         FROM journal_entries
-        WHERE isArchived = 0 AND isDraft = 0
+        WHERE isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL
         ORDER BY date DESC
     """)
     suspend fun getDistinctEntryDates(): List<String>
@@ -245,9 +245,28 @@ interface JournalEntryDao {
     @Query("""
         SELECT COUNT(*) FROM journal_entries 
         WHERE createdAt >= :startTime AND createdAt < :endTime
-        AND isArchived = 0 AND isDraft = 0
+        AND isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL
     """)
     suspend fun getEntryCountBetween(startTime: Long, endTime: Long): Int
+    
+    // Soft delete
+    @Query("UPDATE journal_entries SET deletedAt = :deletedAt WHERE id = :id")
+    suspend fun softDelete(id: Long, deletedAt: Long = System.currentTimeMillis())
+    
+    @Query("UPDATE journal_entries SET deletedAt = NULL WHERE id = :id")
+    suspend fun restoreEntry(id: Long)
+    
+    // Trash - get all soft-deleted entries
+    @Query("SELECT * FROM journal_entries WHERE deletedAt IS NOT NULL ORDER BY deletedAt DESC")
+    fun getDeletedEntriesFlow(): Flow<List<JournalEntryEntity>>
+    
+    // Permanently delete entries older than 30 days in trash
+    @Query("DELETE FROM journal_entries WHERE deletedAt IS NOT NULL AND deletedAt < :cutoff")
+    suspend fun emptyOldTrash(cutoff: Long)
+    
+    // Permanently delete all trash
+    @Query("DELETE FROM journal_entries WHERE deletedAt IS NOT NULL")
+    suspend fun emptyTrash()
 }
 
 data class MoodCount(val moodLevel: Int, val count: Int)
