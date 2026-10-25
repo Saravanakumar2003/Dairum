@@ -24,6 +24,7 @@ fun TrashScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showEmptyTrashDialog by remember { mutableStateOf(false) }
+    var entryPendingDelete by remember { mutableStateOf<JournalEntry?>(null) }
 
     Scaffold(
         topBar = {
@@ -86,7 +87,7 @@ fun TrashScreen(
                     TrashEntryItem(
                         entry = entry,
                         onRestore = { viewModel.restoreEntry(entry.id) },
-                        onDeletePermanently = { viewModel.permanentlyDelete(entry.id) }
+                        onDeletePermanently = { entryPendingDelete = entry }
                     )
                 }
             }
@@ -94,25 +95,56 @@ fun TrashScreen(
     }
 
     if (showEmptyTrashDialog) {
-        AlertDialog(
-            onDismissRequest = { showEmptyTrashDialog = false },
-            title = { Text("Empty Trash?") },
-            text = { Text("All entries in trash will be permanently deleted. This cannot be undone.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.emptyTrash()
-                    showEmptyTrashDialog = false
-                }) {
-                    Text("Empty", color = MaterialTheme.colorScheme.error)
-                }
+        PermanentDeleteDialog(
+            title = "Empty Trash?",
+            text = "All entries in trash will be permanently deleted, along with their photos, videos and attachments. This cannot be undone.",
+            confirmLabel = "Empty",
+            onConfirm = {
+                viewModel.emptyTrash()
+                showEmptyTrashDialog = false
             },
-            dismissButton = {
-                TextButton(onClick = { showEmptyTrashDialog = false }) {
-                    Text("Cancel")
-                }
-            }
+            onDismiss = { showEmptyTrashDialog = false }
         )
     }
+
+    entryPendingDelete?.let { entry ->
+        PermanentDeleteDialog(
+            title = "Delete permanently?",
+            text = "This entry will be permanently deleted, along with its photos, videos and attachments. This cannot be undone.",
+            confirmLabel = "Delete",
+            onConfirm = {
+                viewModel.permanentlyDelete(entry.id)
+                entryPendingDelete = null
+            },
+            onDismiss = { entryPendingDelete = null }
+        )
+    }
+}
+
+/** Confirmation for the irreversible deletes on this screen. Shared so the wording stays consistent. */
+@Composable
+internal fun PermanentDeleteDialog(
+    title: String,
+    text: String,
+    confirmLabel: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = { Text(text) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(confirmLabel, color = MaterialTheme.colorScheme.error)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 @Composable
