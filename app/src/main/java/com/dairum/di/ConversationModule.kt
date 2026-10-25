@@ -29,7 +29,8 @@ object ConversationModule {
         chatEmbeddingRepository: ChatEmbeddingRepository,
         reflectionMemoryRepository: ReflectionMemoryRepository,
         journalRepository: JournalRepository,
-        embeddingRepository: EmbeddingRepository
+        embeddingRepository: EmbeddingRepository,
+        contextualSearchService: com.dairum.data.search.ContextualSearchService
     ): ConversationMemoryService {
         return ConversationMemoryService(
             embeddingService = embeddingService,
@@ -37,7 +38,8 @@ object ConversationModule {
             chatEmbeddingRepository = chatEmbeddingRepository,
             reflectionMemoryRepository = reflectionMemoryRepository,
             journalRepository = journalRepository,
-            embeddingRepository = embeddingRepository
+            embeddingRepository = embeddingRepository,
+            contextualSearchService = contextualSearchService
         )
     }
     
@@ -68,7 +70,8 @@ object ConversationModule {
         reflectionService: ReflectionGenerationService,
         chatSessionRepository: ChatSessionRepository,
         chatMessageRepository: ChatMessageRepository,
-        conversationContextRepository: ConversationContextRepository
+        conversationContextRepository: ConversationContextRepository,
+        guardrailsRepository: AIGuardrailsRepository
     ): ConversationAIOrchestrator {
         return ConversationAIOrchestrator(
             localLLM = localLLM,
@@ -77,7 +80,8 @@ object ConversationModule {
             reflectionService = reflectionService,
             chatSessionRepository = chatSessionRepository,
             chatMessageRepository = chatMessageRepository,
-            conversationContextRepository = conversationContextRepository
+            conversationContextRepository = conversationContextRepository,
+            guardrailsRepository = guardrailsRepository
         )
     }
 }
@@ -112,6 +116,12 @@ abstract class ConversationRepositoryModule {
     abstract fun bindReflectionMemoryRepository(
         impl: ReflectionMemoryRepositoryImpl
     ): ReflectionMemoryRepository
+    
+    @Binds
+    @Singleton
+    abstract fun bindAIGuardrailsRepository(
+        impl: AIGuardrailsRepositoryImpl
+    ): AIGuardrailsRepository
     
     @Binds
     @Singleton

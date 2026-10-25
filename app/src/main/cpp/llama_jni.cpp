@@ -38,6 +38,12 @@ struct LlamaState {
     int n_past = 0;
     int n_generated = 0;
     
+    // Streaming generation limits (previously parsed but never stored/enforced - caused
+    // runaway generation that hallucinated fake "User:"/"Assistant:" turns indefinitely)
+    int stream_max_tokens = 0;
+    std::vector<std::string> stream_stop_tokens;
+    std::string stream_generated_text;
+    
     std::string model_name;
     int context_size = 0;
     
@@ -321,6 +327,18 @@ Java_com_dairum_data_ai_llm_LlamaCppLLM_nativeStartGeneration(
         return JNI_FALSE;
     }
     
+    // Store limits so nativeGenerateToken can actually enforce them
+    state->stream_max_tokens = max_tokens;
+    state->stream_generated_text.clear();
+    state->stream_stop_tokens.clear();
+    if (jstop_tokens) {
+        int len = env->GetArrayLength(jstop_tokens);
+        for (int i = 0; i < len; i++) {
+            auto jstr = (jstring)env->GetObjectArrayElement(jstop_tokens, i);
+            state->stream_stop_tokens.push_back(jstring_to_string(env, jstr));
+        }
+    }
+    
     // Clear and reset
     llama_kv_cache_clear(state->ctx);
     state->n_past = 0;
@@ -370,6 +388,12 @@ Java_com_dairum_data_ai_llm_LlamaCppLLM_nativeGenerateToken(JNIEnv* env, jobject
         return nullptr;
     }
     
+    // Enforce the token budget - previously ignored, letting generation run until EOS only
+    if (state->stream_max_tokens > 0 && state->n_generated >= state->stream_max_tokens) {
+        state->is_generating = false;
+        return nullptr;
+    }
+    
     // Sample next token
     llama_token new_token = common_sampler_sample(state->sampler, state->ctx, -1);
     
@@ -392,6 +416,26 @@ Java_com_dairum_data_ai_llm_LlamaCppLLM_nativeGenerateToken(JNIEnv* env, jobject
     }
     
     state->n_generated++;
+    
+    // Enforce stop sequences (e.g. "User:", "Assistant:") - previously never checked in the
+    // streaming path, which is what allowed the model to keep fabricating whole fake dialogues
+    state->stream_generated_text += piece;
+    for (const auto& stop : state->stream_stop_tokens) {
+        if (stop.empty()) continue;
+        if (state->stream_generated_text.length() >= stop.length() &&
+            state->stream_generated_text.compare(
+                state->stream_generated_text.length() - stop.length(), stop.length(), stop) == 0) {
+            state->is_generating = false;
+            // If the whole stop sequence landed inside this piece, withhold it from output.
+            // Otherwise it straddles an already-emitted piece; just stop emitting further text.
+            if (piece.length() >= stop.length()) {
+                piece = piece.substr(0, piece.length() - stop.length());
+            } else {
+                piece.clear();
+            }
+            return piece.empty() ? nullptr : string_to_jstring(env, piece);
+        }
+    }
     
     return string_to_jstring(env, piece);
 }

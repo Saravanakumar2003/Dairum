@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -42,7 +43,8 @@ class EditorViewModel @Inject constructor(
     private val weatherRepository: WeatherRepository,
     private val settingsRepository: SettingsRepository,
     private val locationService: LocationService,
-    private val voiceRecorderService: VoiceRecorderService
+    private val voiceRecorderService: VoiceRecorderService,
+    private val locationNicknameRepository: LocationNicknameRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EditorUiState())
@@ -66,6 +68,7 @@ class EditorViewModel @Inject constructor(
         loadPeople()
         loadTrackers()
         loadTemplates()
+        loadLocationNicknames()
         
         // Observe voice recording state
         viewModelScope.launch {
@@ -94,6 +97,16 @@ class EditorViewModel @Inject constructor(
         
         // Note: Auto-fetch for location is handled by EditorScreen's LaunchedEffect
         // to avoid race condition when editing existing entries
+    }
+
+    private fun loadLocationNicknames() {
+        viewModelScope.launch {
+            locationNicknameRepository.getAllFlow().collect { nicknames ->
+                _uiState.update {
+                    it.copy(locationNicknames = nicknames.associate { n -> n.locationKey to n.nickname })
+                }
+            }
+        }
     }
 
     private fun autoFetchLocationAndWeather() {
@@ -250,7 +263,8 @@ class EditorViewModel @Inject constructor(
                         mood = it.mood,
                         weather = it.weather,
                         location = it.location,
-                        media = it.media.map { m -> MediaItem(uri = m.uri, type = m.type) },
+                        additionalLocations = it.additionalLocations,
+                        media = it.media.map { m -> MediaItem(uri = m.uri, type = m.type, inlineKey = m.inlineKey) },
                         tags = it.tags,
                         people = it.people,
                         trackerValues = it.trackerValues,
@@ -293,14 +307,119 @@ class EditorViewModel @Inject constructor(
         // Adjust formatting spans
         val adjustedFormatting = _uiState.value.textFormatting.adjustForTextChange(changePosition, delta)
         
+        val mentionTrigger = detectMentionTrigger(content)
+        
         _uiState.update { 
             it.copy(
                 content = content, 
                 textFormatting = adjustedFormatting,
-                hasChanges = true
+                hasChanges = true,
+                mentionQuery = mentionTrigger?.query,
+                mentionStartIndex = mentionTrigger?.start
             ) 
         }
         scheduleAutosave()
+    }
+
+    private data class MentionTrigger(val start: Int, val query: String)
+
+    /**
+     * Looks backward from the cursor for an unclosed "@" trigger (Twitter/Slack-style mention),
+     * e.g. typing "@ali" returns MentionTrigger(start of '@', query="ali").
+     */
+    private fun detectMentionTrigger(content: TextFieldValue): MentionTrigger? {
+        if (content.selection.start != content.selection.end) return null
+        val cursor = content.selection.end
+        val text = content.text
+        var i = cursor - 1
+        while (i >= 0) {
+            val c = text[i]
+            if (c == '@') {
+                if (i > 0) {
+                    val prev = text[i - 1]
+                    if (!prev.isWhitespace()) return null // e.g. part of an email address
+                }
+                val query = text.substring(i + 1, cursor)
+                if (query.contains('\n')) return null
+                return MentionTrigger(start = i, query = query)
+            }
+            if (c.isWhitespace()) return null
+            i--
+        }
+        return null
+    }
+
+    /**
+     * Replaces the active "@query" with the chosen mention, styles it as a colored chip, and
+     * links the referenced person/tag/location to this entry.
+     */
+    fun selectMentionCandidate(candidate: MentionCandidate) {
+        val start = _uiState.value.mentionStartIndex ?: return
+        val content = _uiState.value.content
+        val cursor = content.selection.end
+        if (cursor < start) return
+        if (!candidate.isAvailable) return // Informational "not added" hint - not selectable
+        
+        val insertion = "@${candidate.displayName} "
+        val newText = content.text.substring(0, start) + insertion + content.text.substring(cursor)
+        val newCursor = start + insertion.length
+        val newContent = TextFieldValue(newText, TextRange(newCursor))
+        
+        val delta = insertion.length - (cursor - start)
+        var formatting = _uiState.value.textFormatting.adjustForTextChange(start, delta)
+        val style = when (candidate.type) {
+            MentionType.PERSON -> SpanStyle.MENTION_PERSON
+            MentionType.LOCATION -> SpanStyle.MENTION_LOCATION
+            MentionType.TAG -> SpanStyle.MENTION_TAG
+            MentionType.EMOTION -> SpanStyle.MENTION_EMOTION
+        }
+        val mentionSpan = TextSpan(start, start + 1 + candidate.displayName.length, style)
+        formatting = formatting.copy(spans = formatting.spans + mentionSpan)
+        
+        _uiState.update {
+            it.copy(
+                content = newContent,
+                textFormatting = formatting,
+                mentionQuery = null,
+                mentionStartIndex = null,
+                hasChanges = true
+            )
+        }
+        scheduleAutosave()
+        
+        when (candidate.type) {
+            MentionType.PERSON -> candidate.personId?.let { id ->
+                _uiState.value.availablePeople.find { it.id == id }?.let { addPerson(it) }
+            }
+            MentionType.TAG -> candidate.tagId?.let { id ->
+                _uiState.value.availableTags.find { it.id == id }?.let { addTag(it) }
+            }
+            MentionType.LOCATION -> Unit // Already part of this entry - nothing further to link
+            MentionType.EMOTION -> Unit // Purely stylistic - doesn't overwrite the entry's single mood field
+        }
+    }
+
+    fun dismissMentionPopup() {
+        _uiState.update { it.copy(mentionQuery = null, mentionStartIndex = null) }
+    }
+
+    /** Creates a brand-new tag on the fly and inserts it as a mention ("Create tag '...'" option). */
+    fun createMentionTagAndInsert(name: String) {
+        viewModelScope.launch {
+            val tag = tagRepository.createOrGet(name)
+            selectMentionCandidate(MentionCandidate(MentionType.TAG, tag.name, tagId = tag.id))
+        }
+    }
+
+    /** Creates a brand-new person on the fly and inserts it as a mention ("Create person '...'" option). */
+    fun createMentionPersonAndInsert(name: String) {
+        viewModelScope.launch {
+            val personId = personRepository.create(Person(name = name))
+            val person = personRepository.getById(personId)
+            if (person != null) {
+                selectMentionCandidate(MentionCandidate(MentionType.PERSON, person.name, personId = person.id))
+            }
+        }
     }
 
     fun updateCategory(category: Category) {
@@ -364,10 +483,60 @@ class EditorViewModel @Inject constructor(
         _uiState.update { it.copy(media = currentMedia, hasChanges = true) }
     }
 
+    /** Inserts an image marker chip at the cursor so a photo appears in the flow of the text. */
+    fun insertInlineImage(uri: Uri) {
+        val key = java.util.UUID.randomUUID().toString().take(6)
+        val marker = "[IMG:$key]"
+        val currentContent = _uiState.value.content
+        val insertPos = currentContent.selection.end.coerceIn(0, currentContent.text.length)
+        val insertion = "\n$marker\n"
+        val newText = currentContent.text.substring(0, insertPos) + insertion + currentContent.text.substring(insertPos)
+        val newCursor = insertPos + insertion.length
+        val newContent = TextFieldValue(newText, TextRange(newCursor))
+        
+        val markerStart = insertPos + 1 // Skip the leading newline
+        val shiftedFormatting = _uiState.value.textFormatting.adjustForTextChange(insertPos, insertion.length)
+        val newSpan = TextSpan(markerStart, markerStart + marker.length, SpanStyle.INLINE_IMAGE)
+        val newFormatting = shiftedFormatting.copy(spans = shiftedFormatting.spans + newSpan)
+        
+        val mediaItem = MediaItem(uri = uri.toString(), type = MediaType.PHOTO, inlineKey = key)
+        val currentMedia = _uiState.value.media + mediaItem
+        
+        _uiState.update {
+            it.copy(
+                content = newContent,
+                textFormatting = newFormatting,
+                media = currentMedia,
+                hasChanges = true
+            )
+        }
+        scheduleAutosave()
+    }
+
     fun removeMedia(media: MediaItem) {
         val currentMedia = _uiState.value.media.toMutableList()
         currentMedia.remove(media)
-        _uiState.update { it.copy(media = currentMedia, hasChanges = true) }
+        
+        var content = _uiState.value.content
+        var formatting = _uiState.value.textFormatting
+        
+        val inlineKey = media.inlineKey
+        if (inlineKey != null) {
+            val marker = "[IMG:$inlineKey]"
+            val idx = content.text.indexOf(marker)
+            if (idx >= 0) {
+                val newText = content.text.removeRange(idx, idx + marker.length)
+                val newCursor = idx.coerceAtMost(newText.length)
+                content = TextFieldValue(newText, TextRange(newCursor))
+                formatting = formatting.adjustForTextChange(idx, -marker.length)
+                    .copy(spans = formatting.spans.filterNot { it.style == SpanStyle.INLINE_IMAGE && it.start == idx })
+            }
+        }
+        
+        _uiState.update {
+            it.copy(media = currentMedia, content = content, textFormatting = formatting, hasChanges = true)
+        }
+        scheduleAutosave()
     }
 
     fun updateTrackerValue(trackerId: Long, value: String) {
@@ -401,14 +570,21 @@ class EditorViewModel @Inject constructor(
     fun insertTimestamp() {
         val now = LocalDateTime.now()
         val formatter = DateTimeFormatter.ofPattern("h:mm a")
-        val timestamp = "[${now.format(formatter)}] "
+        val token = "[${now.format(formatter)}]"
         
         val currentContent = _uiState.value.content
+        val insertPos = currentContent.text.length
         val newContent = TextFieldValue(
-            text = currentContent.text + timestamp,
+            text = currentContent.text + token + " ",
             selection = currentContent.selection
         )
-        _uiState.update { it.copy(content = newContent, hasChanges = true) }
+        // Existing spans all end at or before insertPos, so no adjustment is needed - just append the chip span.
+        val newSpan = TextSpan(insertPos, insertPos + token.length, SpanStyle.TIMESTAMP)
+        val newFormatting = _uiState.value.textFormatting.copy(
+            spans = _uiState.value.textFormatting.spans + newSpan
+        )
+        _uiState.update { it.copy(content = newContent, textFormatting = newFormatting, hasChanges = true) }
+        scheduleAutosave()
     }
 
     fun fetchWeather() {
@@ -515,6 +691,76 @@ class EditorViewModel @Inject constructor(
 
     fun removeLocation() {
         _uiState.update { it.copy(location = null, hasChanges = true) }
+    }
+
+    /** Adds an extra location beyond the primary one (feature: multiple locations per entry). */
+    fun addLocation(location: Location) {
+        val isSameAsPrimary = _uiState.value.location?.let {
+            it.latitude == location.latitude && it.longitude == location.longitude
+        } ?: false
+        val list = _uiState.value.additionalLocations
+        val alreadyPresent = list.any { it.latitude == location.latitude && it.longitude == location.longitude }
+        if (!isSameAsPrimary && !alreadyPresent) {
+            _uiState.update { it.copy(additionalLocations = list + location, hasChanges = true) }
+            scheduleAutosave()
+        }
+    }
+
+    fun removeAdditionalLocation(location: Location) {
+        _uiState.update { it.copy(additionalLocations = it.additionalLocations - location, hasChanges = true) }
+        scheduleAutosave()
+    }
+
+    fun addCurrentLocationAsAdditional() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingLocation = true) }
+            locationService.getCurrentLocation().fold(
+                onSuccess = { loc ->
+                    addLocation(loc)
+                    _uiState.update { it.copy(isLoadingLocation = false) }
+                },
+                onFailure = {
+                    _uiState.update { it.copy(isLoadingLocation = false) }
+                }
+            )
+        }
+    }
+
+    fun addLocationFromCoordinatesAsAdditional(latitude: Double, longitude: Double) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingLocation = true) }
+            val address = locationService.getAddressFromCoordinates(latitude, longitude)
+            val placeName = address?.split(",")?.firstOrNull()?.trim()
+            addLocation(Location(latitude = latitude, longitude = longitude, address = address, placeName = placeName))
+            _uiState.update { it.copy(isLoadingLocation = false) }
+        }
+    }
+
+    fun toggleAdditionalLocationPicker() {
+        _uiState.update { it.copy(showAdditionalLocationPicker = !it.showAdditionalLocationPicker) }
+    }
+
+    fun showNicknameDialog(location: Location) {
+        _uiState.update { it.copy(showNicknameDialogFor = location) }
+    }
+
+    fun dismissNicknameDialog() {
+        _uiState.update { it.copy(showNicknameDialogFor = null) }
+    }
+
+    /** Nicknames are stored globally so they persist across every entry that references this place. */
+    fun setLocationNickname(location: Location, nickname: String) {
+        viewModelScope.launch {
+            locationNicknameRepository.setNickname(location, nickname)
+            _uiState.update { it.copy(showNicknameDialogFor = null) }
+        }
+    }
+
+    fun removeLocationNickname(location: Location) {
+        viewModelScope.launch {
+            locationNicknameRepository.removeNickname(location)
+            _uiState.update { it.copy(showNicknameDialogFor = null) }
+        }
     }
 
     fun startVoiceRecording() {
@@ -754,6 +1000,7 @@ class EditorViewModel @Inject constructor(
                 mood = state.mood,
                 weather = state.weather,
                 location = state.location,
+                additionalLocations = state.additionalLocations,
                 tags = state.tags,
                 people = state.people,
                 trackerValues = state.trackerValues,
@@ -861,6 +1108,7 @@ class EditorViewModel @Inject constructor(
             mood = state.mood,
             weather = state.weather,
             location = state.location,
+            additionalLocations = state.additionalLocations,
             tags = state.tags,
             people = state.people,
             trackerValues = state.trackerValues,
@@ -887,10 +1135,26 @@ class EditorViewModel @Inject constructor(
         journalRepository.setPeopleForEntry(entryId, state.people.map { it.id })
         journalRepository.setTrackerValues(entryId, state.trackerValues)
         
-        // Save media files
-        state.media.forEach { mediaItem ->
+        // Save media files - diff against what's already persisted so media the user removed
+        // (e.g. deleted an inline image) is actually deleted instead of lingering forever, and
+        // so unchanged media isn't re-copied/re-inserted as a duplicate on every save.
+        val existingMedia = mediaRepository.getMediaForEntry(entryId)
+        val currentUris = state.media.map { it.uri }.toSet()
+        val existingUris = existingMedia.map { it.uri }.toSet()
+        
+        existingMedia.filter { it.uri !in currentUris }.forEach { stale ->
+            try {
+                mediaRepository.deleteMediaFile(stale.uri)
+            } catch (e: Exception) {
+                // File may already be gone; still remove the DB row below
+            }
+            mediaRepository.deleteMedia(stale.id)
+        }
+        
+        state.media.filter { it.uri !in existingUris }.forEach { mediaItem ->
             try {
                 val savedMedia = mediaRepository.saveMediaFile(mediaItem.uri, entryId, mediaItem.type)
+                    .copy(inlineKey = mediaItem.inlineKey)
                 mediaRepository.addMedia(savedMedia)
             } catch (e: Exception) {
                 // Log error but continue saving other media
@@ -931,6 +1195,7 @@ data class EditorUiState(
     val mood: Mood? = null,
     val weather: Weather? = null,
     val location: Location? = null,
+    val additionalLocations: List<Location> = emptyList(),
     val media: List<MediaItem> = emptyList(),
     val tags: List<Tag> = emptyList(),
     val people: List<Person> = emptyList(),
@@ -951,6 +1216,7 @@ data class EditorUiState(
     val isLoadingWeather: Boolean = false,
     val isLoadingLocation: Boolean = false,
     val showLocationPicker: Boolean = false,
+    val showAdditionalLocationPicker: Boolean = false,
     val locationSearchResults: List<Location> = emptyList(),
     val isRecording: Boolean = false,
     val recordingDuration: Long = 0,
@@ -965,7 +1231,15 @@ data class EditorUiState(
     
     // Autosave state
     val autosaveStatus: AutosaveStatus = AutosaveStatus.IDLE,
-    val lastAutosaveTime: LocalDateTime? = null
+    val lastAutosaveTime: LocalDateTime? = null,
+    
+    // Mention (@person/location/tag/emotion) autocomplete state
+    val mentionQuery: String? = null,
+    val mentionStartIndex: Int? = null,
+    
+    // Location nicknames (persistent across entries) and the nickname-edit dialog target
+    val locationNicknames: Map<String, String> = emptyMap(),
+    val showNicknameDialogFor: Location? = null
 ) {
     val canSave: Boolean
         get() = content.text.isNotBlank() || title.isNotBlank()
@@ -979,9 +1253,66 @@ data class EditorUiState(
             } ?: "Saved"
             AutosaveStatus.ERROR -> "Save failed"
         }
+
+    /** Nickname if set for this location, otherwise its place name/address. */
+    fun displayNameFor(location: Location): String {
+        return locationNicknames[location.nicknameKey()] ?: location.placeName ?: location.address ?: "Location"
+    }
+
+    /**
+     * Combined, filtered @-mention suggestions across people, locations, tags, and emotions.
+     * Locations only ever surface places already added to THIS entry - mentioning a place never
+     * creates a new one. If nothing in the entry matches, a non-selectable hint is shown instead.
+     */
+    val mentionCandidates: List<MentionCandidate>
+        get() {
+            val query = mentionQuery ?: return emptyList()
+            val people = availablePeople
+                .filter { it.name.contains(query, ignoreCase = true) }
+                .take(6)
+                .map { MentionCandidate(MentionType.PERSON, it.name, personId = it.id) }
+            
+            val entryLocations = (listOfNotNull(location) + additionalLocations).distinct()
+            val matchingLocations = entryLocations.filter { loc ->
+                query.isBlank() || displayNameFor(loc).contains(query, ignoreCase = true)
+            }
+            val locations = if (matchingLocations.isNotEmpty()) {
+                matchingLocations.take(6).map {
+                    MentionCandidate(MentionType.LOCATION, displayNameFor(it), location = it, isAvailable = true)
+                }
+            } else if (query.isNotBlank()) {
+                // Nothing in this entry matches - make that explicit instead of silently doing nothing
+                listOf(MentionCandidate(MentionType.LOCATION, query, isAvailable = false))
+            } else {
+                emptyList()
+            }
+            
+            val tags = availableTags
+                .filter { it.name.contains(query, ignoreCase = true) }
+                .take(6)
+                .map { MentionCandidate(MentionType.TAG, it.name, tagId = it.id) }
+            val moods = MoodOption.values()
+                .filter { it.label.contains(query, ignoreCase = true) }
+                .take(6)
+                .map { MentionCandidate(MentionType.EMOTION, it.label, emoji = it.emoji) }
+            return people + locations + tags + moods
+        }
 }
+
+enum class MentionType { PERSON, LOCATION, TAG, EMOTION }
+
+data class MentionCandidate(
+    val type: MentionType,
+    val displayName: String,
+    val personId: Long? = null,
+    val tagId: Long? = null,
+    val emoji: String? = null,
+    val location: Location? = null,
+    val isAvailable: Boolean = true // false = informational "not added to this entry" hint
+)
 
 data class MediaItem(
     val uri: String,
-    val type: MediaType
+    val type: MediaType,
+    val inlineKey: String? = null // Non-null when this photo is embedded inline within the text
 )

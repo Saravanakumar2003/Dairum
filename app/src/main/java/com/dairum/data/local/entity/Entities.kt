@@ -34,12 +34,14 @@ data class JournalEntryEntity(
     val moodIcon: String? = null, // Custom emoji/icon
     val weatherData: String? = null, // JSON: {temp, condition, icon, humidity, location}
     val locationData: String? = null, // JSON: {lat, lng, address, placeId, placeName}
+    val additionalLocationsData: String? = null, // JSON array of extra locations beyond the primary one
     val isFavorite: Boolean = false,
     val isArchived: Boolean = false,
     val isDraft: Boolean = false,
     val isPinned: Boolean = false,
     val wordCount: Int = 0,
-    val backgroundColor: String? = null // Background color name
+    val backgroundColor: String? = null, // Background color name
+    val deletedAt: Long? = null // Soft delete timestamp, null means not deleted
 )
 
 /**
@@ -137,6 +139,7 @@ data class MediaEntity(
     val height: Int? = null,
     val sortOrder: Int = 0,
     val caption: String? = null,
+    val inlineKey: String? = null, // Set when this media is embedded inline within the entry text
     val createdAt: Long = System.currentTimeMillis()
 )
 
@@ -531,5 +534,28 @@ data class MoodCheckInConfigEntity(
     val lastPromptAt: Long? = null, // Last time a mood check-in was prompted
     val enabledDays: String = "1,2,3,4,5,6,7", // Days of week to prompt (1=Mon, 7=Sun)
     val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis()
+)
+
+// ============ LOCATION NICKNAMES ============
+
+/**
+ * A user-assigned nickname for a location, persistent across all entries. Keyed by
+ * [com.dairum.domain.model.nicknameKey] rather than raw lat/lng so revisiting the same place
+ * (with a slightly different GPS fix) still resolves to the same nickname.
+ */
+@Entity(
+    tableName = "location_nicknames",
+    indices = [Index(value = ["locationKey"], unique = true)]
+)
+data class LocationNicknameEntity(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val locationKey: String,
+    val nickname: String,
+    val latitude: Double,
+    val longitude: Double,
+    val placeName: String? = null,
+    val address: String? = null,
     val updatedAt: Long = System.currentTimeMillis()
 )

@@ -26,6 +26,12 @@ interface MemoryDao {
     
     @Query("SELECT * FROM memories ORDER BY startDate DESC")
     fun getAllMemoriesFlow(): Flow<List<MemoryEntity>>
+
+    @Query("SELECT * FROM memories ORDER BY startDate DESC")
+    suspend fun getAllMemoriesSync(): List<MemoryEntity>
+
+    @Query("SELECT * FROM memory_entries ORDER BY memoryId, sortOrder")
+    suspend fun getAllMemoryEntryLinks(): List<MemoryEntryCrossRef>
     
     @Query("SELECT * FROM memories WHERE isFavorite = 1 ORDER BY startDate DESC")
     fun getFavoriteMemoriesFlow(): Flow<List<MemoryEntity>>
@@ -88,6 +94,9 @@ interface MemoryDao {
     
     @Query("SELECT * FROM memory_milestones WHERE memoryId = :memoryId ORDER BY milestoneDate ASC")
     fun getMilestonesForMemory(memoryId: Long): Flow<List<MemoryMilestoneEntity>>
+
+    @Query("SELECT * FROM memory_milestones WHERE memoryId = :memoryId ORDER BY milestoneDate ASC")
+    suspend fun getMilestonesForMemorySync(memoryId: Long): List<MemoryMilestoneEntity>
     
     // ============ MEMORY TRACKERS ============
     
@@ -102,6 +111,9 @@ interface MemoryDao {
     
     @Query("SELECT * FROM memory_trackers WHERE memoryId = :memoryId")
     fun getTrackersForMemory(memoryId: Long): Flow<List<MemoryTrackerEntity>>
+
+    @Query("SELECT * FROM memory_trackers WHERE memoryId = :memoryId")
+    suspend fun getTrackersForMemorySync(memoryId: Long): List<MemoryTrackerEntity>
     
     // ============ STATISTICS & AGGREGATIONS ============
     

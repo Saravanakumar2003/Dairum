@@ -1,6 +1,9 @@
 package com.dairum.presentation.screens.editor
 
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -33,8 +36,25 @@ enum class SpanStyle {
     FONT_HANDWRITING,
     FONT_SMALL,
     FONT_LARGE,
-    FONT_EXTRA_LARGE
+    FONT_EXTRA_LARGE,
+    // Chip-style spans: rendered with a rounded background drawn separately (see drawChipBackgrounds)
+    TIMESTAMP,
+    MENTION_PERSON,
+    MENTION_LOCATION,
+    MENTION_TAG,
+    MENTION_EMOTION,
+    INLINE_IMAGE
 }
+
+/** Chip-style spans get a custom-drawn rounded background instead of a plain SpanStyle background. */
+val CHIP_SPAN_STYLES = setOf(
+    SpanStyle.TIMESTAMP,
+    SpanStyle.MENTION_PERSON,
+    SpanStyle.MENTION_LOCATION,
+    SpanStyle.MENTION_TAG,
+    SpanStyle.MENTION_EMOTION,
+    SpanStyle.INLINE_IMAGE
+)
 
 /**
  * Manages text formatting spans for an entry.
@@ -290,9 +310,140 @@ fun TextFormatting.toAnnotatedString(
                     SpanStyle.FONT_EXTRA_LARGE -> androidx.compose.ui.text.SpanStyle(
                         fontSize = androidx.compose.ui.unit.TextUnit(26f, androidx.compose.ui.unit.TextUnitType.Sp)
                     )
+                    SpanStyle.TIMESTAMP -> androidx.compose.ui.text.SpanStyle(
+                        color = Color(0xFF00695C),
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                    )
+                    SpanStyle.MENTION_PERSON -> androidx.compose.ui.text.SpanStyle(
+                        color = Color(0xFF1565C0),
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                    )
+                    SpanStyle.MENTION_LOCATION -> androidx.compose.ui.text.SpanStyle(
+                        color = Color(0xFF2E7D32),
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                    )
+                    SpanStyle.MENTION_TAG -> androidx.compose.ui.text.SpanStyle(
+                        color = Color(0xFF6A1B9A),
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                    )
+                    SpanStyle.MENTION_EMOTION -> androidx.compose.ui.text.SpanStyle(
+                        color = Color(0xFFAD1457),
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                    )
+                    SpanStyle.INLINE_IMAGE -> androidx.compose.ui.text.SpanStyle(
+                        color = Color(0xFFE65100),
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                    )
                 }
                 addStyle(style, start, end)
             }
         }
     }
+}
+
+private val TIMESTAMP_TOKEN_REGEX = Regex("""\[\d{1,2}:\d{2}\s?[AaPp][Mm]\]""")
+
+/**
+ * Adds TIMESTAMP chip spans for any legacy bracketed time tokens (e.g. "[6:00 AM]") in [text] that
+ * aren't already covered by an explicit span. Lets old entries (saved before chip styling existed)
+ * still render with the rounded timestamp chip.
+ */
+fun TextFormatting.withDetectedTimestamps(text: String): TextFormatting {
+    if (text.isEmpty()) return this
+    val alreadyCovered = spans.filter { it.style in CHIP_SPAN_STYLES }
+    val detected = mutableListOf<TextSpan>()
+    TIMESTAMP_TOKEN_REGEX.findAll(text).forEach { match ->
+        val start = match.range.first
+        val end = match.range.last + 1
+        if (alreadyCovered.none { it.start == start && it.end == end }) {
+            detected.add(TextSpan(start, end, SpanStyle.TIMESTAMP))
+        }
+    }
+    return if (detected.isEmpty()) this else copy(spans = spans + detected)
+}
+
+/** A resolved rounded-chip background range ready to be drawn. */
+data class ChipBackground(val start: Int, val end: Int, val color: Color)
+
+/** Returns the rounded-background color for chip-style spans, or null for regular formatting spans. */
+fun chipBackgroundColorFor(style: SpanStyle, isDark: Boolean): Color? = when (style) {
+    SpanStyle.TIMESTAMP -> if (isDark) Color(0xFF0D3B36) else Color(0xFFB2DFDB)
+    SpanStyle.MENTION_PERSON -> if (isDark) Color(0xFF163A5E) else Color(0xFFDCEAFF)
+    SpanStyle.MENTION_LOCATION -> if (isDark) Color(0xFF1B3D1E) else Color(0xFFDCF5DE)
+    SpanStyle.MENTION_TAG -> if (isDark) Color(0xFF3D1F4D) else Color(0xFFF0DEFF)
+    SpanStyle.MENTION_EMOTION -> if (isDark) Color(0xFF4D1F33) else Color(0xFFFFDCE9)
+    SpanStyle.INLINE_IMAGE -> if (isDark) Color(0xFF4A2E10) else Color(0xFFFFE7C2)
+    else -> null
+}
+
+fun TextFormatting.chipBackgrounds(isDark: Boolean): List<ChipBackground> {
+    if (spans.isEmpty()) return emptyList()
+    return spans.mapNotNull { span ->
+        chipBackgroundColorFor(span.style, isDark)?.let { color -> ChipBackground(span.start, span.end, color) }
+    }
+}
+
+/** Extracts the spans overlapping [start, end) and rebases their positions to start at 0. Used when
+ * a single stored text/formatting pair is split into multiple rendered segments (e.g. around inline images). */
+fun TextFormatting.sliceFor(start: Int, end: Int): TextFormatting {
+    if (start >= end) return TextFormatting()
+    val sliced = spans.mapNotNull { span ->
+        val s = span.start.coerceIn(start, end)
+        val e = span.end.coerceIn(start, end)
+        if (s < e) TextSpan(s - start, e - start, span.style) else null
+    }
+    return TextFormatting(sliced)
+}
+
+/**
+ * Draws rounded-rect backgrounds behind [chips] ranges using [textLayoutResult], so chip spans
+ * (timestamps, mentions, inline image markers) look like real pill/chip UI instead of plain text
+ * or a sharp-cornered SpanStyle background. Must be applied to the same Text whose layout was used.
+ */
+fun Modifier.drawChipBackgrounds(
+    textLayoutResult: androidx.compose.ui.text.TextLayoutResult?,
+    chips: List<ChipBackground>,
+    cornerRadius: androidx.compose.ui.unit.Dp = 6.dp
+): Modifier {
+    if (textLayoutResult == null || chips.isEmpty()) return this
+    return this.then(
+        Modifier.drawBehind {
+            val radiusPx = cornerRadius.toPx()
+            val textLength = textLayoutResult.layoutInput.text.length
+            chips.forEach { chip ->
+                val start = chip.start.coerceIn(0, textLength)
+                val end = chip.end.coerceIn(start, textLength)
+                if (start >= end) return@forEach
+                try {
+                    val startBox = textLayoutResult.getBoundingBox(start)
+                    val endBox = textLayoutResult.getBoundingBox(end - 1)
+                    if (kotlin.math.abs(startBox.top - endBox.top) < 1f) {
+                        drawRoundRect(
+                            color = chip.color,
+                            topLeft = androidx.compose.ui.geometry.Offset(startBox.left, startBox.top),
+                            size = androidx.compose.ui.geometry.Size(endBox.right - startBox.left, startBox.height),
+                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(radiusPx, radiusPx)
+                        )
+                    } else {
+                        val startLine = textLayoutResult.getLineForOffset(start)
+                        val endLine = textLayoutResult.getLineForOffset(end - 1)
+                        for (line in startLine..endLine) {
+                            val left = if (line == startLine) startBox.left else textLayoutResult.getLineLeft(line)
+                            val right = if (line == endLine) endBox.right else textLayoutResult.getLineRight(line)
+                            val top = textLayoutResult.getLineTop(line)
+                            val bottom = textLayoutResult.getLineBottom(line)
+                            drawRoundRect(
+                                color = chip.color,
+                                topLeft = androidx.compose.ui.geometry.Offset(left, top),
+                                size = androidx.compose.ui.geometry.Size(right - left, bottom - top),
+                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(radiusPx, radiusPx)
+                            )
+                        }
+                    }
+                } catch (e: Exception) {
+                    // Stale layout mid-recomposition; skip this chip for this frame.
+                }
+            }
+        }
+    )
 }

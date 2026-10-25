@@ -74,6 +74,7 @@ fun DairumTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        shapes = DairumShapes,
         content = content
     )
 }

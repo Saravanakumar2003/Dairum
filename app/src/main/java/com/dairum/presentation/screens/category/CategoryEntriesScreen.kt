@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -49,14 +50,16 @@ fun CategoryEntriesScreen(
                                 modifier = Modifier
                                     .size(36.dp)
                                     .background(
-                                        Color(category.color).copy(alpha = 0.2f),
+                                        Color(category.color),
                                         CircleShape
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = getCategoryEmoji(category),
-                                    style = MaterialTheme.typography.titleMedium
+                                Icon(
+                                    imageVector = getCategoryIconVector(category.icon),
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp)
                                 )
                             }
                             Text(category.name)
@@ -245,5 +248,50 @@ private fun getCategoryEmoji(category: Category): String {
         "shopping" -> "🛍️"
         "events", "special" -> "🎉"
         else -> "📁"
+    }
+}
+
+/**
+ * Maps icon name strings to Material Icon vectors for category display
+ */
+private fun getCategoryIconVector(iconName: String): androidx.compose.ui.graphics.vector.ImageVector {
+    return when (iconName) {
+        "folder" -> Icons.Default.Folder
+        "edit_note" -> Icons.Default.Edit
+        "person" -> Icons.Default.Person
+        "work" -> Icons.Default.Work
+        "flight" -> Icons.Default.Flight
+        "favorite" -> Icons.Default.Favorite
+        "flag" -> Icons.Default.Flag
+        "star" -> Icons.Default.Star
+        "home" -> Icons.Default.Home
+        "school" -> Icons.Default.School
+        "fitness_center" -> Icons.Default.FitnessCenter
+        "restaurant" -> Icons.Default.Restaurant
+        "shopping_cart" -> Icons.Default.ShoppingCart
+        "music_note" -> Icons.Default.MusicNote
+        "book" -> Icons.Default.Book
+        "camera" -> Icons.Default.CameraAlt
+        "pets" -> Icons.Default.Pets
+        "sports" -> Icons.Default.Sports
+        "beach" -> Icons.Default.BeachAccess
+        "local_cafe" -> Icons.Default.LocalCafe
+        "palette" -> Icons.Default.Palette
+        "code" -> Icons.Default.Code
+        "science" -> Icons.Default.Science
+        "psychology" -> Icons.Default.Psychology
+        "celebration" -> Icons.Default.Celebration
+        "nature" -> Icons.Default.Nature
+        "spa" -> Icons.Default.Spa
+        "directions_car" -> Icons.Default.DirectionsCar
+        "movie" -> Icons.Default.Movie
+        "night_life" -> Icons.Default.Nightlife
+        "volunteer_activism" -> Icons.Default.VolunteerActivism
+        "lightbulb" -> Icons.Default.Lightbulb
+        "self_improvement" -> Icons.Default.SelfImprovement
+        "groups" -> Icons.Default.Groups
+        "savings" -> Icons.Default.Savings
+        "medical_services" -> Icons.Default.MedicalServices
+        else -> Icons.Default.Folder
     }
 }

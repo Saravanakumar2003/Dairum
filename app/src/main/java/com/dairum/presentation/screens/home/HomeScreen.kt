@@ -14,10 +14,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -25,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dairum.R
 import com.dairum.domain.model.Location
@@ -36,6 +42,7 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
@@ -59,6 +66,38 @@ fun HomeScreen(
     var searchQuery by remember { mutableStateOf("") }
     var showCreateMemoryDialog by remember { mutableStateOf(false) }
     var showAddToMemoryDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    
+    // Show export result snackbar and trigger share
+    LaunchedEffect(uiState.exportFilePath) {
+        uiState.exportFilePath?.let { path ->
+            val file = java.io.File(path)
+            if (file.exists()) {
+                val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "application/pdf"
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                context.startActivity(Intent.createChooser(shareIntent, "Share PDF"))
+            } else {
+                // Try as content URI
+                try {
+                    val uri = Uri.parse(path)
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "application/pdf"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    context.startActivity(Intent.createChooser(shareIntent, "Share PDF"))
+                } catch (_: Exception) {
+                    snackbarHostState.showSnackbar("PDF exported but could not share")
+                }
+            }
+            viewModel.clearExportResult()
+        }
+    }
     
     // Reset selection mode when navigating away
     LaunchedEffect(viewMode) {
@@ -68,6 +107,7 @@ fun HomeScreen(
     }
     
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             when {
                 uiState.isSelectionMode -> {
@@ -99,6 +139,20 @@ fun HomeScreen(
                                 enabled = uiState.selectedEntryIds.isNotEmpty()
                             ) {
                                 Icon(Icons.Outlined.CollectionsBookmark, contentDescription = "Create Memory")
+                            }
+                            // Export to PDF
+                            IconButton(
+                                onClick = { viewModel.exportSelectedToPdf() },
+                                enabled = uiState.selectedEntryIds.isNotEmpty() && !uiState.isExporting
+                            ) {
+                                if (uiState.isExporting) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Icon(Icons.Outlined.PictureAsPdf, contentDescription = "Export PDF")
+                                }
                             }
                         },
                         colors = TopAppBarDefaults.topAppBarColors(
@@ -219,6 +273,7 @@ fun HomeScreen(
                                     Icon(
                                         imageVector = when (viewMode) {
                                             ViewMode.TIMELINE -> Icons.Outlined.ViewAgenda
+                                            ViewMode.CALENDAR -> Icons.Outlined.CalendarMonth
                                             ViewMode.CATEGORY -> Icons.Outlined.Folder
                                             ViewMode.TAG -> Icons.Outlined.Tag
                                             ViewMode.MOOD -> Icons.Outlined.Mood
@@ -240,6 +295,7 @@ fun HomeScreen(
                                                 Text(
                                                     when (mode) {
                                                         ViewMode.TIMELINE -> stringResource(R.string.view_timeline)
+                                                        ViewMode.CALENDAR -> "Calendar"
                                                         ViewMode.CATEGORY -> stringResource(R.string.view_category)
                                                         ViewMode.TAG -> stringResource(R.string.view_tag)
                                                         ViewMode.MOOD -> stringResource(R.string.view_mood)
@@ -261,6 +317,7 @@ fun HomeScreen(
                                                 Icon(
                                                     imageVector = when (mode) {
                                                         ViewMode.TIMELINE -> Icons.Outlined.ViewAgenda
+                                                        ViewMode.CALENDAR -> Icons.Outlined.CalendarMonth
                                                         ViewMode.CATEGORY -> Icons.Outlined.Folder
                                                         ViewMode.TAG -> Icons.Outlined.Tag
                                                         ViewMode.MOOD -> Icons.Outlined.Mood
@@ -289,13 +346,32 @@ fun HomeScreen(
             }
         }
     ) { paddingValues ->
+        val pullToRefreshState = rememberPullToRefreshState()
+        
+        LaunchedEffect(uiState.isRefreshing) {
+            if (!uiState.isRefreshing) {
+                pullToRefreshState.endRefresh()
+            }
+        }
+        
+        LaunchedEffect(pullToRefreshState.isRefreshing) {
+            if (pullToRefreshState.isRefreshing) {
+                viewModel.refresh()
+            }
+        }
+        
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .nestedScroll(pullToRefreshState.nestedScrollConnection)
+        ) {
             when {
                 uiState.isLoading -> {
                     // Shimmer loading skeleton
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(paddingValues)
                             .padding(16.dp)
                     ) {
                         ShimmerEntryList(itemCount = 5)
@@ -325,7 +401,7 @@ fun HomeScreen(
                             Text("Write your first entry")
                         }
                     },
-                    modifier = Modifier.padding(paddingValues)
+                    modifier = Modifier.fillMaxSize()
                 )
             }
             
@@ -347,19 +423,25 @@ fun HomeScreen(
                         },
                         onFavoriteClick = { viewModel.toggleFavorite(it) },
                         onPinClick = { viewModel.togglePin(it) },
-                        modifier = Modifier.padding(paddingValues)
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    
+                    ViewMode.CALENDAR -> CalendarView(
+                        entries = uiState.entries,
+                        onEntryClick = onEntryClick,
+                        modifier = Modifier.fillMaxSize()
                     )
                     
                     ViewMode.CATEGORY -> CategoryView(
                         categories = uiState.categories,
                         onCategoryClick = onCategoryClick,
-                        modifier = Modifier.padding(paddingValues)
+                        modifier = Modifier.fillMaxSize()
                     )
                     
                     ViewMode.TAG -> TagView(
                         tags = uiState.tags,
                         onTagClick = onTagClick,
-                        modifier = Modifier.padding(paddingValues)
+                        modifier = Modifier.fillMaxSize()
                     )
                     
                     ViewMode.MOOD -> MoodView(
@@ -367,7 +449,7 @@ fun HomeScreen(
                         onMoodClick = onMoodClick,
                         onEntryClick = onEntryClick,
                         onFavoriteClick = { viewModel.toggleFavorite(it) },
-                        modifier = Modifier.padding(paddingValues)
+                        modifier = Modifier.fillMaxSize()
                     )
                     
                     ViewMode.PEOPLE -> PeopleView(
@@ -375,13 +457,13 @@ fun HomeScreen(
                         people = uiState.people,
                         onEntryClick = onEntryClick,
                         onFavoriteClick = { viewModel.toggleFavorite(it) },
-                        modifier = Modifier.padding(paddingValues)
+                        modifier = Modifier.fillMaxSize()
                     )
                     
                     ViewMode.LOCATION -> LocationView(
                         entries = uiState.entries,
                         onEntryClick = onEntryClick,
-                        modifier = Modifier.padding(paddingValues)
+                        modifier = Modifier.fillMaxSize()
                     )
                     
                     ViewMode.STORY -> {
@@ -389,6 +471,12 @@ fun HomeScreen(
                     }
                 }
             }
+            }
+            
+            PullToRefreshContainer(
+                state = pullToRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
         }
         
         // Error snackbar
@@ -783,6 +871,51 @@ private fun getCategoryEmoji(category: com.dairum.domain.model.Category): String
     }
 }
 
+/**
+ * Maps icon name strings to Material Icon vectors for category display
+ */
+private fun getCategoryIconVector(iconName: String): androidx.compose.ui.graphics.vector.ImageVector {
+    return when (iconName) {
+        "folder" -> Icons.Default.Folder
+        "edit_note" -> Icons.Default.Edit
+        "person" -> Icons.Default.Person
+        "work" -> Icons.Default.Work
+        "flight" -> Icons.Default.Flight
+        "favorite" -> Icons.Default.Favorite
+        "flag" -> Icons.Default.Flag
+        "star" -> Icons.Default.Star
+        "home" -> Icons.Default.Home
+        "school" -> Icons.Default.School
+        "fitness_center" -> Icons.Default.FitnessCenter
+        "restaurant" -> Icons.Default.Restaurant
+        "shopping_cart" -> Icons.Default.ShoppingCart
+        "music_note" -> Icons.Default.MusicNote
+        "book" -> Icons.Default.Book
+        "camera" -> Icons.Default.CameraAlt
+        "pets" -> Icons.Default.Pets
+        "sports" -> Icons.Default.Sports
+        "beach" -> Icons.Default.BeachAccess
+        "local_cafe" -> Icons.Default.LocalCafe
+        "palette" -> Icons.Default.Palette
+        "code" -> Icons.Default.Code
+        "science" -> Icons.Default.Science
+        "psychology" -> Icons.Default.Psychology
+        "celebration" -> Icons.Default.Celebration
+        "nature" -> Icons.Default.Nature
+        "spa" -> Icons.Default.Spa
+        "directions_car" -> Icons.Default.DirectionsCar
+        "movie" -> Icons.Default.Movie
+        "night_life" -> Icons.Default.Nightlife
+        "volunteer_activism" -> Icons.Default.VolunteerActivism
+        "lightbulb" -> Icons.Default.Lightbulb
+        "self_improvement" -> Icons.Default.SelfImprovement
+        "groups" -> Icons.Default.Groups
+        "savings" -> Icons.Default.Savings
+        "medical_services" -> Icons.Default.MedicalServices
+        else -> Icons.Default.Folder
+    }
+}
+
 @Composable
 private fun CategoryView(
     categories: List<com.dairum.domain.model.Category>,
@@ -798,8 +931,6 @@ private fun CategoryView(
             items = categories,
             key = { it.id }
         ) { category ->
-            val emoji = getCategoryEmoji(category)
-            
             Card(
                 onClick = { onCategoryClick(category.id) },
                 modifier = Modifier.fillMaxWidth()
@@ -810,19 +941,21 @@ private fun CategoryView(
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Emoji or colored circle with icon
+                    // Colored circle with icon
                     Box(
                         modifier = Modifier
                             .size(48.dp)
                             .background(
-                                color = androidx.compose.ui.graphics.Color(category.color).copy(alpha = 0.15f),
+                                color = androidx.compose.ui.graphics.Color(category.color),
                                 shape = CircleShape
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = emoji,
-                            style = MaterialTheme.typography.headlineSmall
+                        Icon(
+                            imageVector = getCategoryIconVector(category.icon),
+                            contentDescription = null,
+                            tint = androidx.compose.ui.graphics.Color.White,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                     
@@ -917,14 +1050,13 @@ private fun MoodView(
     
     // Group all moods by category
     val moodsByCategory = entriesWithMood.groupBy { entry ->
-        val level = entry.mood!!.level
-        // For extended moods (level > 5), get category from MoodOption
-        // For basic moods (1-5), map to categories
-        if (level > 5) {
-            com.dairum.domain.model.MoodOption.fromId(level)?.category 
+        val mood = entry.mood!!
+        // Use moodType to correctly determine extended vs basic
+        if (mood.moodType == com.dairum.domain.model.MoodType.EXTENDED) {
+            com.dairum.domain.model.MoodOption.fromId(mood.level)?.category 
                 ?: com.dairum.domain.model.MoodCategory.NEUTRAL
         } else {
-            when (level) {
+            when (mood.level) {
                 5, 4 -> com.dairum.domain.model.MoodCategory.POSITIVE
                 3 -> com.dairum.domain.model.MoodCategory.NEUTRAL
                 2, 1 -> com.dairum.domain.model.MoodCategory.NEGATIVE
@@ -936,19 +1068,37 @@ private fun MoodView(
     // Count moods by MoodOption (for extended) and level (for basic)
     val moodCounts = entriesWithMood
         .groupBy { entry ->
-            val level = entry.mood!!.level
-            if (level > 5) {
-                com.dairum.domain.model.MoodOption.fromId(level)?.let { 
+            val mood = entry.mood!!
+            if (mood.moodType == com.dairum.domain.model.MoodType.EXTENDED) {
+                com.dairum.domain.model.MoodOption.fromId(mood.level)?.let { 
                     it.emoji to it.label 
                 } ?: ("😐" to "Unknown")
             } else {
-                val mood = com.dairum.domain.model.Mood(level)
                 mood.emoji to mood.label
             }
         }
         .mapValues { it.value.size }
         .entries
         .sortedByDescending { it.value }
+    
+    // Selected mood filter state
+    var selectedMoodFilter by remember { mutableStateOf<Pair<String, String>?>(null) }
+    
+    // Filtered entries based on selected mood
+    val filteredEntries = remember(selectedMoodFilter, entriesWithMood) {
+        if (selectedMoodFilter == null) null
+        else entriesWithMood.filter { entry ->
+            val mood = entry.mood!!
+            val (emoji, label) = if (mood.moodType == com.dairum.domain.model.MoodType.EXTENDED) {
+                com.dairum.domain.model.MoodOption.fromId(mood.level)?.let {
+                    it.emoji to it.label
+                } ?: ("😐" to "Unknown")
+            } else {
+                mood.emoji to mood.label
+            }
+            emoji == selectedMoodFilter!!.first && label == selectedMoodFilter!!.second
+        }.sortedByDescending { it.createdAt }
+    }
     
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -1027,10 +1177,21 @@ private fun MoodView(
                     } else {
                         moodCounts.take(6).forEach { (moodInfo, count) ->
                             val (emoji, label) = moodInfo
+                            val isSelected = selectedMoodFilter == moodInfo
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 4.dp),
+                                    .clip(MaterialTheme.shapes.small)
+                                    .clickable {
+                                        selectedMoodFilter = if (isSelected) null else moodInfo
+                                    }
+                                    .then(
+                                        if (isSelected) Modifier.background(
+                                            MaterialTheme.colorScheme.primaryContainer,
+                                            MaterialTheme.shapes.small
+                                        ) else Modifier
+                                    )
+                                    .padding(vertical = 4.dp, horizontal = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
@@ -1090,13 +1251,12 @@ private fun MoodView(
                 item(key = "mood_category_chips_$category") {
                     val moodsInCategory = categoryEntries
                         .groupBy { entry ->
-                            val level = entry.mood!!.level
-                            if (level > 5) {
-                                com.dairum.domain.model.MoodOption.fromId(level)?.let {
+                            val mood = entry.mood!!
+                            if (mood.moodType == com.dairum.domain.model.MoodType.EXTENDED) {
+                                com.dairum.domain.model.MoodOption.fromId(mood.level)?.let {
                                     it.emoji to it.label
                                 } ?: ("😐" to "Unknown")
                             } else {
-                                val mood = com.dairum.domain.model.Mood(level)
                                 mood.emoji to mood.label
                             }
                         }
@@ -1108,10 +1268,14 @@ private fun MoodView(
                     ) {
                         moodsInCategory.forEach { (moodInfo, moodEntries) ->
                             val (moodEmoji, moodLabel) = moodInfo
+                            val isSelected = selectedMoodFilter == moodInfo
                             Surface(
                                 shape = MaterialTheme.shapes.medium,
-                                color = MaterialTheme.colorScheme.surfaceVariant,
-                                onClick = { }
+                                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer 
+                                       else MaterialTheme.colorScheme.surfaceVariant,
+                                onClick = { 
+                                    selectedMoodFilter = if (isSelected) null else moodInfo
+                                }
                             ) {
                                 Row(
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
@@ -1151,6 +1315,39 @@ private fun MoodView(
                         onFavoriteClick = { onFavoriteClick(entry.id) }
                     )
                 }
+            }
+        }
+        
+        // Selected mood entries section
+        if (filteredEntries != null) {
+            item(key = "selected_mood_header") {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "${selectedMoodFilter!!.first} ${selectedMoodFilter!!.second} — ${filteredEntries.size} entries",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    TextButton(onClick = { selectedMoodFilter = null }) {
+                        Text("Clear")
+                    }
+                }
+            }
+            
+            items(
+                items = filteredEntries,
+                key = { "filtered_mood_entry_${it.id}" }
+            ) { entry ->
+                EntryCard(
+                    entry = entry,
+                    onClick = { onEntryClick(entry.id) },
+                    onFavoriteClick = { onFavoriteClick(entry.id) }
+                )
             }
         }
     }
@@ -1336,7 +1533,7 @@ private fun PeopleView(
                         if (expanded && personEntries.isNotEmpty()) {
                             HorizontalDivider()
                             
-                            personEntries.take(5).forEach { entry ->
+                            personEntries.sortedByDescending { it.createdAt }.forEach { entry ->
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -1380,15 +1577,6 @@ private fun PeopleView(
                                         )
                                     }
                                 }
-                            }
-                            
-                            if (personEntries.size > 5) {
-                                Text(
-                                    text = "+${personEntries.size - 5} more entries",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(16.dp)
-                                )
                             }
                         }
                     }
@@ -1489,9 +1677,11 @@ private fun WeeklyInsightsCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-        )
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -1762,6 +1952,7 @@ private fun LocationView(
     }
     
     var selectedLocation by remember { mutableStateOf<LocationGroup?>(null) }
+    var isMapExpanded by remember { mutableStateOf(false) }
     
     // Initialize OSMDroid
     LaunchedEffect(Unit) {
@@ -1849,7 +2040,10 @@ private fun LocationView(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
+                    .then(
+                        if (isMapExpanded) Modifier.weight(1f)
+                        else Modifier.height(250.dp)
+                    )
                     .padding(horizontal = 16.dp)
                     .clip(RoundedCornerShape(16.dp))
             ) {
@@ -1889,11 +2083,27 @@ private fun LocationView(
                     },
                     modifier = Modifier.fillMaxSize()
                 )
+                
+                // Expand/Collapse button
+                FilledTonalIconButton(
+                    onClick = { isMapExpanded = !isMapExpanded },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isMapExpanded) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
+                        contentDescription = if (isMapExpanded) "Collapse map" else "Expand map",
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            // Location list
+            // Location list - hide when map is expanded
+            if (!isMapExpanded) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1912,6 +2122,7 @@ private fun LocationView(
                         onClick = { selectedLocation = if (selectedLocation == group) null else group }
                     )
                 }
+            }
             }
         }
     }
@@ -2039,6 +2250,162 @@ private fun LocationGroupCard(
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(start = 8.dp)
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CalendarView(
+    entries: List<com.dairum.domain.model.JournalEntry>,
+    onEntryClick: (Long) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var selectedMonth by remember { mutableStateOf(YearMonth.now()) }
+    var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
+    
+    val entriesByDate = remember(entries) {
+        entries.groupBy { it.createdAt.toLocalDate() }
+    }
+    
+    val daysInMonth = selectedMonth.lengthOfMonth()
+    val firstDayOfWeek = selectedMonth.atDay(1).dayOfWeek.value % 7 // Sunday = 0
+    
+    Column(modifier = modifier.padding(16.dp)) {
+        // Month navigation
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = { selectedMonth = selectedMonth.minusMonths(1) }) {
+                Icon(Icons.Default.ChevronLeft, contentDescription = "Previous month")
+            }
+            Text(
+                text = selectedMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
+                style = MaterialTheme.typography.titleMedium
+            )
+            IconButton(onClick = { selectedMonth = selectedMonth.plusMonths(1) }) {
+                Icon(Icons.Default.ChevronRight, contentDescription = "Next month")
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Day-of-week headers
+        Row(modifier = Modifier.fillMaxWidth()) {
+            listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat").forEach { day ->
+                Text(
+                    text = day,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(4.dp))
+        
+        // Calendar grid
+        val totalCells = firstDayOfWeek + daysInMonth
+        val rows = (totalCells + 6) / 7
+        
+        for (row in 0 until rows) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                for (col in 0..6) {
+                    val cellIndex = row * 7 + col
+                    val day = cellIndex - firstDayOfWeek + 1
+                    
+                    if (day in 1..daysInMonth) {
+                        val date = selectedMonth.atDay(day)
+                        val hasEntries = entriesByDate.containsKey(date)
+                        val entryCount = entriesByDate[date]?.size ?: 0
+                        val isSelected = selectedDate == date
+                        
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .aspectRatio(1f)
+                                .clip(CircleShape)
+                                .then(
+                                    if (isSelected) Modifier.background(
+                                        MaterialTheme.colorScheme.primaryContainer,
+                                        CircleShape
+                                    ) else Modifier
+                                )
+                                .clickable { selectedDate = if (isSelected) null else date },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "$day",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
+                                           else MaterialTheme.colorScheme.onSurface
+                                )
+                                if (hasEntries) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(6.dp)
+                                            .background(
+                                                MaterialTheme.colorScheme.primary,
+                                                CircleShape
+                                            )
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f).aspectRatio(1f))
+                    }
+                }
+            }
+        }
+        
+        // Entries for selected date
+        selectedDate?.let { date ->
+            val dayEntries = entriesByDate[date] ?: emptyList()
+            if (dayEntries.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = date.format(DateTimeFormatter.ofPattern("EEEE, MMMM d")),
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                dayEntries.forEach { entry ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .clickable { onEntryClick(entry.id) }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            entry.mood?.let { 
+                                Text(it.emoji, style = MaterialTheme.typography.titleMedium)
+                                Spacer(modifier = Modifier.width(8.dp))
+                            }
+                            Column {
+                                Text(
+                                    text = entry.title ?: "Untitled",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = entry.createdAt.format(DateTimeFormatter.ofPattern("h:mm a")),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -7,6 +7,7 @@ import com.dairum.data.ai.conversation.ConversationAIOrchestrator
 import com.dairum.data.ai.conversation.ConversationStreamEvent
 import com.dairum.data.ai.llm.LocalLLM
 import com.dairum.data.ai.model.ModelManager
+import com.dairum.data.ai.retrieval.ConversationMemoryService
 import com.dairum.domain.model.*
 import com.dairum.domain.repository.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,6 +37,7 @@ data class ChatUiState(
     val isGenerating: Boolean = false,
     val streamingContent: String = "",
     val processingStatus: String? = null,
+    val lastFailedInput: String? = null,
     
     // Sessions list
     val savedSessions: List<ChatSession> = emptyList(),
@@ -50,7 +52,13 @@ data class ChatUiState(
     // Memory insights (optional display)
     val reflectionCount: Int = 0,
     val showMemoryInsights: Boolean = false,
-    val recentReflections: List<ReflectionMemory> = emptyList()
+    val recentReflections: List<ReflectionMemory> = emptyList(),
+    val isAddingMemory: Boolean = false,
+    
+    // Prompt transparency: the exact prompt sent to the LLM, either for a past message
+    // (from MessageMetadata.promptUsed) or the currently streaming one.
+    val viewingPrompt: String? = null,
+    val currentGenerationPrompt: String? = null
 ) {
     val canSend: Boolean
         get() = currentInput.isNotBlank() && !isGenerating && isAIReady
@@ -63,6 +71,7 @@ data class ChatUiState(
 class ChatViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val conversationOrchestrator: ConversationAIOrchestrator,
+    private val conversationMemoryService: ConversationMemoryService,
     private val chatSessionRepository: ChatSessionRepository,
     private val chatMessageRepository: ChatMessageRepository,
     private val reflectionMemoryRepository: ReflectionMemoryRepository,
@@ -258,7 +267,8 @@ class ChatViewModel @Inject constructor(
                 currentInput = "",
                 isGenerating = true,
                 streamingContent = "",
-                error = null
+                error = null,
+                lastFailedInput = null
             )
         }
         
@@ -277,7 +287,9 @@ class ChatViewModel @Inject constructor(
                         }
                     }
                     is ConversationStreamEvent.GenerationStarted -> {
-                        _uiState.update { it.copy(streamingContent = "") }
+                        _uiState.update {
+                            it.copy(streamingContent = "", processingStatus = null, currentGenerationPrompt = event.promptUsed)
+                        }
                     }
                     is ConversationStreamEvent.Token -> {
                         _uiState.update { state ->
@@ -289,7 +301,9 @@ class ChatViewModel @Inject constructor(
                             state.copy(
                                 messages = state.messages + event.message,
                                 isGenerating = false,
-                                streamingContent = ""
+                                streamingContent = "",
+                                processingStatus = null,
+                                currentGenerationPrompt = null
                             )
                         }
                         
@@ -303,13 +317,25 @@ class ChatViewModel @Inject constructor(
                             it.copy(
                                 isGenerating = false,
                                 streamingContent = "",
-                                error = event.message
+                                processingStatus = null,
+                                currentGenerationPrompt = null,
+                                error = event.message,
+                                lastFailedInput = input
                             )
                         }
                     }
                 }
             }
         }
+    }
+    
+    /**
+     * Retries the most recent message that failed to generate a response.
+     */
+    fun retryLastMessage() {
+        val failedInput = _uiState.value.lastFailedInput ?: return
+        _uiState.update { it.copy(currentInput = failedInput, lastFailedInput = null) }
+        sendMessageStreaming()
     }
     
     /**
@@ -425,6 +451,51 @@ class ChatViewModel @Inject constructor(
      */
     fun toggleMemoryInsights() {
         _uiState.update { it.copy(showMemoryInsights = !it.showMemoryInsights) }
+    }
+    
+    /**
+     * Shows the exact prompt sent for a past message (or the current in-flight generation).
+     */
+    fun viewPromptForMessage(message: ChatMessage) {
+        _uiState.update { it.copy(viewingPrompt = message.metadata?.promptUsed ?: "No prompt recorded for this message.") }
+    }
+    
+    fun viewCurrentGenerationPrompt() {
+        val prompt = _uiState.value.currentGenerationPrompt ?: return
+        _uiState.update { it.copy(viewingPrompt = prompt) }
+    }
+    
+    fun dismissPromptView() {
+        _uiState.update { it.copy(viewingPrompt = null) }
+    }
+    
+    fun showAddMemoryDialog() {
+        _uiState.update { it.copy(isAddingMemory = true) }
+    }
+    
+    fun dismissAddMemoryDialog() {
+        _uiState.update { it.copy(isAddingMemory = false) }
+    }
+    
+    /**
+     * Saves a fact/memory the user wants the AI to remember in all future conversations
+     * (e.g. "My sister's name is Priya"), regardless of how the conversation is phrased later.
+     */
+    fun addMemory(content: String) {
+        if (content.isBlank()) return
+        viewModelScope.launch {
+            conversationMemoryService.addUserProvidedMemory(content).onSuccess {
+                _uiState.update { it.copy(isAddingMemory = false, successMessage = "Memory saved") }
+            }.onFailure { error ->
+                _uiState.update { it.copy(error = "Failed to save memory: ${error.message}") }
+            }
+        }
+    }
+    
+    fun deleteMemory(reflection: ReflectionMemory) {
+        viewModelScope.launch {
+            conversationMemoryService.deleteUserProvidedMemory(reflection.id)
+        }
     }
     
     /**

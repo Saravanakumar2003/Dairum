@@ -16,12 +16,14 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.CollectionsBookmark
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.MoreHoriz
+import androidx.compose.material.icons.outlined.SelfImprovement
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -173,7 +175,10 @@ fun DairumApp(
     // List of routes where bottom nav should be shown
     val bottomNavRoutes = listOf(
         Screen.Home.route,
-        Screen.Files.route,
+        Screen.Gratia.route,
+        Screen.GratitudeFolderDetail.route,
+        Screen.AffirmationFolderDetail.route,
+        Screen.AffirmationPlay.route,
         Screen.Memories.route,
         Screen.Stats.route,
         Screen.More.route
@@ -190,7 +195,8 @@ fun DairumApp(
                     bottomNavItems.forEach { item ->
                         val selected = currentDestination?.hierarchy?.any { 
                             it.route == item.route 
-                        } == true
+                        } == true || (item.route == Screen.Gratia.route && 
+                            currentDestination?.route?.startsWith("gratia") == true)
                         
                         NavigationBarItem(
                             icon = {
@@ -253,10 +259,10 @@ val bottomNavItems = listOf(
         unselectedIcon = Icons.Outlined.Home
     ),
     BottomNavItemData(
-        route = Screen.Files.route,
-        label = "Files",
-        selectedIcon = Icons.Filled.Folder,
-        unselectedIcon = Icons.Outlined.Folder
+        route = Screen.Gratia.route,
+        label = "Gratia",
+        selectedIcon = Icons.Filled.SelfImprovement,
+        unselectedIcon = Icons.Outlined.SelfImprovement
     ),
     BottomNavItemData(
         route = Screen.Memories.route,

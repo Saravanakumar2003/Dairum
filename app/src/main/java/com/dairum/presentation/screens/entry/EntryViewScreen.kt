@@ -33,8 +33,7 @@ import coil.compose.AsyncImage
 import com.dairum.R
 import com.dairum.domain.model.*
 import com.dairum.presentation.components.*
-import com.dairum.presentation.screens.editor.TextFormatting
-import com.dairum.presentation.screens.editor.toAnnotatedString
+import com.dairum.presentation.screens.editor.*
 import com.dairum.presentation.theme.EntryBackgroundColors
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -52,6 +51,7 @@ fun EntryViewScreen(
     viewModel: EntryViewViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val isReading by viewModel.isReading.collectAsState()
     val scrollState = rememberScrollState()
     val context = LocalContext.current
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -70,6 +70,9 @@ fun EntryViewScreen(
             append("\n\n")
             entry.mood?.let { append("Mood: ${it.emoji} ${it.label}\n") }
             entry.location?.let { append("📍 ${it.placeName ?: it.address ?: "Unknown location"}\n") }
+            entry.additionalLocations.forEach {
+                append("📍 ${it.placeName ?: it.address ?: "Unknown location"}\n")
+            }
             if (entry.tags.isNotEmpty()) {
                 append("Tags: ${entry.tags.joinToString { "#${it.name}" }}\n")
             }
@@ -101,6 +104,16 @@ fun EntryViewScreen(
                     }
                 },
                 actions = {
+                    // Read aloud button
+                    IconButton(onClick = { viewModel.toggleReadAloud() }) {
+                        Icon(
+                            imageVector = if (isReading) Icons.Filled.StopCircle
+                                         else Icons.Outlined.VolumeUp,
+                            contentDescription = if (isReading) "Stop reading" else "Read aloud",
+                            tint = if (isReading) MaterialTheme.colorScheme.primary
+                                   else LocalContentColor.current
+                        )
+                    }
                     // Share button
                     IconButton(onClick = { shareEntry() }) {
                         Icon(
@@ -180,10 +193,12 @@ fun EntryViewScreen(
                     // Modern Header Card
                     ModernEntryHeader(entry = entry)
                     
-                    // Media gallery with improved spacing
-                    if (uiState.media.isNotEmpty()) {
+                    // Media gallery with improved spacing (inline images are already shown
+                    // within the text below, so they're excluded here to avoid duplicates)
+                    val galleryMedia = uiState.media.filter { it.inlineKey == null }
+                    if (galleryMedia.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(16.dp))
-                        MediaGallery(media = uiState.media)
+                        MediaGallery(media = galleryMedia)
                     }
                     
                     // Content
@@ -201,20 +216,14 @@ fun EntryViewScreen(
                             Spacer(modifier = Modifier.height(16.dp))
                         }
                         
-                        // Content text with formatting applied
+                        // Content text with formatting, including any inline images
                         val formatting = remember(entry.formattingJson) {
                             TextFormatting.fromJson(entry.formattingJson)
                         }
-                        val formattedText = remember(entry.plainContent, formatting) {
-                            formatting.toAnnotatedString(entry.plainContent)
-                        }
-                        
-                        Text(
-                            text = formattedText,
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.4
-                            ),
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.87f)
+                        EntryContentWithInlineImages(
+                            text = entry.plainContent,
+                            formatting = formatting,
+                            media = entry.media
                         )
                         
                         // Tags with modern chips
@@ -239,11 +248,13 @@ fun EntryViewScreen(
                         }
                         
                         // Weather & Location section with modern card
-                        if (entry.weather != null || entry.location != null) {
+                        if (entry.weather != null || entry.location != null || entry.additionalLocations.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(20.dp))
                             WeatherLocationSection(
                                 weather = entry.weather,
-                                location = entry.location
+                                location = entry.location,
+                                additionalLocations = entry.additionalLocations,
+                                locationNicknames = uiState.locationNicknames
                             )
                         }
                         
@@ -695,10 +706,105 @@ private fun TrackerValueItem(tracker: CustomTracker, value: String) {
     }
 }
 
+private val INLINE_IMAGE_MARKER_REGEX = Regex("""\[IMG:([A-Za-z0-9\-]+)\]""")
+
+private sealed class EntryContentSegment {
+    data class TextPart(val text: String, val formatting: TextFormatting) : EntryContentSegment()
+    data class ImagePart(val media: Media) : EntryContentSegment()
+}
+
+private fun splitContentWithInlineImages(
+    text: String,
+    formatting: TextFormatting,
+    media: List<Media>
+): List<EntryContentSegment> {
+    val mediaByKey = media.filter { it.inlineKey != null }.associateBy { it.inlineKey }
+    if (mediaByKey.isEmpty()) return listOf(EntryContentSegment.TextPart(text, formatting))
+    
+    val matches = INLINE_IMAGE_MARKER_REGEX.findAll(text)
+        .filter { mediaByKey.containsKey(it.groupValues[1]) }
+        .toList()
+    if (matches.isEmpty()) return listOf(EntryContentSegment.TextPart(text, formatting))
+    
+    val segments = mutableListOf<EntryContentSegment>()
+    var cursor = 0
+    matches.forEach { match ->
+        val start = match.range.first
+        val end = match.range.last + 1
+        if (start > cursor) {
+            segments.add(EntryContentSegment.TextPart(text.substring(cursor, start), formatting.sliceFor(cursor, start)))
+        }
+        mediaByKey[match.groupValues[1]]?.let { segments.add(EntryContentSegment.ImagePart(it)) }
+        cursor = end
+    }
+    if (cursor < text.length) {
+        segments.add(EntryContentSegment.TextPart(text.substring(cursor), formatting.sliceFor(cursor, text.length)))
+    }
+    return segments
+}
+
+/** Renders entry text with any inline-image markers replaced by the actual photo, in place. */
+@Composable
+private fun EntryContentWithInlineImages(
+    text: String,
+    formatting: TextFormatting,
+    media: List<Media>
+) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val segments = remember(text, formatting, media) { splitContentWithInlineImages(text, formatting, media) }
+    
+    Column {
+        segments.forEach { segment ->
+            when (segment) {
+                is EntryContentSegment.TextPart -> {
+                    if (segment.text.isNotEmpty()) {
+                        val effectiveFormatting = remember(segment.text, segment.formatting) {
+                            segment.formatting.withDetectedTimestamps(segment.text)
+                        }
+                        val annotated = remember(segment.text, effectiveFormatting) {
+                            effectiveFormatting.toAnnotatedString(segment.text)
+                        }
+                        val chips = remember(effectiveFormatting, isDarkTheme) {
+                            effectiveFormatting.chipBackgrounds(isDarkTheme)
+                        }
+                        var layoutResult by remember { mutableStateOf<androidx.compose.ui.text.TextLayoutResult?>(null) }
+                        Text(
+                            text = annotated,
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.4
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.87f),
+                            onTextLayout = { layoutResult = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .drawChipBackgrounds(layoutResult, chips)
+                        )
+                    }
+                }
+                is EntryContentSegment.ImagePart -> {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    AsyncImage(
+                        model = segment.media.uri,
+                        contentDescription = segment.media.caption ?: "Inline photo",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 260.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun WeatherLocationSection(
     weather: Weather?,
-    location: Location?
+    location: Location?,
+    additionalLocations: List<Location> = emptyList(),
+    locationNicknames: Map<String, String> = emptyMap()
 ) {
     val context = LocalContext.current
     
@@ -796,40 +902,7 @@ private fun WeatherLocationSection(
                     }
                     
                     // Helper function to open location in maps
-                    val openInMaps: () -> Unit = {
-                        android.util.Log.d("EntryViewScreen", "Opening location in maps: lat=${loc.latitude}, lng=${loc.longitude}, place=${loc.placeName}")
-                        try {
-                            // Try Google Maps first with geo: URI
-                            val gmmIntentUri = android.net.Uri.parse(
-                                "geo:${loc.latitude},${loc.longitude}?q=${loc.latitude},${loc.longitude}(${java.net.URLEncoder.encode(loc.placeName ?: "Location", "UTF-8")})"
-                            )
-                            val mapIntent = android.content.Intent(android.content.Intent.ACTION_VIEW, gmmIntentUri)
-                            mapIntent.setPackage("com.google.android.apps.maps")
-                            
-                            if (mapIntent.resolveActivity(context.packageManager) != null) {
-                                android.util.Log.d("EntryViewScreen", "Opening with Google Maps app")
-                                context.startActivity(mapIntent)
-                            } else {
-                                // Fallback to browser
-                                android.util.Log.d("EntryViewScreen", "Google Maps not found, opening in browser")
-                                val browserUri = android.net.Uri.parse(
-                                    "https://www.google.com/maps/search/?api=1&query=${loc.latitude},${loc.longitude}"
-                                )
-                                context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, browserUri))
-                            }
-                        } catch (e: Exception) {
-                            android.util.Log.e("EntryViewScreen", "Error opening maps: ${e.message}")
-                            // Ultimate fallback
-                            try {
-                                val browserUri = android.net.Uri.parse(
-                                    "https://www.google.com/maps/search/?api=1&query=${loc.latitude},${loc.longitude}"
-                                )
-                                context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, browserUri))
-                            } catch (e2: Exception) {
-                                android.util.Log.e("EntryViewScreen", "Failed to open browser: ${e2.message}")
-                            }
-                        }
-                    }
+                    val openInMaps: () -> Unit = { openLocationInMaps(context, loc) }
                     
                     // Map preview - clickable to open in maps
                     Box(
@@ -882,14 +955,13 @@ private fun WeatherLocationSection(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            loc.placeName?.let { name ->
-                                Text(
-                                    text = name,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                            loc.address?.let { address ->
+                            val nickname = locationNicknames[loc.nicknameKey()]
+                            Text(
+                                text = nickname ?: loc.placeName ?: "Location",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium
+                            )
+                            loc.address?.takeIf { nickname != null || loc.placeName != null }?.let { address ->
                                 Text(
                                     text = address,
                                     style = MaterialTheme.typography.bodySmall,
@@ -912,8 +984,99 @@ private fun WeatherLocationSection(
                         )
                     }
                 }
+                
+                // Additional locations (feature: more than one location per entry)
+                if (additionalLocations.isNotEmpty()) {
+                    if (weather != null || location != null) {
+                        HorizontalDivider()
+                    }
+                    additionalLocations.forEach { extraLocation ->
+                        AdditionalLocationRow(
+                            location = extraLocation,
+                            context = context,
+                            displayName = locationNicknames[extraLocation.nicknameKey()]
+                                ?: extraLocation.placeName ?: extraLocation.address ?: "Unknown location"
+                        )
+                    }
+                }
             }
         }
+    }
+}
+
+private fun openLocationInMaps(context: android.content.Context, loc: Location) {
+    android.util.Log.d("EntryViewScreen", "Opening location in maps: lat=${loc.latitude}, lng=${loc.longitude}, place=${loc.placeName}")
+    try {
+        val gmmIntentUri = android.net.Uri.parse(
+            "geo:${loc.latitude},${loc.longitude}?q=${loc.latitude},${loc.longitude}(${java.net.URLEncoder.encode(loc.placeName ?: "Location", "UTF-8")})"
+        )
+        val mapIntent = android.content.Intent(android.content.Intent.ACTION_VIEW, gmmIntentUri)
+        mapIntent.setPackage("com.google.android.apps.maps")
+        
+        if (mapIntent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(mapIntent)
+        } else {
+            val browserUri = android.net.Uri.parse(
+                "https://www.google.com/maps/search/?api=1&query=${loc.latitude},${loc.longitude}"
+            )
+            context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, browserUri))
+        }
+    } catch (e: Exception) {
+        android.util.Log.e("EntryViewScreen", "Error opening maps: ${e.message}")
+        try {
+            val browserUri = android.net.Uri.parse(
+                "https://www.google.com/maps/search/?api=1&query=${loc.latitude},${loc.longitude}"
+            )
+            context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, browserUri))
+        } catch (e2: Exception) {
+            android.util.Log.e("EntryViewScreen", "Failed to open browser: ${e2.message}")
+        }
+    }
+}
+
+@Composable
+private fun AdditionalLocationRow(
+    location: Location,
+    context: android.content.Context,
+    displayName: String = location.placeName ?: location.address ?: "Unknown location"
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .clickable { openLocationInMaps(context, location) }
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Filled.LocationOn,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = displayName,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+            location.address?.takeIf { it != location.placeName && it != displayName }?.let { address ->
+                Text(
+                    text = address,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+        Icon(
+            imageVector = Icons.Outlined.OpenInNew,
+            contentDescription = "Open in maps",
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(18.dp)
+        )
     }
 }
 

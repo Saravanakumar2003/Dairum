@@ -32,7 +32,8 @@ class AIOrchestrator @Inject constructor(
     private val localLLM: LocalLLM,
     private val journalRepository: JournalRepository,
     private val aiContentRepository: AIContentRepository,
-    private val embeddingRepository: EmbeddingRepository
+    private val embeddingRepository: EmbeddingRepository,
+    private val statisticalPatternDetector: StatisticalPatternDetector
 ) {
     
     companion object {
@@ -250,29 +251,37 @@ class AIOrchestrator @Inject constructor(
             val dateFormatter = DateTimeFormatter.ofPattern("MMMM d")
             val dateRange = "${weekStart.format(dateFormatter)} - ${weekEnd.format(dateFormatter)}"
             
-            val prompt = PromptTemplates.buildPrompt(
-                template = PromptTemplates.WEEKLY_REFLECTION,
-                entries = entries,
-                additionalContext = mapOf(
-                    "date_range" to dateRange,
-                    "avg_mood" to String.format("%.1f", avgMood),
-                    "mood_range" to "${moodRange.first} - ${moodRange.second}",
-                    "dominant_mood" to dominantMood
+            val topTags = entries.flatMap { it.tags }.groupingBy { it.name }.eachCount()
+                .entries.sortedByDescending { it.value }.take(3).map { it.key }
+            val topPeople = entries.flatMap { it.people }.groupingBy { it.name }.eachCount()
+                .entries.sortedByDescending { it.value }.take(3).map { it.key }
+            
+            // Generate reflection - use the LLM for a warmer narrative summary when available,
+            // but fall back to a grounded template so reflections still work without an AI model
+            val responseText = if (localLLM.isModelLoaded()) {
+                val prompt = PromptTemplates.buildPrompt(
+                    template = PromptTemplates.WEEKLY_REFLECTION,
+                    entries = entries,
+                    additionalContext = mapOf(
+                        "date_range" to dateRange,
+                        "avg_mood" to String.format("%.1f", avgMood),
+                        "mood_range" to "${moodRange.first} - ${moodRange.second}",
+                        "dominant_mood" to dominantMood
+                    )
                 )
-            )
-            
-            // Generate reflection
-            val generationResult = localLLM.generate(
-                prompt = prompt,
-                maxTokens = PromptTemplates.WEEKLY_REFLECTION.maxTokens,
-                temperature = PromptTemplates.WEEKLY_REFLECTION.temperature
-            )
-            
-            if (generationResult.isFailure) {
-                return@withContext Result.failure(generationResult.exceptionOrNull()!!)
+                val generationResult = localLLM.generate(
+                    prompt = prompt,
+                    maxTokens = PromptTemplates.WEEKLY_REFLECTION.maxTokens,
+                    temperature = PromptTemplates.WEEKLY_REFLECTION.temperature
+                )
+                generationResult.getOrNull() ?: buildFallbackWeeklySummary(
+                    dateRange, entries.size, entries.sumOf { it.wordCount }, avgMood, dominantMood, trend, topTags, topPeople
+                )
+            } else {
+                buildFallbackWeeklySummary(
+                    dateRange, entries.size, entries.sumOf { it.wordCount }, avgMood, dominantMood, trend, topTags, topPeople
+                )
             }
-            
-            val responseText = generationResult.getOrThrow()
             
             // Parse response into structured reflection
             val reflection = WeeklyReflection(
@@ -286,8 +295,8 @@ class AIOrchestrator @Inject constructor(
                     moodDistribution = moodDistribution,
                     trend = trend
                 ),
-                keyThemes = extractKeyThemes(responseText),
-                highlights = extractHighlights(responseText),
+                keyThemes = extractKeyThemes(responseText).ifEmpty { topTags },
+                highlights = extractHighlights(responseText).ifEmpty { topPeople.map { "Spent meaningful time with $it" } },
                 suggestions = extractSuggestions(responseText),
                 entryCount = entries.size,
                 totalWordCount = entries.sumOf { it.wordCount }
@@ -304,7 +313,12 @@ class AIOrchestrator @Inject constructor(
     }
     
     /**
-     * Detect patterns in journal entries
+     * Detect patterns in journal entries.
+     *
+     * Statistical, data-grounded patterns (mood vs day-of-week/person/tag/location/weather) are
+     * computed first and are always available even without an AI model loaded. The LLM-narrated
+     * pass is only used as a fallback when there isn't enough mood data for statistics to find
+     * anything, since that path's confidence/evidence are far less reliable (see parsePatterns).
      */
     suspend fun detectPatterns(
         startDate: LocalDateTime = LocalDateTime.now().minusMonths(1),
@@ -316,6 +330,19 @@ class AIOrchestrator @Inject constructor(
             if (entries.size < 5) {
                 return@withContext Result.failure(
                     Exception("Need at least 5 entries for pattern detection")
+                )
+            }
+            
+            val statisticalPatterns = statisticalPatternDetector.detect(entries)
+            if (statisticalPatterns.isNotEmpty()) {
+                statisticalPatterns.forEach { pattern -> aiContentRepository.savePattern(pattern) }
+                return@withContext Result.success(statisticalPatterns)
+            }
+            
+            // Fallback: not enough mood data for statistics - ask the LLM instead, if available
+            if (!localLLM.isModelLoaded()) {
+                return@withContext Result.failure(
+                    Exception("Not enough mood data for patterns yet. Log moods with your entries, or load an AI model for a narrative analysis.")
                 )
             }
             
@@ -512,6 +539,33 @@ class AIOrchestrator @Inject constructor(
     }
     
     // Helper functions for parsing AI responses
+    
+    /** Grounded, template-based summary used when no AI model is loaded (or generation fails),
+     * so weekly reflections aren't entirely gated behind downloading a model. */
+    private fun buildFallbackWeeklySummary(
+        dateRange: String,
+        entryCount: Int,
+        wordCount: Int,
+        avgMood: Float,
+        dominantMood: String,
+        trend: TrendDirection,
+        topTags: List<String>,
+        topPeople: List<String>
+    ): String {
+        val trendPhrase = when (trend) {
+            TrendDirection.IMPROVING -> "trending upward as the week went on"
+            TrendDirection.DECLINING -> "trending lower as the week went on"
+            TrendDirection.FLUCTUATING -> "fluctuating throughout the week"
+            TrendDirection.STABLE -> "fairly steady throughout the week"
+        }
+        return buildString {
+            append("This week ($dateRange) you wrote $entryCount ${if (entryCount == 1) "entry" else "entries"} ")
+            append("totaling $wordCount words. ")
+            append("Your average mood was ${"%.1f".format(avgMood)}/5, most often $dominantMood, $trendPhrase. ")
+            if (topTags.isNotEmpty()) append("You wrote most about ${topTags.joinToString(", ")}. ")
+            if (topPeople.isNotEmpty()) append("You mentioned ${topPeople.joinToString(", ")} often. ")
+        }.trim()
+    }
     
     private fun extractKeyThemes(text: String): List<String> {
         // Simple extraction - look for numbered items or bullet points

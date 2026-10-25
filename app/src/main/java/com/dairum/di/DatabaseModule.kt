@@ -158,4 +158,18 @@ object DatabaseModule {
     fun provideConversationContextDao(database: DairumDatabase): ConversationContextDao {
         return database.conversationContextDao()
     }
+    
+    // Gratia DAOs
+    
+    @Provides
+    @Singleton
+    fun provideGratiaDao(database: DairumDatabase): GratiaDao {
+        return database.gratiaDao()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideLocationNicknameDao(database: DairumDatabase): LocationNicknameDao {
+        return database.locationNicknameDao()
+    }
 }

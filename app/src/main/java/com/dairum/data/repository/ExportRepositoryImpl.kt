@@ -17,7 +17,15 @@ import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.Base64
+import com.dairum.data.local.dao.CategoryDao
 import com.dairum.data.local.dao.ExportDao
+import com.dairum.data.local.dao.GratiaDao
+import com.dairum.data.local.dao.MediaDao
+import com.dairum.data.local.dao.MemoryDao
+import com.dairum.data.local.dao.NotificationDao
+import com.dairum.data.local.dao.PersonDao
+import com.dairum.data.local.dao.TagDao
+import com.dairum.data.local.dao.TrackerDao
 import com.dairum.data.local.entity.ExportConfigEntity
 import com.dairum.data.local.entity.ExportHistoryEntity
 import com.dairum.domain.model.ExportConfig
@@ -42,6 +50,14 @@ import javax.inject.Inject
 
 class ExportRepositoryImpl @Inject constructor(
     private val exportDao: ExportDao,
+    private val categoryDao: CategoryDao,
+    private val tagDao: TagDao,
+    private val personDao: PersonDao,
+    private val trackerDao: TrackerDao,
+    private val mediaDao: MediaDao,
+    private val memoryDao: MemoryDao,
+    private val notificationDao: NotificationDao,
+    private val gratiaDao: GratiaDao,
     @ApplicationContext private val context: Context
 ) : ExportRepository {
 
@@ -53,7 +69,7 @@ class ExportRepositoryImpl @Inject constructor(
         get() = listOf("photo", "video", "voice", "attachment").map { File(context.filesDir, it) }
     
     /**
-     * Save a file to Documents/diarum folder using MediaStore for Android 10+
+     * Save a file to Documents/Data Exports/Dairum folder using MediaStore for Android 10+
      * or legacy file system approach for older versions.
      * Returns the file path or URI string.
      */
@@ -75,7 +91,7 @@ class ExportRepositoryImpl @Inject constructor(
                 val contentValues = ContentValues().apply {
                     put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
                     put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
-                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/diarum")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/Data Exports/Dairum")
                     // Set IS_PENDING to write atomically
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         put(MediaStore.MediaColumns.IS_PENDING, 1)
@@ -110,7 +126,7 @@ class ExportRepositoryImpl @Inject constructor(
                 }
             } catch (e: Exception) {
                 // Log the error and fallback to internal storage
-                android.util.Log.e("ExportRepositoryImpl", "Failed to save to Documents/diarum: ${e.message}", e)
+                android.util.Log.e("ExportRepositoryImpl", "Failed to save to Documents/Data Exports/Dairum: ${e.message}", e)
                 val internalFile = File(internalExportDir, fileName)
                 tempFile.copyTo(internalFile, overwrite = true)
                 return@withContext internalFile.absolutePath
@@ -118,8 +134,8 @@ class ExportRepositoryImpl @Inject constructor(
         } else {
             // Legacy approach for Android 9 and below
             val documentsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
-            val diarumDir = File(documentsDir, "diarum").also { it.mkdirs() }
-            val destFile = File(diarumDir, fileName)
+            val dairumDir = File(File(documentsDir, "Data Exports"), "Dairum").also { it.mkdirs() }
+            val destFile = File(dairumDir, fileName)
             
             tempFile.copyTo(destFile, overwrite = true)
             destFile.absolutePath
@@ -127,14 +143,14 @@ class ExportRepositoryImpl @Inject constructor(
     }
     
     /**
-     * Find an existing file in Documents/diarum by name
+     * Find an existing file in Documents/Data Exports/Dairum by name
      */
     private fun findExistingFile(fileName: String): Uri? {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
         
         val projection = arrayOf(MediaStore.MediaColumns._ID)
         val selection = "${MediaStore.MediaColumns.DISPLAY_NAME} = ? AND ${MediaStore.MediaColumns.RELATIVE_PATH} = ?"
-        val selectionArgs = arrayOf(fileName, Environment.DIRECTORY_DOCUMENTS + "/diarum/")
+        val selectionArgs = arrayOf(fileName, Environment.DIRECTORY_DOCUMENTS + "/Data Exports/Dairum/")
         
         context.contentResolver.query(
             MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
@@ -276,7 +292,7 @@ class ExportRepositoryImpl @Inject constructor(
             // Get file size before moving
             val fileSize = tempFile.length()
             
-            // Save to Documents/diarum
+            // Save to Documents/Data Exports/Dairum
             val savedPath = saveToDocumentsDiarum(tempFile, fileName, "text/plain")
             
             // Store the file size in a temporary way (append to path with separator)
@@ -297,72 +313,310 @@ class ExportRepositoryImpl @Inject constructor(
         try {
             val timestamp = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
                 .format(LocalDateTime.now())
-            val fileName = "diarum_export_$timestamp.json"
+            val fileName = "dairum_export_$timestamp.json"
             val tempFile = File(internalExportDir, "temp_$fileName")
 
             val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
+            // Fetch all DB data for complete export
+            val allCategories = categoryDao.getAll()
+            val allTags = tagDao.getAll()
+            val allPeople = personDao.getAll()
+            val allTrackers = trackerDao.getAllTrackers()
+            val allMemories = memoryDao.getAllMemoriesSync()
+            val allMemoryEntryLinks = memoryDao.getAllMemoryEntryLinks()
+            val allReminderConfigs = notificationDao.getAllReminderConfigs()
+            val allSmartReminders = notificationDao.getAllSmartReminders()
+            val allGratitudeFolders = gratiaDao.getAllGratitudeFoldersSync()
+            val allAffirmationFolders = gratiaDao.getAllAffirmationFoldersSync()
+
             FileOutputStream(tempFile).bufferedWriter().use { writer ->
-                writer.appendLine("[")
+                writer.appendLine("{")
+                writer.appendLine("  \"exportedAt\": \"${LocalDateTime.now().format(dateFormatter)}\",")
+                writer.appendLine("  \"version\": 1,")
+
+                // ===== ENTRIES =====
+                writer.appendLine("  \"entries\": [")
                 entries.forEachIndexed { index, entry ->
+                    // Get media and tracker values for this entry
+                    val entryMedia = mediaDao.getMediaForEntry(entry.id)
+                    val entryTrackerValues = trackerDao.getValuesForEntry(entry.id)
+
                     val json = buildString {
-                        append("  {\n")
-                        append("    \"id\": ${entry.id},\n")
-                        append("    \"title\": ${escapeJson(entry.title)},\n")
-                        append("    \"content\": ${escapeJson(entry.plainContent)},\n")
-                        append("    \"createdAt\": \"${entry.createdAt.format(dateFormatter)}\",\n")
-                        append("    \"updatedAt\": \"${entry.updatedAt.format(dateFormatter)}\",\n")
-                        append("    \"wordCount\": ${entry.wordCount},\n")
-                        append("    \"isFavorite\": ${entry.isFavorite},\n")
-                        append("    \"isArchived\": ${entry.isArchived},\n")
-                        append("    \"isDraft\": ${entry.isDraft},\n")
-                        append("    \"isPinned\": ${entry.isPinned},\n")
+                        append("    {\n")
+                        append("      \"id\": ${entry.id},\n")
+                        append("      \"title\": ${escapeJson(entry.title)},\n")
+                        append("      \"content\": ${escapeJson(entry.plainContent)},\n")
+                        append("      \"formattingJson\": ${escapeJson(entry.formattingJson)},\n")
+                        append("      \"createdAt\": \"${entry.createdAt.format(dateFormatter)}\",\n")
+                        append("      \"updatedAt\": \"${entry.updatedAt.format(dateFormatter)}\",\n")
+                        append("      \"wordCount\": ${entry.wordCount},\n")
+                        append("      \"isFavorite\": ${entry.isFavorite},\n")
+                        append("      \"isArchived\": ${entry.isArchived},\n")
+                        append("      \"isDraft\": ${entry.isDraft},\n")
+                        append("      \"isPinned\": ${entry.isPinned},\n")
+                        append("      \"backgroundColor\": ${escapeJson(entry.backgroundColor)},\n")
 
                         // Mood
                         if (entry.mood != null) {
-                            append("    \"mood\": { \"label\": ${escapeJson(entry.mood.label)}, \"emoji\": ${escapeJson(entry.mood.emoji)}, \"level\": ${entry.mood.level} },\n")
+                            append("      \"mood\": { \"label\": ${escapeJson(entry.mood.label)}, \"emoji\": ${escapeJson(entry.mood.emoji)}, \"level\": ${entry.mood.level} },\n")
                         } else {
-                            append("    \"mood\": null,\n")
+                            append("      \"mood\": null,\n")
                         }
 
                         // Category
                         if (entry.category != null) {
-                            append("    \"category\": ${escapeJson(entry.category.name)},\n")
+                            append("      \"category\": { \"id\": ${entry.category.id}, \"name\": ${escapeJson(entry.category.name)} },\n")
                         } else {
-                            append("    \"category\": null,\n")
+                            append("      \"category\": null,\n")
                         }
 
                         // Tags
-                        val tagsStr = entry.tags.joinToString(", ") { "\"${it.name.replace("\"", "\\\"")}\"" }
-                        append("    \"tags\": [$tagsStr],\n")
+                        val tagsStr = entry.tags.joinToString(", ") { "{ \"id\": ${it.id}, \"name\": ${escapeJson(it.name)} }" }
+                        append("      \"tags\": [$tagsStr],\n")
 
                         // People
-                        val peopleStr = entry.people.joinToString(", ") { "\"${it.name.replace("\"", "\\\"")}\"" }
-                        append("    \"people\": [$peopleStr],\n")
+                        val peopleStr = entry.people.joinToString(", ") { "{ \"id\": ${it.id}, \"name\": ${escapeJson(it.name)} }" }
+                        append("      \"people\": [$peopleStr],\n")
 
                         // Weather
                         if (entry.weather != null) {
-                            append("    \"weather\": { \"condition\": ${escapeJson(entry.weather.condition)}, \"temperature\": ${entry.weather.temperature}, \"humidity\": ${entry.weather.humidity} },\n")
+                            append("      \"weather\": { \"condition\": ${escapeJson(entry.weather.condition)}, \"temperature\": ${entry.weather.temperature}, \"temperatureFahrenheit\": ${entry.weather.temperatureFahrenheit}, \"humidity\": ${entry.weather.humidity}, \"feelsLike\": ${entry.weather.feelsLike}, \"icon\": ${escapeJson(entry.weather.icon)}, \"locationName\": ${escapeJson(entry.weather.locationName)} },\n")
                         } else {
-                            append("    \"weather\": null,\n")
+                            append("      \"weather\": null,\n")
                         }
 
                         // Location
                         if (entry.location != null) {
-                            append("    \"location\": { \"latitude\": ${entry.location.latitude}, \"longitude\": ${entry.location.longitude}, \"address\": ${escapeJson(entry.location.address)}, \"placeName\": ${escapeJson(entry.location.placeName)} },\n")
+                            append("      \"location\": { \"latitude\": ${entry.location.latitude}, \"longitude\": ${entry.location.longitude}, \"address\": ${escapeJson(entry.location.address)}, \"placeName\": ${escapeJson(entry.location.placeName)}, \"placeId\": ${escapeJson(entry.location.placeId)} },\n")
                         } else {
-                            append("    \"location\": null,\n")
+                            append("      \"location\": null,\n")
                         }
 
-                        // Background color
-                        append("    \"backgroundColor\": ${escapeJson(entry.backgroundColor)}\n")
-                        append("  }")
+                        // Tracker Values
+                        val trackerValuesStr = entryTrackerValues.joinToString(", ") {
+                            "{ \"trackerId\": ${it.trackerId}, \"value\": ${escapeJson(it.value)} }"
+                        }
+                        append("      \"trackerValues\": [$trackerValuesStr],\n")
+
+                        // Media
+                        val mediaStr = entryMedia.joinToString(", ") { m ->
+                            buildString {
+                                append("{ \"id\": ${m.id}")
+                                append(", \"type\": ${escapeJson(m.type.name)}")
+                                append(", \"uri\": ${escapeJson(m.uri)}")
+                                append(", \"fileName\": ${escapeJson(m.fileName)}")
+                                append(", \"mimeType\": ${escapeJson(m.mimeType)}")
+                                append(", \"sizeBytes\": ${m.sizeBytes}")
+                                m.duration?.let { append(", \"duration\": $it") }
+                                m.width?.let { append(", \"width\": $it") }
+                                m.height?.let { append(", \"height\": $it") }
+                                m.caption?.let { append(", \"caption\": ${escapeJson(it)}") }
+                                append(", \"sortOrder\": ${m.sortOrder}")
+                                append(" }")
+                            }
+                        }
+                        append("      \"media\": [$mediaStr]\n")
+                        append("    }")
                     }
                     writer.append(json)
                     if (index < entries.size - 1) writer.append(",")
                     writer.appendLine()
                 }
-                writer.appendLine("]")
+                writer.appendLine("  ],")
+
+                // ===== CATEGORIES =====
+                writer.appendLine("  \"categories\": [")
+                allCategories.forEachIndexed { index, cat ->
+                    writer.append("    { \"id\": ${cat.id}, \"name\": ${escapeJson(cat.name)}, \"color\": ${cat.color}, \"icon\": ${escapeJson(cat.icon)}, \"sortOrder\": ${cat.sortOrder}, \"isDefault\": ${cat.isDefault} }")
+                    if (index < allCategories.size - 1) writer.append(",")
+                    writer.appendLine()
+                }
+                writer.appendLine("  ],")
+
+                // ===== TAGS =====
+                writer.appendLine("  \"tags\": [")
+                allTags.forEachIndexed { index, tag ->
+                    writer.append("    { \"id\": ${tag.id}, \"name\": ${escapeJson(tag.name)}, \"color\": ${tag.color}, \"usageCount\": ${tag.usageCount} }")
+                    if (index < allTags.size - 1) writer.append(",")
+                    writer.appendLine()
+                }
+                writer.appendLine("  ],")
+
+                // ===== PEOPLE =====
+                writer.appendLine("  \"people\": [")
+                allPeople.forEachIndexed { index, person ->
+                    val personJson = buildString {
+                        append("    { \"id\": ${person.id}")
+                        append(", \"name\": ${escapeJson(person.name)}")
+                        append(", \"relationship\": ${escapeJson(person.relationship)}")
+                        append(", \"photoUri\": ${escapeJson(person.photoUri)}")
+                        append(", \"notes\": ${escapeJson(person.notes)}")
+                        append(", \"email\": ${escapeJson(person.email)}")
+                        append(", \"phone\": ${escapeJson(person.phone)}")
+                        person.birthday?.let { append(", \"birthday\": $it") }
+                        append(", \"importantDates\": ${person.importantDates ?: "null"}")
+                        append(", \"isFavorite\": ${person.isFavorite}")
+                        append(", \"mentionCount\": ${person.mentionCount}")
+                        append(" }")
+                    }
+                    writer.append(personJson)
+                    if (index < allPeople.size - 1) writer.append(",")
+                    writer.appendLine()
+                }
+                writer.appendLine("  ],")
+
+                // ===== CUSTOM TRACKERS =====
+                writer.appendLine("  \"customTrackers\": [")
+                allTrackers.forEachIndexed { index, tracker ->
+                    val trackerJson = buildString {
+                        append("    { \"id\": ${tracker.id}")
+                        append(", \"name\": ${escapeJson(tracker.name)}")
+                        append(", \"type\": ${escapeJson(tracker.type.name)}")
+                        append(", \"icon\": ${escapeJson(tracker.icon)}")
+                        append(", \"unit\": ${escapeJson(tracker.unit)}")
+                        tracker.minValue?.let { append(", \"minValue\": $it") }
+                        tracker.maxValue?.let { append(", \"maxValue\": $it") }
+                        append(", \"options\": ${tracker.options ?: "null"}")
+                        append(", \"isBuiltIn\": ${tracker.isBuiltIn}")
+                        append(", \"isActive\": ${tracker.isActive}")
+                        append(", \"sortOrder\": ${tracker.sortOrder}")
+                        append(" }")
+                    }
+                    writer.append(trackerJson)
+                    if (index < allTrackers.size - 1) writer.append(",")
+                    writer.appendLine()
+                }
+                writer.appendLine("  ],")
+
+                // ===== MEMORIES =====
+                writer.appendLine("  \"memories\": [")
+                allMemories.forEachIndexed { index, memory ->
+                    val milestones = memoryDao.getMilestonesForMemorySync(memory.id)
+                    val memTrackers = memoryDao.getTrackersForMemorySync(memory.id)
+                    val entryLinks = allMemoryEntryLinks.filter { it.memoryId == memory.id }
+
+                    val memoryJson = buildString {
+                        append("    {\n")
+                        append("      \"id\": ${memory.id},\n")
+                        append("      \"title\": ${escapeJson(memory.title)},\n")
+                        append("      \"description\": ${escapeJson(memory.description)},\n")
+                        append("      \"coverImageUri\": ${escapeJson(memory.coverImageUri)},\n")
+                        append("      \"startDate\": ${memory.startDate},\n")
+                        append("      \"endDate\": ${memory.endDate},\n")
+                        append("      \"location\": ${escapeJson(memory.location)},\n")
+                        append("      \"locationData\": ${memory.locationData ?: "null"},\n")
+                        append("      \"isFavorite\": ${memory.isFavorite},\n")
+                        append("      \"color\": ${memory.color},\n")
+                        append("      \"icon\": ${escapeJson(memory.icon)},\n")
+                        append("      \"tags\": ${escapeJson(memory.tags)},\n")
+                        append("      \"moodSummary\": ${memory.moodSummary ?: "null"},\n")
+                        append("      \"totalTimeSpent\": ${memory.totalTimeSpent},\n")
+                        append("      \"entryCount\": ${memory.entryCount},\n")
+                        append("      \"wordCount\": ${memory.wordCount},\n")
+                        append("      \"photoCount\": ${memory.photoCount},\n")
+                        append("      \"videoCount\": ${memory.videoCount},\n")
+                        append("      \"peopleInvolved\": ${memory.peopleInvolved ?: "null"},\n")
+                        append("      \"highlights\": ${memory.highlights ?: "null"},\n")
+                        append("      \"trackerSummary\": ${memory.trackerSummary ?: "null"},\n")
+
+                        // Entry links
+                        val linksStr = entryLinks.joinToString(", ") { "{ \"entryId\": ${it.entryId}, \"sortOrder\": ${it.sortOrder} }" }
+                        append("      \"entryLinks\": [$linksStr],\n")
+
+                        // Milestones
+                        val milestonesStr = milestones.joinToString(", ") { ms ->
+                            "{ \"id\": ${ms.id}, \"title\": ${escapeJson(ms.title)}, \"description\": ${escapeJson(ms.description)}, \"milestoneDate\": ${ms.milestoneDate}, \"relatedEntryId\": ${ms.relatedEntryId}, \"icon\": ${escapeJson(ms.icon)}, \"sortOrder\": ${ms.sortOrder} }"
+                        }
+                        append("      \"milestones\": [$milestonesStr],\n")
+
+                        // Memory Trackers
+                        val memTrackersStr = memTrackers.joinToString(", ") { mt ->
+                            "{ \"id\": ${mt.id}, \"name\": ${escapeJson(mt.name)}, \"type\": ${escapeJson(mt.type.name)}, \"icon\": ${escapeJson(mt.icon)}, \"unit\": ${escapeJson(mt.unit)}, \"goalValue\": ${escapeJson(mt.goalValue)}, \"currentValue\": ${escapeJson(mt.currentValue)}, \"progress\": ${mt.progress} }"
+                        }
+                        append("      \"trackers\": [$memTrackersStr]\n")
+                        append("    }")
+                    }
+                    writer.append(memoryJson)
+                    if (index < allMemories.size - 1) writer.append(",")
+                    writer.appendLine()
+                }
+                writer.appendLine("  ],")
+
+                // ===== REMINDER CONFIGS =====
+                writer.appendLine("  \"reminderConfigs\": [")
+                allReminderConfigs.forEachIndexed { index, rc ->
+                    val rcJson = buildString {
+                        append("    { \"id\": ${rc.id}")
+                        append(", \"type\": ${escapeJson(rc.type.name)}")
+                        append(", \"name\": ${escapeJson(rc.name)}")
+                        append(", \"description\": ${escapeJson(rc.description)}")
+                        append(", \"isEnabled\": ${rc.isEnabled}")
+                        append(", \"scheduleHour\": ${rc.scheduleHour}")
+                        append(", \"scheduleMinute\": ${rc.scheduleMinute}")
+                        append(", \"scheduleDays\": ${escapeJson(rc.scheduleDays)}")
+                        append(", \"notificationTitle\": ${escapeJson(rc.notificationTitle)}")
+                        append(", \"notificationMessage\": ${escapeJson(rc.notificationMessage)}")
+                        append(", \"priority\": ${escapeJson(rc.priority.name)}")
+                        append(" }")
+                    }
+                    writer.append(rcJson)
+                    if (index < allReminderConfigs.size - 1) writer.append(",")
+                    writer.appendLine()
+                }
+                writer.appendLine("  ],")
+
+                // ===== SMART REMINDERS =====
+                writer.appendLine("  \"smartReminders\": [")
+                allSmartReminders.forEachIndexed { index, sr ->
+                    val srJson = buildString {
+                        append("    { \"id\": ${sr.id}")
+                        append(", \"reminderType\": ${escapeJson(sr.reminderType.name)}")
+                        append(", \"title\": ${escapeJson(sr.title)}")
+                        append(", \"description\": ${escapeJson(sr.description)}")
+                        append(", \"reminderDate\": ${sr.reminderDate}")
+                        append(", \"repeatYearly\": ${sr.repeatYearly}")
+                        append(", \"relatedPersonId\": ${sr.relatedPersonId}")
+                        append(", \"relatedEntryId\": ${sr.relatedEntryId}")
+                        append(", \"isEnabled\": ${sr.isEnabled}")
+                        append(", \"notifyDaysBefore\": ${sr.notifyDaysBefore}")
+                        sr.lastNotifiedAt?.let { append(", \"lastNotifiedAt\": $it") }
+                        append(", \"metadata\": ${sr.metadata ?: "null"}")
+                        append(" }")
+                    }
+                    writer.append(srJson)
+                    if (index < allSmartReminders.size - 1) writer.append(",")
+                    writer.appendLine()
+                }
+                writer.appendLine("  ],")
+
+                // ===== GRATITUDE FOLDERS (with prompts) =====
+                writer.appendLine("  \"gratitudeFolders\": [")
+                allGratitudeFolders.forEachIndexed { index, folder ->
+                    val prompts = gratiaDao.getPromptsByFolderSync(folder.id)
+                    val promptsStr = prompts.joinToString(", ") { p ->
+                        "{ \"id\": ${p.id}, \"prompt\": ${escapeJson(p.prompt)} }"
+                    }
+                    writer.append("    { \"id\": ${folder.id}, \"name\": ${escapeJson(folder.name)}, \"emoji\": ${escapeJson(folder.emoji)}, \"description\": ${escapeJson(folder.description)}, \"prompts\": [$promptsStr] }")
+                    if (index < allGratitudeFolders.size - 1) writer.append(",")
+                    writer.appendLine()
+                }
+                writer.appendLine("  ],")
+
+                // ===== AFFIRMATION FOLDERS (with affirmations) =====
+                writer.appendLine("  \"affirmationFolders\": [")
+                allAffirmationFolders.forEachIndexed { index, folder ->
+                    val affirmations = gratiaDao.getAffirmationsByFolderSync(folder.id)
+                    val affirmationsStr = affirmations.joinToString(", ") { a ->
+                        "{ \"id\": ${a.id}, \"text\": ${escapeJson(a.text)}, \"audioUri\": ${escapeJson(a.audioUri)}, \"useTts\": ${a.useTts}, \"sortOrder\": ${a.sortOrder} }"
+                    }
+                    writer.append("    { \"id\": ${folder.id}, \"name\": ${escapeJson(folder.name)}, \"emoji\": ${escapeJson(folder.emoji)}, \"description\": ${escapeJson(folder.description)}, \"backgroundAudioUri\": ${escapeJson(folder.backgroundAudioUri)}, \"affirmations\": [$affirmationsStr] }")
+                    if (index < allAffirmationFolders.size - 1) writer.append(",")
+                    writer.appendLine()
+                }
+                writer.appendLine("  ]")
+
+                writer.appendLine("}")
             }
 
             val fileSize = tempFile.length()
@@ -822,7 +1076,7 @@ class ExportRepositoryImpl @Inject constructor(
             // Get file size before moving
             val fileSize = tempFile.length()
             
-            // Save to Documents/diarum
+            // Save to Documents/Data Exports/Dairum
             val savedPath = saveToDocumentsDiarum(tempFile, fileName, "application/pdf")
             
             // Store the file size in a temporary way (append to path with separator)

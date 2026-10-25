@@ -1,16 +1,18 @@
 package com.dairum.presentation.screens.chat
 
 import androidx.compose.animation.*
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.*
@@ -39,6 +41,7 @@ import java.time.format.DateTimeFormatter
 fun ChatScreen(
     onNavigateBack: () -> Unit,
     onNavigateToModels: () -> Unit,
+    onNavigateToGuardrails: () -> Unit = {},
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -46,17 +49,29 @@ fun ChatScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     
-    // Auto-scroll to bottom when new messages arrive
-    LaunchedEffect(uiState.messages.size, uiState.streamingContent) {
-        if (uiState.messages.isNotEmpty()) {
-            listState.animateScrollToItem(uiState.messages.size - 1)
+    // Auto-scroll to the true bottom (including the streaming bubble/typing indicator) when it changes
+    val bottomItemCount = uiState.messages.size + when {
+        uiState.isGenerating && uiState.streamingContent.isNotBlank() -> 1
+        uiState.isGenerating -> 1 // processing status row or typing indicator
+        else -> 0
+    }
+    LaunchedEffect(bottomItemCount, uiState.streamingContent) {
+        if (bottomItemCount > 0) {
+            listState.animateScrollToItem(bottomItemCount - 1)
         }
     }
     
     // Show error snackbar
     LaunchedEffect(uiState.error) {
         uiState.error?.let { error ->
-            snackbarHostState.showSnackbar(error)
+            val canRetry = uiState.lastFailedInput != null
+            val result = snackbarHostState.showSnackbar(
+                message = error,
+                actionLabel = if (canRetry) "Retry" else null
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                viewModel.retryLastMessage()
+            }
             viewModel.clearError()
         }
     }
@@ -78,7 +93,8 @@ fun ChatScreen(
                 onToggleSave = viewModel::toggleSave,
                 onNewConversation = viewModel::startNewConversation,
                 onShowSessions = viewModel::toggleSessionsList,
-                onShowMemoryInsights = viewModel::toggleMemoryInsights
+                onShowMemoryInsights = viewModel::toggleMemoryInsights,
+                onShowGuardrails = onNavigateToGuardrails
             )
         },
         bottomBar = {
@@ -112,7 +128,8 @@ fun ChatScreen(
                     isAIReady = uiState.isAIReady,
                     modelName = uiState.selectedLLMName,
                     reflectionCount = uiState.reflectionCount,
-                    onNavigateToModels = onNavigateToModels
+                    onNavigateToModels = onNavigateToModels,
+                    onSuggestionClick = { suggestion -> viewModel.updateInput(suggestion) }
                 )
             } else {
                 ChatMessagesList(
@@ -120,7 +137,8 @@ fun ChatScreen(
                     streamingContent = uiState.streamingContent,
                     isGenerating = uiState.isGenerating,
                     processingStatus = uiState.processingStatus,
-                    listState = listState
+                    listState = listState,
+                    onViewPrompt = viewModel::viewPromptForMessage
                 )
             }
             
@@ -149,10 +167,25 @@ fun ChatScreen(
                     reflections = uiState.recentReflections,
                     reflectionCount = uiState.reflectionCount,
                     onGenerateReflections = viewModel::generateReflections,
+                    onAddMemory = viewModel::showAddMemoryDialog,
+                    onDeleteMemory = viewModel::deleteMemory,
                     onDismiss = viewModel::toggleMemoryInsights
                 )
             }
         }
+    }
+    
+    // Add memory dialog
+    if (uiState.isAddingMemory) {
+        AddMemoryDialog(
+            onSave = { viewModel.addMemory(it) },
+            onDismiss = viewModel::dismissAddMemoryDialog
+        )
+    }
+    
+    // Prompt transparency dialog
+    uiState.viewingPrompt?.let { prompt ->
+        PromptViewerDialog(prompt = prompt, onDismiss = viewModel::dismissPromptView)
     }
 }
 
@@ -165,7 +198,8 @@ private fun ChatTopBar(
     onToggleSave: () -> Unit,
     onNewConversation: () -> Unit,
     onShowSessions: () -> Unit,
-    onShowMemoryInsights: () -> Unit
+    onShowMemoryInsights: () -> Unit,
+    onShowGuardrails: () -> Unit = {}
 ) {
     TopAppBar(
         title = {
@@ -187,6 +221,9 @@ private fun ChatTopBar(
                     contentDescription = if (isSaved) "Unsave" else "Save",
                     tint = if (isSaved) MaterialTheme.colorScheme.primary else LocalContentColor.current
                 )
+            }
+            IconButton(onClick = onShowGuardrails) {
+                Icon(Icons.Outlined.Shield, contentDescription = "AI Guardrails")
             }
             IconButton(onClick = onShowMemoryInsights) {
                 Icon(Icons.Outlined.Psychology, contentDescription = "Memory Insights")
@@ -213,7 +250,9 @@ private fun ChatInputBar(
     onNavigateToModels: () -> Unit
 ) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .imePadding(),
         tonalElevation = 3.dp
     ) {
         Column(
@@ -283,7 +322,8 @@ private fun ChatMessagesList(
     streamingContent: String,
     isGenerating: Boolean,
     processingStatus: String?,
-    listState: androidx.compose.foundation.lazy.LazyListState
+    listState: androidx.compose.foundation.lazy.LazyListState,
+    onViewPrompt: (ChatMessage) -> Unit = {}
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -292,7 +332,7 @@ private fun ChatMessagesList(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(messages, key = { it.id }) { message ->
-            ChatMessageBubble(message = message)
+            ChatMessageBubble(message = message, onViewPrompt = onViewPrompt)
         }
         
         // Show streaming content
@@ -311,7 +351,7 @@ private fun ChatMessagesList(
         }
         
         // Show processing status
-        if (processingStatus != null) {
+        if (isGenerating && processingStatus != null) {
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -344,7 +384,8 @@ private fun ChatMessagesList(
 @Composable
 private fun ChatMessageBubble(
     message: ChatMessage,
-    isStreaming: Boolean = false
+    isStreaming: Boolean = false,
+    onViewPrompt: (ChatMessage) -> Unit = {}
 ) {
     val isUser = message.role == MessageRole.USER
     val clipboardManager = LocalClipboardManager.current
@@ -437,6 +478,20 @@ private fun ChatMessageBubble(
                         )
                     }
                 }
+                
+                if (!isUser && message.metadata?.promptUsed != null) {
+                    IconButton(
+                        onClick = { onViewPrompt(message) },
+                        modifier = Modifier.size(20.dp)
+                    ) {
+                        Icon(
+                            Icons.Outlined.Code,
+                            contentDescription = "View prompt sent to the AI",
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        )
+                    }
+                }
             }
         }
         
@@ -463,13 +518,19 @@ private fun ChatMessageBubble(
 
 @Composable
 private fun TypingIndicator() {
+    val transition = rememberInfiniteTransition(label = "typing")
     Row(
         modifier = Modifier.padding(start = 40.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         repeat(3) { index ->
-            val alpha by animateFloatAsState(
-                targetValue = if (index % 3 == 0) 1f else 0.3f,
+            val alpha by transition.animateFloat(
+                initialValue = 0.3f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = 600, delayMillis = index * 150),
+                    repeatMode = RepeatMode.Reverse
+                ),
                 label = "dot_$index"
             )
             Box(
@@ -489,7 +550,8 @@ private fun EmptyChatContent(
     isAIReady: Boolean,
     modelName: String?,
     reflectionCount: Int,
-    onNavigateToModels: () -> Unit
+    onNavigateToModels: () -> Unit,
+    onSuggestionClick: (String) -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -573,7 +635,7 @@ private fun EmptyChatContent(
                 
                 suggestions.forEach { suggestion ->
                     SuggestionChip(
-                        onClick = { /* Could auto-fill input */ },
+                        onClick = { onSuggestionClick(suggestion) },
                         label = { 
                             Text(
                                 suggestion,
@@ -706,6 +768,8 @@ private fun MemoryInsightsSheet(
     reflections: List<ReflectionMemory>,
     reflectionCount: Int,
     onGenerateReflections: () -> Unit,
+    onAddMemory: () -> Unit = {},
+    onDeleteMemory: (ReflectionMemory) -> Unit = {},
     onDismiss: () -> Unit
 ) {
     Surface(
@@ -753,6 +817,9 @@ private fun MemoryInsightsSheet(
                 }
                 
                 Row {
+                    IconButton(onClick = onAddMemory) {
+                        Icon(Icons.Default.Add, contentDescription = "Add a memory")
+                    }
                     IconButton(onClick = onGenerateReflections) {
                         Icon(Icons.Default.Refresh, contentDescription = "Generate")
                     }
@@ -772,7 +839,7 @@ private fun MemoryInsightsSheet(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No insights yet.\nAs we chat, I'll learn about your thinking patterns, values, and interests.",
+                        text = "No insights yet.\nAs we chat, I'll learn about your thinking patterns, values, and interests. Tap + to add a memory yourself.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -785,7 +852,12 @@ private fun MemoryInsightsSheet(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(reflections, key = { it.id }) { reflection ->
-                        ReflectionCard(reflection = reflection)
+                        ReflectionCard(
+                            reflection = reflection,
+                            onDelete = if (reflection.category == ReflectionCategory.USER_PROVIDED) {
+                                { onDeleteMemory(reflection) }
+                            } else null
+                        )
                     }
                 }
             }
@@ -794,7 +866,7 @@ private fun MemoryInsightsSheet(
 }
 
 @Composable
-private fun ReflectionCard(reflection: ReflectionMemory) {
+private fun ReflectionCard(reflection: ReflectionMemory, onDelete: (() -> Unit)? = null) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -811,18 +883,32 @@ private fun ReflectionCard(reflection: ReflectionMemory) {
                     onClick = { },
                     label = { 
                         Text(
-                            reflection.category.name.lowercase().replaceFirstChar { it.uppercase() },
+                            reflection.category.name.lowercase().replace("_", " ").replaceFirstChar { it.uppercase() },
                             style = MaterialTheme.typography.labelSmall
                         )
                     },
                     modifier = Modifier.height(24.dp)
                 )
                 
-                Text(
-                    text = "${(reflection.confidence * 100).toInt()}%",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (reflection.category != ReflectionCategory.USER_PROVIDED) {
+                        Text(
+                            text = "${(reflection.confidence * 100).toInt()}%",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    if (onDelete != null) {
+                        IconButton(onClick = onDelete, modifier = Modifier.size(20.dp)) {
+                            Icon(
+                                Icons.Outlined.Delete,
+                                contentDescription = "Delete memory",
+                                modifier = Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+                }
             }
             
             Spacer(modifier = Modifier.height(8.dp))
@@ -844,3 +930,74 @@ private fun ReflectionCard(reflection: ReflectionMemory) {
         }
     }
 }
+
+@Composable
+private fun AddMemoryDialog(
+    onSave: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var text by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add a memory") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    "Tell the AI something to remember for future conversations, e.g. \"My sister's name is Priya\".",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    placeholder = { Text("Type a fact or memory...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2,
+                    maxLines = 4
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onSave(text) }, enabled = text.isNotBlank()) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
+}
+
+@Composable
+private fun PromptViewerDialog(
+    prompt: String,
+    onDismiss: () -> Unit
+) {
+    val clipboardManager = LocalClipboardManager.current
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Prompt sent to the AI") },
+        text = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 400.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Text(
+                    text = prompt,
+                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { clipboardManager.setText(AnnotatedString(prompt)) }) {
+                Text("Copy")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
+        }
+    )
+}
+

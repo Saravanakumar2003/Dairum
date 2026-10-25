@@ -201,6 +201,81 @@ class BackupRestoreViewModel @Inject constructor(
         }
     }
 
+    fun createCompleteExport() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isBackingUp = true) }
+            try {
+                val result = backupRepository.createCompleteExport(
+                    includeMedia = _uiState.value.includeMediaInBackup
+                )
+                result.fold(
+                    onSuccess = { backupResult ->
+                        _uiState.update {
+                            it.copy(
+                                isBackingUp = false,
+                                successMessage = "Complete export created! ${backupResult.entriesCount} entries, ${backupResult.mediaCount} media files."
+                            )
+                        }
+                        loadAvailableBackups()
+                    },
+                    onFailure = { e ->
+                        _uiState.update {
+                            it.copy(
+                                isBackingUp = false,
+                                error = e.message ?: "Failed to create complete export"
+                            )
+                        }
+                    }
+                )
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(isBackingUp = false, error = e.message ?: "Unknown error")
+                }
+            }
+        }
+    }
+
+    fun importCompleteExport(uri: Uri, context: Context) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRestoring = true) }
+            try {
+                val tempFile = File(context.cacheDir, "import_complete_temp.zip")
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    FileOutputStream(tempFile).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                
+                val result = backupRepository.importCompleteExport(tempFile)
+                tempFile.delete()
+                
+                result.fold(
+                    onSuccess = { restoreResult ->
+                        _uiState.update {
+                            it.copy(
+                                isRestoring = false,
+                                successMessage = "Import complete! ${restoreResult.mediaRestored} media files restored. Please restart the app.",
+                                requiresRestart = true
+                            )
+                        }
+                    },
+                    onFailure = { e ->
+                        _uiState.update {
+                            it.copy(
+                                isRestoring = false,
+                                error = e.message ?: "Failed to import"
+                            )
+                        }
+                    }
+                )
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(isRestoring = false, error = e.message ?: "Unknown error")
+                }
+            }
+        }
+    }
+
     fun clearMessages() {
         _uiState.update { 
             it.copy(

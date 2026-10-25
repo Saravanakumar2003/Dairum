@@ -1,5 +1,7 @@
 package com.dairum.presentation.screens.memories
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -28,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -53,8 +56,40 @@ fun MemoryDetailScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var showAddMilestoneDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    
+    // Share PDF when exported
+    LaunchedEffect(uiState.exportFilePath) {
+        uiState.exportFilePath?.let { path ->
+            val file = java.io.File(path)
+            if (file.exists()) {
+                val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "application/pdf"
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                context.startActivity(Intent.createChooser(shareIntent, "Share Memory PDF"))
+            } else {
+                try {
+                    val uri = Uri.parse(path)
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "application/pdf"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    context.startActivity(Intent.createChooser(shareIntent, "Share Memory PDF"))
+                } catch (_: Exception) {
+                    snackbarHostState.showSnackbar("PDF exported but could not share")
+                }
+            }
+            viewModel.clearExportResult()
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             LargeTopAppBar(
                 title = {
@@ -86,6 +121,20 @@ fun MemoryDetailScreen(
                                 contentDescription = "Favorite",
                                 tint = if (memory.isFavorite) MaterialTheme.colorScheme.error else LocalContentColor.current
                             )
+                        }
+                    }
+                    // Export Memory to PDF
+                    IconButton(
+                        onClick = { viewModel.exportMemoryToPdf() },
+                        enabled = !uiState.isExporting
+                    ) {
+                        if (uiState.isExporting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(Icons.Outlined.PictureAsPdf, contentDescription = "Export PDF")
                         }
                     }
                     IconButton(onClick = { showEditDialog = true }) {
@@ -213,7 +262,8 @@ fun MemoryDetailScreen(
                             milestones = uiState.memory!!.milestones,
                             onEntryClick = onEntryClick,
                             onAddMilestone = { showAddMilestoneDialog = true },
-                            onDeleteMilestone = viewModel::deleteMilestone
+                            onDeleteMilestone = viewModel::deleteMilestone,
+                            onReorderMilestone = viewModel::reorderMilestone
                         )
                     }
                 }
@@ -1438,7 +1488,8 @@ private fun TimelineTab(
     milestones: List<MemoryMilestone>,
     onEntryClick: (Long) -> Unit,
     onAddMilestone: () -> Unit,
-    onDeleteMilestone: (Long) -> Unit
+    onDeleteMilestone: (Long) -> Unit,
+    onReorderMilestone: (Long, Int) -> Unit = { _, _ -> }
 ) {
     // Combine entries and milestones into timeline items
     data class TimelineItem(
@@ -1572,6 +1623,28 @@ private fun TimelineTab(
                                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                                         )
                                     }
+                                }
+                                IconButton(
+                                    onClick = { onReorderMilestone(milestone.id, -1) },
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.KeyboardArrowUp,
+                                        contentDescription = "Move up",
+                                        modifier = Modifier.size(16.dp),
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                                    )
+                                }
+                                IconButton(
+                                    onClick = { onReorderMilestone(milestone.id, 1) },
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.KeyboardArrowDown,
+                                        contentDescription = "Move down",
+                                        modifier = Modifier.size(16.dp),
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                                    )
                                 }
                                 IconButton(
                                     onClick = { onDeleteMilestone(milestone.id) },
@@ -1747,6 +1820,31 @@ private fun AddMilestoneDialog(
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var date by remember { mutableStateOf(LocalDateTime.now()) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = date.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        date = java.time.Instant.ofEpochMilli(millis)
+                            .atZone(java.time.ZoneId.systemDefault())
+                            .toLocalDateTime()
+                    }
+                    showDatePicker = false
+                }) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
     
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -1774,10 +1872,35 @@ private fun AddMilestoneDialog(
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                Text(
-                    text = "Date: ${date.format(DateTimeFormatter.ofPattern("MMM d, yyyy"))}",
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                OutlinedCard(
+                    onClick = { showDatePicker = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Date",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = date.format(DateTimeFormatter.ofPattern("MMM d, yyyy")),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                        Icon(
+                            Icons.Outlined.CalendarMonth,
+                            contentDescription = "Pick date",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
             }
         },
         confirmButton = {

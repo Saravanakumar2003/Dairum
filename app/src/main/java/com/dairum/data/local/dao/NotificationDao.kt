@@ -25,6 +25,9 @@ interface NotificationDao {
     
     @Query("SELECT * FROM reminder_configs ORDER BY createdAt DESC")
     fun getAllReminderConfigsFlow(): Flow<List<ReminderConfigEntity>>
+
+    @Query("SELECT * FROM reminder_configs ORDER BY createdAt DESC")
+    suspend fun getAllReminderConfigs(): List<ReminderConfigEntity>
     
     @Query("SELECT * FROM reminder_configs WHERE isEnabled = 1")
     suspend fun getEnabledReminderConfigs(): List<ReminderConfigEntity>
@@ -51,6 +54,9 @@ interface NotificationDao {
     
     @Query("SELECT * FROM smart_reminders ORDER BY reminderDate ASC")
     fun getAllSmartRemindersFlow(): Flow<List<SmartReminderEntity>>
+
+    @Query("SELECT * FROM smart_reminders ORDER BY reminderDate ASC")
+    suspend fun getAllSmartReminders(): List<SmartReminderEntity>
     
     @Query("SELECT * FROM smart_reminders WHERE isEnabled = 1 ORDER BY reminderDate ASC")
     fun getEnabledSmartRemindersFlow(): Flow<List<SmartReminderEntity>>

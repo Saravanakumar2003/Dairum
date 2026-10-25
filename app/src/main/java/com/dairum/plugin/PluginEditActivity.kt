@@ -346,7 +346,7 @@ fun PluginEditScreen(
                 onValueChange = { exportPath = it },
                 label = { Text("Custom path (optional)") },
                 placeholder = { Text("e.g. /storage/emulated/0/Documents/MyExports") },
-                supportingText = { Text("Leave empty to use default (Documents/diarum)") },
+                supportingText = { Text("Leave empty to use default (Documents/Data Exports/Dairum)") },
                 leadingIcon = { Icon(Icons.Default.Folder, contentDescription = null) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
@@ -408,7 +408,7 @@ fun PluginEditScreen(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "When this action runs, Diarum will automatically perform the configured operation in the background. Exports are saved to the specified location or the app's default export folder (Documents/diarum).",
+                        text = "When this action runs, Diarum will automatically perform the configured operation in the background. Exports are saved to the specified location or the app's default export folder (Documents/Data Exports/Dairum).",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -488,7 +488,7 @@ private fun generatePreviewText(
                 else -> "(all entries)"
             }
             val mediaStr = if (includeMedia && format == "pdf") "\nPhotos will be embedded in the PDF." else ""
-            val pathStr = if (exportPath.isNotBlank()) "\nSaved to: $exportPath" else "\nSaved to: Documents/diarum (default)"
+            val pathStr = if (exportPath.isNotBlank()) "\nSaved to: $exportPath" else "\nSaved to: Documents/Data Exports/Dairum (default)"
             "Export journal entries $periodStr to $formatStr format.$mediaStr$pathStr"
         }
         PluginEditActivity.ACTION_BACKUP -> {

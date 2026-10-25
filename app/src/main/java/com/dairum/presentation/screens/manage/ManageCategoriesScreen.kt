@@ -106,13 +106,21 @@ private fun CategoryItem(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Color indicator
+            // Color indicator with icon
             Box(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(Color(category.color))
-            )
+                    .background(Color(category.color)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = getCategoryIcon(category.icon),
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.width(16.dp))
 
@@ -194,6 +202,8 @@ private fun CategoryEditDialog(
 ) {
     var name by remember { mutableStateOf(category?.name ?: "") }
     var selectedColor by remember { mutableStateOf(category?.color ?: CategoryColors.first().toArgb()) }
+    var selectedIcon by remember { mutableStateOf(category?.icon ?: "folder") }
+    var showIconPicker by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -207,6 +217,67 @@ private fun CategoryEditDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                // Icon selection
+                Text("Icon", style = MaterialTheme.typography.labelMedium)
+                
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Current selected icon preview
+                    Surface(
+                        shape = CircleShape,
+                        color = Color(selectedColor),
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = getCategoryIcon(selectedIcon),
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                    
+                    TextButton(onClick = { showIconPicker = !showIconPicker }) {
+                        Text(if (showIconPicker) "Hide Icons" else "Change Icon")
+                    }
+                }
+                
+                if (showIconPicker) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        CategoryIconOptions.forEach { (iconName, iconVector) ->
+                            Surface(
+                                shape = CircleShape,
+                                color = if (selectedIcon == iconName) 
+                                    MaterialTheme.colorScheme.primaryContainer
+                                else 
+                                    MaterialTheme.colorScheme.surfaceVariant,
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clickable { selectedIcon = iconName }
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = iconVector,
+                                        contentDescription = iconName,
+                                        tint = if (selectedIcon == iconName)
+                                            MaterialTheme.colorScheme.onPrimaryContainer
+                                        else
+                                            MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
 
                 Text("Color", style = MaterialTheme.typography.labelMedium)
                 
@@ -240,7 +311,7 @@ private fun CategoryEditDialog(
         },
         confirmButton = {
             TextButton(
-                onClick = { onSave(name, selectedColor, "folder") },
+                onClick = { onSave(name, selectedColor, selectedIcon) },
                 enabled = name.isNotBlank()
             ) {
                 Text("Save")
@@ -253,6 +324,55 @@ private fun CategoryEditDialog(
         }
     )
 }
+
+/**
+ * Maps icon name strings to Material Icon vectors for category icons
+ */
+private fun getCategoryIcon(iconName: String): androidx.compose.ui.graphics.vector.ImageVector {
+    return CategoryIconOptions.find { it.first == iconName }?.second ?: Icons.Default.Folder
+}
+
+/**
+ * Available icons for category selection
+ */
+private val CategoryIconOptions: List<Pair<String, androidx.compose.ui.graphics.vector.ImageVector>> = listOf(
+    "folder" to Icons.Default.Folder,
+    "edit_note" to Icons.Default.Edit,
+    "person" to Icons.Default.Person,
+    "work" to Icons.Default.Work,
+    "flight" to Icons.Default.Flight,
+    "favorite" to Icons.Default.Favorite,
+    "flag" to Icons.Default.Flag,
+    "star" to Icons.Default.Star,
+    "home" to Icons.Default.Home,
+    "school" to Icons.Default.School,
+    "fitness_center" to Icons.Default.FitnessCenter,
+    "restaurant" to Icons.Default.Restaurant,
+    "shopping_cart" to Icons.Default.ShoppingCart,
+    "music_note" to Icons.Default.MusicNote,
+    "book" to Icons.Default.Book,
+    "camera" to Icons.Default.CameraAlt,
+    "pets" to Icons.Default.Pets,
+    "sports" to Icons.Default.Sports,
+    "beach" to Icons.Default.BeachAccess,
+    "local_cafe" to Icons.Default.LocalCafe,
+    "palette" to Icons.Default.Palette,
+    "code" to Icons.Default.Code,
+    "science" to Icons.Default.Science,
+    "psychology" to Icons.Default.Psychology,
+    "celebration" to Icons.Default.Celebration,
+    "nature" to Icons.Default.Nature,
+    "spa" to Icons.Default.Spa,
+    "directions_car" to Icons.Default.DirectionsCar,
+    "movie" to Icons.Default.Movie,
+    "night_life" to Icons.Default.Nightlife,
+    "volunteer_activism" to Icons.Default.VolunteerActivism,
+    "lightbulb" to Icons.Default.Lightbulb,
+    "self_improvement" to Icons.Default.SelfImprovement,
+    "groups" to Icons.Default.Groups,
+    "savings" to Icons.Default.Savings,
+    "medical_services" to Icons.Default.MedicalServices,
+)
 
 // Extended color palette for categories
 private val ExtendedCategoryColors = listOf(

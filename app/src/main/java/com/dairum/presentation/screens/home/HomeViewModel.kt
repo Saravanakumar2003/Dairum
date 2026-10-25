@@ -8,6 +8,7 @@ import com.dairum.domain.model.Memory
 import com.dairum.domain.model.Person
 import com.dairum.domain.model.Tag
 import com.dairum.domain.repository.CategoryRepository
+import com.dairum.domain.repository.ExportRepository
 import com.dairum.domain.repository.JournalRepository
 import com.dairum.domain.repository.MemoryRepository
 import com.dairum.domain.repository.PersonRepository
@@ -23,7 +24,8 @@ class HomeViewModel @Inject constructor(
     private val categoryRepository: CategoryRepository,
     private val tagRepository: TagRepository,
     private val personRepository: PersonRepository,
-    private val memoryRepository: MemoryRepository
+    private val memoryRepository: MemoryRepository,
+    private val exportRepository: ExportRepository
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -226,6 +228,30 @@ class HomeViewModel @Inject constructor(
         }
     }
     
+    fun exportSelectedToPdf() {
+        viewModelScope.launch {
+            val entries = getSelectedEntries()
+            if (entries.isEmpty()) return@launch
+            _uiState.update { it.copy(isExporting = true) }
+            val result = exportRepository.exportToPdf(entries, includeMedia = true)
+            _uiState.update {
+                it.copy(
+                    isExporting = false,
+                    exportResult = result.fold(
+                        onSuccess = { pathWithSize -> "PDF exported successfully" },
+                        onFailure = { e -> "Export failed: ${e.message}" }
+                    ),
+                    exportFilePath = result.getOrNull()?.split("|")?.firstOrNull()
+                )
+            }
+            clearSelection()
+        }
+    }
+
+    fun clearExportResult() {
+        _uiState.update { it.copy(exportResult = null, exportFilePath = null) }
+    }
+
     fun refresh() {
         viewModelScope.launch {
             _uiState.update { it.copy(isRefreshing = true) }
@@ -252,11 +278,16 @@ data class HomeUiState(
     val error: String? = null,
     // Selection mode
     val isSelectionMode: Boolean = false,
-    val selectedEntryIds: Set<Long> = emptySet()
+    val selectedEntryIds: Set<Long> = emptySet(),
+    // Export
+    val isExporting: Boolean = false,
+    val exportResult: String? = null,
+    val exportFilePath: String? = null
 )
 
 enum class ViewMode {
     TIMELINE,
+    CALENDAR,
     CATEGORY,
     TAG,
     MOOD,

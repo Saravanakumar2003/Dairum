@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dairum.R
@@ -117,6 +118,7 @@ fun StatsScreen(
                         StatsTab.TAGS -> TagsContent(stats = uiState.tagStats)
                         StatsTab.PEOPLE -> PeopleContent(stats = uiState.peopleStats)
                         StatsTab.TRACKERS -> TrackersContent(stats = uiState.trackerStats)
+                        StatsTab.GRATIA -> GratiaStatsContent(stats = uiState.gratiaStats)
                     }
                 }
             }
@@ -1501,7 +1503,8 @@ enum class StatsTab(val title: String) {
     MOOD("Mood"),
     TAGS("Tags"),
     PEOPLE("People"),
-    TRACKERS("Trackers")
+    TRACKERS("Trackers"),
+    GRATIA("Gratia")
 }
 
 enum class TimeRange(val label: String) {
@@ -1663,6 +1666,166 @@ private fun MoodCategorySection(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun GratiaStatsContent(stats: GratiaStats?) {
+    if (stats == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    LazyColumn(
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            Text(
+                text = "Gratia Practice",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
+
+        // Summary cards
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                GratiaStatCard(
+                    modifier = Modifier.weight(1f),
+                    value = stats.gratitudeFolderCount.toString(),
+                    label = "Gratitude\nFolders",
+                    emoji = "🙏"
+                )
+                GratiaStatCard(
+                    modifier = Modifier.weight(1f),
+                    value = stats.affirmationFolderCount.toString(),
+                    label = "Affirmation\nFolders",
+                    emoji = "✨"
+                )
+            }
+        }
+
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                GratiaStatCard(
+                    modifier = Modifier.weight(1f),
+                    value = stats.gratitudePromptCount.toString(),
+                    label = "Gratitude\nPrompts",
+                    emoji = "💭"
+                )
+                GratiaStatCard(
+                    modifier = Modifier.weight(1f),
+                    value = stats.affirmationCount.toString(),
+                    label = "Total\nAffirmations",
+                    emoji = "💪"
+                )
+            }
+        }
+
+        // Total content card
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("🌟", style = MaterialTheme.typography.headlineLarge)
+                    Text(
+                        text = "Total Gratia Content",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Text(
+                        text = "${stats.gratitudeFolderCount + stats.affirmationFolderCount} folders • ${stats.gratitudePromptCount + stats.affirmationCount} items",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+        }
+
+        // Empty state hint
+        if (stats.gratitudeFolderCount == 0 && stats.affirmationFolderCount == 0) {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Start your Gratia practice!",
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Create gratitude prompts and affirmations in the Gratia tab to see your stats here.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GratiaStatCard(
+    modifier: Modifier = Modifier,
+    value: String,
+    label: String,
+    emoji: String
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(text = emoji, style = MaterialTheme.typography.headlineSmall)
+            Text(
+                text = value,
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
