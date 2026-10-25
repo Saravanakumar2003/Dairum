@@ -27,7 +27,8 @@ data class JournalEntry(
     val isDraft: Boolean = false,
     val isPinned: Boolean = false,
     val wordCount: Int = 0,
-    val backgroundColor: String? = null // Background color name
+    val backgroundColor: String? = null, // Background color name
+    val deletedAt: Long? = null // Epoch millis when moved to trash; null = not deleted
 )
 
 /**
@@ -344,7 +345,8 @@ data class Person(
     val birthday: Long? = null, // Timestamp for birthday
     val importantDates: List<ImportantDate> = emptyList(),
     val isFavorite: Boolean = false,
-    val mentionCount: Int = 0
+    val mentionCount: Int = 0,
+    val createdAt: Long = 0L // Epoch millis; 0 = unknown (a fresh object not read from the database)
 )
 
 /**

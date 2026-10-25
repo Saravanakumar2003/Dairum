@@ -1,11 +1,15 @@
 package com.dairum.data.repository
 
+import androidx.room.withTransaction
 import com.dairum.data.local.dao.*
+import com.dairum.data.local.database.DairumDatabase
 import com.dairum.data.local.entity.*
 import com.dairum.domain.model.*
 import com.dairum.domain.repository.JournalRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.io.File
+import java.time.Clock
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -17,8 +21,12 @@ class JournalRepositoryImpl @Inject constructor(
     private val personDao: PersonDao,
     private val trackerDao: TrackerDao,
     private val mediaDao: MediaDao,
-    private val categoryDao: CategoryDao
+    private val categoryDao: CategoryDao,
+    private val database: DairumDatabase,
+    private val clock: Clock
 ) : JournalRepository {
+
+    private fun now(): Long = clock.millis()
 
     override suspend fun createEntry(entry: JournalEntry): Long {
         android.util.Log.d("JournalRepo", "createEntry called - location: ${entry.location?.let { "lat=${it.latitude}, lng=${it.longitude}" } ?: "null"}")
@@ -33,12 +41,23 @@ class JournalRepositoryImpl @Inject constructor(
         android.util.Log.d("JournalRepo", "updateEntry called for id=${entry.id} - location: ${entry.location?.let { "lat=${it.latitude}, lng=${it.longitude}" } ?: "null"}")
         val entity = entry.toEntity()
         android.util.Log.d("JournalRepo", "Entity locationData: ${entity.locationData ?: "null"}")
-        entryDao.update(entity)
+        database.withTransaction {
+            // @Update rewrites every column, and the domain object the editor builds has no deletedAt.
+            // Only softDelete/restoreEntry change deletedAt, so keep whatever the row currently has.
+            val existing = entryDao.getById(entity.id)
+            entryDao.update(if (existing != null) entity.copy(deletedAt = existing.deletedAt) else entity)
+        }
         android.util.Log.d("JournalRepo", "Entry updated")
     }
 
+    /** Hard delete ("Delete forever"): removes the row and its media files. */
     override suspend fun deleteEntry(id: Long) {
-        entryDao.deleteById(id)
+        val media = database.withTransaction {
+            val rows = mediaDao.getMediaForEntry(id)
+            entryDao.deleteById(id) // cascades to media, tags, people, tracker values, embeddings
+            rows
+        }
+        deleteMediaFiles(media) // only after the database commit succeeded
     }
 
     override suspend fun getEntry(id: Long): JournalEntry? {
@@ -124,23 +143,23 @@ class JournalRepositoryImpl @Inject constructor(
     }
 
     override suspend fun toggleFavorite(id: Long, isFavorite: Boolean) {
-        entryDao.updateFavorite(id, isFavorite)
+        entryDao.updateFavorite(id, isFavorite, now())
     }
 
     override suspend fun archiveEntry(id: Long, isArchived: Boolean) {
-        entryDao.updateArchived(id, isArchived)
+        entryDao.updateArchived(id, isArchived, now())
     }
 
     override suspend fun togglePin(id: Long, isPinned: Boolean) {
-        entryDao.updatePinned(id, isPinned)
+        entryDao.updatePinned(id, isPinned, now())
     }
 
     override suspend fun softDelete(id: Long) {
-        entryDao.softDelete(id)
+        entryDao.softDelete(id, now())
     }
 
     override suspend fun restoreEntry(id: Long) {
-        entryDao.restoreEntry(id)
+        entryDao.restoreEntry(id, now())
     }
 
     override fun getDeletedEntries(): Flow<List<JournalEntry>> {
@@ -149,11 +168,33 @@ class JournalRepositoryImpl @Inject constructor(
         }
     }
 
+    /** Hard delete of everything in the trash, including the media files of those entries. */
     override suspend fun emptyTrash() {
-        entryDao.emptyTrash()
+        val media = database.withTransaction {
+            val rows = mediaDao.getMediaForTrashedEntries()
+            entryDao.emptyTrash()
+            rows
+        }
+        deleteMediaFiles(media)
     }
 
-    override suspend fun setTagsForEntry(entryId: Long, tagIds: List<Long>) {
+    private fun deleteMediaFiles(media: List<MediaEntity>) {
+        media.forEach { m ->
+            deleteFileQuietly(m.uri)
+            m.thumbnailUri?.let { deleteFileQuietly(it) }
+        }
+    }
+
+    private fun deleteFileQuietly(path: String) {
+        try {
+            File(path).delete()
+        } catch (e: Exception) {
+            android.util.Log.w("JournalRepo", "Could not delete media file", e)
+        }
+    }
+
+    override suspend fun setTagsForEntry(entryId: Long, tagIds: List<Long>) = database.withTransaction {
+        // Atomic: if any insert fails, the old links and counts are restored.
         // Diff old vs new to correctly adjust usage counts
         val oldTagIds = tagDao.getTagIdsForEntry(entryId).toSet()
         val newTagIds = tagIds.toSet()
@@ -170,9 +211,11 @@ class JournalRepositoryImpl @Inject constructor(
         // Adjust counts
         removed.forEach { tagDao.decrementUsageCount(it) }
         added.forEach { tagDao.incrementUsageCount(it) }
+        entryDao.touch(entryId, now())
     }
 
-    override suspend fun setPeopleForEntry(entryId: Long, personIds: List<Long>) {
+    override suspend fun setPeopleForEntry(entryId: Long, personIds: List<Long>) = database.withTransaction {
+        // Atomic: if any insert fails, the old links and counts are restored.
         // Diff old vs new to correctly adjust mention counts
         val oldPersonIds = personDao.getPeopleForEntry(entryId).map { it.id }.toSet()
         val newPersonIds = personIds.toSet()
@@ -189,9 +232,11 @@ class JournalRepositoryImpl @Inject constructor(
         // Adjust counts
         removed.forEach { personDao.decrementMentionCount(it) }
         added.forEach { personDao.incrementMentionCount(it) }
+        entryDao.touch(entryId, now())
     }
 
-    override suspend fun setTrackerValues(entryId: Long, values: Map<Long, String>) {
+    override suspend fun setTrackerValues(entryId: Long, values: Map<Long, String>) = database.withTransaction {
+        // Atomic: if any insert fails, the old values are restored.
         // Delete existing values
         trackerDao.deleteAllValuesForEntry(entryId)
         // Insert new values
@@ -204,6 +249,7 @@ class JournalRepositoryImpl @Inject constructor(
                 )
             )
         }
+        entryDao.touch(entryId, now())
     }
 
     // Entity to Domain mappings
@@ -231,7 +277,8 @@ class JournalRepositoryImpl @Inject constructor(
             isDraft = entry.isDraft,
             isPinned = entry.isPinned,
             wordCount = entry.wordCount,
-            backgroundColor = entry.backgroundColor
+            backgroundColor = entry.backgroundColor,
+            deletedAt = entry.deletedAt
         )
     }
 
@@ -252,7 +299,8 @@ class JournalRepositoryImpl @Inject constructor(
             isDraft = isDraft,
             isPinned = isPinned,
             wordCount = wordCount,
-            backgroundColor = backgroundColor
+            backgroundColor = backgroundColor,
+            deletedAt = deletedAt
         )
     }
 
@@ -275,7 +323,8 @@ class JournalRepositoryImpl @Inject constructor(
             isDraft = isDraft,
             isPinned = isPinned,
             wordCount = wordCount,
-            backgroundColor = backgroundColor
+            backgroundColor = backgroundColor,
+            deletedAt = deletedAt
         )
     }
 
@@ -326,7 +375,8 @@ class JournalRepositoryImpl @Inject constructor(
             photoUri = photoUri,
             notes = notes,
             isFavorite = isFavorite,
-            mentionCount = mentionCount
+            mentionCount = mentionCount,
+            createdAt = createdAt
         )
     }
 
