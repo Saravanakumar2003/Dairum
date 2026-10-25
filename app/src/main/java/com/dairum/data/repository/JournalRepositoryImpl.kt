@@ -367,6 +367,12 @@ class JournalRepositoryImpl @Inject constructor(
         )
     }
 
+    /**
+     * LOSSY projection, for display only: drops email, phone, birthday and importantDates.
+     * Never pass the result to PersonRepository.update/create; that would erase those fields.
+     * (Checked: nothing does. The editor keeps these objects only for their ids, and Manage People
+     * edits start from PersonRepository.getAllWithCountFlow(), which maps every field.)
+     */
     private fun PersonEntity.toDomain(): Person {
         return Person(
             id = id,
