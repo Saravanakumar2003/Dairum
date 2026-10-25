@@ -13,7 +13,11 @@ Nothing in this file is implemented yet unless it says "done".
 - Embeddings and all AI/chat data never sync. `locationData`, `weatherData` and
   `additionalLocationsData` never sync.
 - The diary body (`content` spans JSON, `plainContent`) is optional in the protocol; metadata first.
-- Transport: HTTPS over a Tailscale URL, no cleartext.
+- Transport: two routes, both HTTPS, **no domain and no cleartext**: (1) the LAN, with a pinned
+  self-signed certificate; (2) Tailscale. The client must trust exactly the pinned certificate.
+  (OkHttp's `CertificatePinner` alone is not enough: it still requires a chain the platform
+  trusts, which a self-signed certificate does not have; a custom trust manager or
+  `network_security_config` that trusts only that certificate is needed.)
 - Single write path enforced with SQLite triggers (planned for the 5->6 migration).
 
 ## Schema facts the protocol needs
@@ -33,14 +37,15 @@ Nothing in this file is implemented yet unless it says "done".
   to a person is `entry_people`.
 - People fields: `name`, `relationship`, `photoUri` (a local file path), `notes`, `email`, `phone`,
   `birthday`, `importantDates` (JSON text), `isFavorite`. `mentionCount` is a local derived counter.
-  `photoUri` needs a decision in the spec (transfer the file, or do not sync it).
+  `photoUri` is excluded from v1 (see Decisions).
 - Other references to people that are NOT `entry_people`: `memories.peopleInvolved` (comma-separated
-  local ids), `smart_reminders.relatedPersonId`, and `tracker_values.value` for PEOPLE trackers,
-  which stores person **names**. All three need remapping or exclusion.
+  local ids), `smart_reminders.relatedPersonId` (device-local, never syncs), and
+  `tracker_values.value` for PEOPLE trackers, which stores person **names**. The first and third
+  are excluded from v1 (see Decisions).
 - Derived local counters, never sync: `tags.usageCount`, `people.mentionCount`, memory
   `entryCount`/`wordCount`/`photoCount`/`videoCount`.
 - Media files live at `filesDir/{photo,video,voice,attachment}/<uuid>.<ext>`; `media.uri` holds the
-  absolute path; there is no content hash. Media is metadata-only in the first protocol version.
+  absolute path; there is no content hash. Media files are excluded from v1 (see Decisions).
 
 ## Writers by method (audited at `pre-sync-baseline`)
 
@@ -158,16 +163,20 @@ repositories or the existing REPLACE DAOs.
 5. **Tombstones only:** a server deletion is `UPDATE ... SET deletedAt = :t, updatedAt = :u`
    (plus the purge below for entries). Never `DELETE` a synced row.
 6. **Link sets:** replace an entry's person list as a set inside the transaction (delete the rows
-   for that entry, insert the resolved ones). Resolve person `syncId` -> local id first; apply
-   people before entries. An unresolvable person id fails the batch rather than dropping the link.
+   for that entry, insert the resolved ones). A link arrives as a Kith person id when the phone
+   knows one, otherwise as a candidate `syncId`; resolve it to a local row by `kithPersonId`, then by
+   `syncId`. Apply people before entries. An unresolvable person id fails the batch rather than
+   dropping the link.
 7. **Echo suppression:** the planned write-path triggers check a flag in `sync_state` in their
    `WHEN` clause. The apply service sets it inside the transaction, so applying server data does not
    enqueue it back into the outbox.
 8. **Last-write-wins:** compare incoming `updatedAt` with the stored one and ignore older
    changes. The cursor is server-assigned and monotonic; the phone stores it in `sync_state`
    **inside the database**, so a restored database file carries a consistent (data, cursor) pair.
-9. **People are inbound-only:** Kith-owned fields are overwritten by pulls. Local `isFavorite` and
-   `mentionCount` handling is a spec decision.
+9. **People:** Kith-owned fields are overwritten by pulls into rows that have a `kithPersonId`.
+   Candidate rows (no `kithPersonId` yet) are pushed as proposals and keep their own `syncId`.
+   `mentionCount` is a local derived counter and never syncs. A Kith deletion or a `merged_into`
+   message is applied as described under Decisions; it never deletes rows or links.
 
 ## Purge / tombstone proposal (deferred to the 5->6 migration)
 
@@ -190,14 +199,62 @@ keeps a tombstone row so the server can learn the entry is gone.
   tables, the `sync_state` and `sync_outbox` tables, and the triggers.
 - `syncId` backfill: deterministic UUIDv5 over (table, local id, `createdAt`), computed in Kotlin in
   the migration, so restoring a pre-sync backup reproduces the same ids instead of duplicating rows.
+  Tables without `createdAt` need a fallback; see Decisions.
+- `people` also gains a nullable `kithPersonId` (see Decisions). It is not a replacement for `syncId`.
 
-## Open questions for the spec
+## Decisions on the former open questions
 
-- Does `title` count as metadata or body? Is `moodIcon`/`mood` metadata (assumed yes)?
-- `people.photoUri` and `media`: transfer files, or exclude them from v1?
-- How a phone-created person proposal is represented, and what the phone does when Kith rejects or
-  merges it (rewrite `entry_people` to the surviving person).
-- What a Kith-side person deletion does to `entry_people`, `memories.peopleInvolved` and PEOPLE
-  tracker values (which store names).
-- Restore policy: a restored database carries an older cursor, which converges by re-pulling;
-  restoring a pre-sync backup relies on the deterministic `syncId` backfill above.
+**Entries**
+
+- `title` and mood (`moodLevel`, `moodIcon`) are metadata and sync. A separate **"Send titles"**
+  switch, default on, controls whether `title` is sent. When it is off the field must be absent from
+  the payload, and an absent field must never clear a value the server already has (partial update).
+- Trashed entries (`deletedAt` set, not purged) sync as **hidden**. Purged entries (`purgedAt` set)
+  are **tombstones**.
+
+**Media**
+
+- `photoUri` (people) and media files are **excluded from v1**. The `media` table has no v1 sync
+  role; a metadata-only `media` row sync is not part of v1 and would need its own decision.
+
+**People**
+
+- A phone-created person is a **candidate** with its own deterministic `syncId` (same scheme as the
+  other backfills). Add a nullable **`kithPersonId`** column to `people`. Many local rows may map to
+  one Kith person. **`syncId` is never reused as Kith's id.**
+- Entry-person links sync as the **Kith person id if known, else the candidate `syncId`**.
+- A **Kith person deletion hides the person on the phone and keeps the link rows**: set
+  `people.deletedAt` and do not delete anything, so `entry_people` rows stay. Implication: every
+  query on `people` must then filter `deletedAt IS NULL` (none does today: `PersonDao.getAllFlow`,
+  `getAll`, `search`, `getFavoritePeople`, the three `...WithCount`/`getTop...` queries, and
+  `getPeopleForEntry*`), or hidden people reappear in pickers.
+- A **merge arrives as `merged_into`**; the phone rewrites `kithPersonId` on the affected local rows
+  to the surviving Kith person id. Links keep pointing at the same local rows.
+- `tracker_values` for PEOPLE trackers (they store names) and `memories.peopleInvolved` (local ids)
+  are **excluded from v1**.
+
+**Identifiers and triggers**
+
+- UUIDv5 over (table, local id, `createdAt`) needs a **fallback for tables without `createdAt`**:
+  `memory_entries` (has `addedAt`), `memory_milestones`, `memory_trackers`, `location_nicknames`
+  (has `updatedAt`) and the two join tables, which have no id of their own. Use a unique natural key
+  where one exists (`tags.name`, `location_nicknames.locationKey`); otherwise (table, local id),
+  which is stable because AUTOINCREMENT ids are never reused. Join rows are covered by their parent
+  (`entry_people`/`entry_tags` sync as a set on the entry).
+- **Triggers need a recursion guard plus the sync-apply flag.** A trigger that updates its own table
+  (to bump `updatedAt`) must not re-fire itself: guard with `WHEN NEW.updatedAt IS OLD.updatedAt`
+  (SQLite's `recursive_triggers` is off by default, but do not depend on that), and also check the
+  `sync_state` flag so applying server data does not enqueue it again.
+- **Counting queries that ignore `deletedAt` will include tombstones.** Today these ignore it:
+  `JournalEntryDao.getEntryCount()` (`SELECT COUNT(*) FROM journal_entries`, used for backup
+  metadata), the `LEFT JOIN journal_entries` counts in `PersonDao` and `TagDao`, the
+  `INNER JOIN journal_entries` lists in `MediaDao` (the Files screen) and `TrackerDao`. Trashed
+  entries are already counted there today; purged tombstone rows would be too unless the queries
+  gain `deletedAt IS NULL` (or `purgedAt IS NULL`). Purging removes a tombstone's children first, so
+  the join queries stop returning its media, tags and people, but the plain count still includes it.
+
+**Restore**
+
+- A restored database carries an older cursor, which converges by re-pulling. Restoring a pre-sync
+  backup relies on the deterministic `syncId` backfill. Restore and sync-state policy beyond that is
+  left to the restore step.
