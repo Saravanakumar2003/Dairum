@@ -19,3 +19,7 @@
 /app/src/androidTest/assets/fixtures/*.db
 /app/src/androidTest/assets/fixtures/*.db-*
 /app/src/androidTest/assets/fixtures/*.counts.tsv
+
+# Local build logs
+/build_output*.txt
+/compilation_output.txt
