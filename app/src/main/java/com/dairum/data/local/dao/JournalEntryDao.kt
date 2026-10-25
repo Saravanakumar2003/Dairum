@@ -83,8 +83,8 @@ interface JournalEntryDao {
     """)
     fun getFavoriteEntriesFlow(): Flow<List<JournalEntryEntity>>
     
-    @Query("UPDATE journal_entries SET isFavorite = :isFavorite WHERE id = :id")
-    suspend fun updateFavorite(id: Long, isFavorite: Boolean)
+    @Query("UPDATE journal_entries SET isFavorite = :isFavorite, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun updateFavorite(id: Long, isFavorite: Boolean, updatedAt: Long)
     
     // Drafts
     @Query("SELECT * FROM journal_entries WHERE isDraft = 1 AND deletedAt IS NULL ORDER BY updatedAt DESC")
@@ -94,11 +94,11 @@ interface JournalEntryDao {
     @Query("SELECT * FROM journal_entries WHERE isArchived = 1 AND deletedAt IS NULL ORDER BY updatedAt DESC")
     fun getArchivedEntriesFlow(): Flow<List<JournalEntryEntity>>
     
-    @Query("UPDATE journal_entries SET isArchived = :isArchived WHERE id = :id")
-    suspend fun updateArchived(id: Long, isArchived: Boolean)
+    @Query("UPDATE journal_entries SET isArchived = :isArchived, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun updateArchived(id: Long, isArchived: Boolean, updatedAt: Long)
     
-    @Query("UPDATE journal_entries SET isPinned = :isPinned WHERE id = :id")
-    suspend fun updatePinned(id: Long, isPinned: Boolean)
+    @Query("UPDATE journal_entries SET isPinned = :isPinned, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun updatePinned(id: Long, isPinned: Boolean, updatedAt: Long)
     
     // Search
     @Query("""
@@ -250,11 +250,15 @@ interface JournalEntryDao {
     suspend fun getEntryCountBetween(startTime: Long, endTime: Long): Int
     
     // Soft delete
-    @Query("UPDATE journal_entries SET deletedAt = :deletedAt WHERE id = :id")
-    suspend fun softDelete(id: Long, deletedAt: Long = System.currentTimeMillis())
+    @Query("UPDATE journal_entries SET deletedAt = :deletedAt, updatedAt = :deletedAt WHERE id = :id")
+    suspend fun softDelete(id: Long, deletedAt: Long)
     
-    @Query("UPDATE journal_entries SET deletedAt = NULL WHERE id = :id")
-    suspend fun restoreEntry(id: Long)
+    @Query("UPDATE journal_entries SET deletedAt = NULL, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun restoreEntry(id: Long, updatedAt: Long)
+
+    /** Marks the entry as changed without touching its content (used when links or trackers change). */
+    @Query("UPDATE journal_entries SET updatedAt = :updatedAt WHERE id = :id")
+    suspend fun touch(id: Long, updatedAt: Long)
     
     // Trash - get all soft-deleted entries
     @Query("SELECT * FROM journal_entries WHERE deletedAt IS NOT NULL ORDER BY deletedAt DESC")

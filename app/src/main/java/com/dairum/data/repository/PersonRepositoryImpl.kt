@@ -9,11 +9,13 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.time.Clock
 import javax.inject.Inject
 
 class PersonRepositoryImpl @Inject constructor(
     private val personDao: PersonDao,
-    private val moshi: Moshi
+    private val moshi: Moshi,
+    private val clock: Clock
 ) : PersonRepository {
 
     private val importantDatesAdapter = moshi.adapter<List<ImportantDateJson>>(
@@ -21,11 +23,17 @@ class PersonRepositoryImpl @Inject constructor(
     )
 
     override suspend fun create(person: Person): Long {
-        return personDao.insert(person.toEntity())
+        val entity = person.toEntity()
+        return personDao.insert(if (entity.createdAt == 0L) entity.copy(createdAt = clock.millis()) else entity)
     }
 
     override suspend fun update(person: Person) {
-        personDao.update(person.toEntity())
+        val entity = person.toEntity()
+        // createdAt never changes. The edit dialog builds a fresh Person(id = ...) without it (0),
+        // so fall back to the stored value instead of letting @Update reset it to "now".
+        val createdAt = if (entity.createdAt > 0L) entity.createdAt
+        else personDao.getById(person.id)?.createdAt ?: clock.millis()
+        personDao.update(entity.copy(createdAt = createdAt))
     }
 
     override suspend fun delete(id: Long) {
@@ -56,7 +64,8 @@ class PersonRepositoryImpl @Inject constructor(
                     birthday = it.person.birthday,
                     importantDates = parseImportantDates(it.person.importantDates),
                     isFavorite = it.person.isFavorite,
-                    mentionCount = it.entryCount
+                    mentionCount = it.entryCount,
+                    createdAt = it.person.createdAt
                 )
             }
         }
@@ -79,7 +88,8 @@ class PersonRepositoryImpl @Inject constructor(
                 birthday = it.person.birthday,
                 importantDates = parseImportantDates(it.person.importantDates),
                 isFavorite = it.person.isFavorite,
-                mentionCount = it.entryCount
+                mentionCount = it.entryCount,
+                createdAt = it.person.createdAt
             )
         }
     }
@@ -104,7 +114,8 @@ class PersonRepositoryImpl @Inject constructor(
             birthday = birthday,
             importantDates = parseImportantDates(importantDates),
             isFavorite = isFavorite,
-            mentionCount = mentionCount
+            mentionCount = mentionCount,
+            createdAt = createdAt
         )
     }
 
@@ -120,7 +131,8 @@ class PersonRepositoryImpl @Inject constructor(
             birthday = birthday,
             importantDates = serializeImportantDates(importantDates),
             isFavorite = isFavorite,
-            mentionCount = mentionCount
+            mentionCount = mentionCount,
+            createdAt = createdAt
         )
     }
 

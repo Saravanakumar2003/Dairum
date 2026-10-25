@@ -32,6 +32,14 @@ interface MediaDao {
     
     @Query("SELECT * FROM media WHERE entryId = :entryId ORDER BY sortOrder ASC")
     suspend fun getMediaForEntry(entryId: Long): List<MediaEntity>
+
+    /** Media belonging to soft-deleted entries; read before "empty trash" removes the rows. */
+    @Query("""
+        SELECT m.* FROM media m
+        INNER JOIN journal_entries e ON m.entryId = e.id
+        WHERE e.deletedAt IS NOT NULL
+    """)
+    suspend fun getMediaForTrashedEntries(): List<MediaEntity>
     
     @Query("SELECT * FROM media WHERE entryId = :entryId ORDER BY sortOrder ASC")
     fun getMediaForEntryFlow(entryId: Long): Flow<List<MediaEntity>>
