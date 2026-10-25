@@ -22,8 +22,12 @@ Android journaling app (Kotlin, Compose, Room, Hilt). Package `com.dairum`; the 
   on every build, so a file only describes the entities at the last build of that version. Once a
   version has shipped (or been used for real data) its JSON is frozen: never edit or regenerate it by
   hand, and review any diff to it as a red flag.
-- `5.json` (identity hash `1837df50fe8ecbfea4301570eff7b145`) is the frozen v5 baseline. `1.json` to
-  `4.json` were regenerated from later entities and are unreliable; do not build tests on them.
+- `5.json` (identity hash `1837df50fe8ecbfea4301570eff7b145`) is the only committed schema JSON, the
+  frozen v5 baseline. `1.json` to `4.json` were regenerated from later entities, so they were
+  deleted; do not recreate them or build tests on them.
+- From the 5->6 migration on, `6.json` is committed next to `5.json` (and so on for each new
+  version). Once a version has shipped or held real data, its JSON is frozen: never commit a
+  regenerated JSON for a released version. If a build rewrites one, `git checkout` it.
 - Changing entities means bumping the `@Database` version and adding a `Migration`, in the same
   commit as the new `N.json`. Never change entities under an existing version.
 - Do not add `fallbackToDestructiveMigration`.
