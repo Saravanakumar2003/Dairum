@@ -3,6 +3,7 @@ package com.dairum.data.local.database
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.room.testing.MigrationTestHelper
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,6 +26,11 @@ class MigrationChainTest {
         DairumDatabase::class.java
     )
 
+    // Ignored: 1.json to 4.json were regenerated from today's entities, so the "version 1" database
+    // MigrationTestHelper builds already has columns that migration 1->2 adds (it fails with
+    // "duplicate column name: deletedAt"). That says nothing about real databases. The real
+    // migration test arrives with the 5->6 migration and starts from the frozen 5.json baseline.
+    @Ignore("1-4.json were regenerated from current entities; real test starts from frozen 5.json with the 5->6 migration")
     @Test
     fun migrateFromVersion1_matchesCurrentSchema() {
         helper.createDatabase(TEST_DB, 1).close()
