@@ -50,6 +50,11 @@ MSG
   echo "NOTE: $out/backup.zip also contains your app preferences (encrypted API keys). Delete it when done."
 fi
 
+[ -s "$out/dairum.db" ] || {
+  echo "No dairum.db was extracted. If the app has never been opened on this device, open it once, then retry." >&2
+  exit 1
+}
+
 echo
 echo "Extracted into: $out"
 ls -l "$out"
