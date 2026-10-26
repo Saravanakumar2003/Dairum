@@ -23,3 +23,9 @@
 # Local build logs
 /build_output*.txt
 /compilation_output.txt
+
+# Signing material must never be committed
+*.jks
+*.keystore
+*.p12
+keystore.properties

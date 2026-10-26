@@ -218,3 +218,19 @@
 
 # Keep custom Application class
 -keep class com.dairum.DairumApplication { *; }
+
+#-----------------------------------------
+# Release-build fixes (found by building and running the signed release)
+#-----------------------------------------
+
+# Moshi reflects over this private data class (KotlinJsonAdapterFactory). R8 renamed its fields, so
+# backup metadata.json was written as {"a":..,"b":..} and could not be read by another build.
+-keep class com.dairum.data.repository.BackupMetadata { *; }
+
+# Same cause: people.importantDates was stored as [{"a":..,"b":..}] instead of label/date, which a
+# later release (with different obfuscated names) could not parse, silently dropping the dates.
+-keep class com.dairum.data.repository.ImportantDateJson { *; }
+
+# ONNX Runtime's native library finds its Java classes and methods by name through JNI and the AAR
+# ships no consumer rules (none appear in the merged R8 configuration).
+-keep class ai.onnxruntime.** { *; }

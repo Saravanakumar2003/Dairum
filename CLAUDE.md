@@ -25,8 +25,8 @@ Android journaling app (Kotlin, Compose, Room, Hilt). Package `com.dairum`; the 
 - `5.json` (identity hash `1837df50fe8ecbfea4301570eff7b145`) is the only committed schema JSON, the
   frozen v5 baseline. `1.json` to `4.json` were regenerated from later entities, so they were
   deleted; do not recreate them or build tests on them.
-- From the 5->6 migration on, `6.json` is committed next to `5.json` (and so on for each new
-  version). Once a version has shipped or held real data, its JSON is frozen: never commit a
+- From the next schema change on (5->6), `6.json` is committed next to `5.json` (and so on for each
+  new version). Once a version has shipped or held real data, its JSON is frozen: never commit a
   regenerated JSON for a released version. If a build rewrites one, `git checkout` it.
 - Changing entities means bumping the `@Database` version and adding a `Migration`, in the same
   commit as the new `N.json`. Never change entities under an existing version.
@@ -34,13 +34,26 @@ Android journaling app (Kotlin, Compose, Room, Hilt). Package `com.dairum`; the 
 - Avoid `@Insert(onConflict = REPLACE)` for rows that have children: with `ON DELETE CASCADE` it
   deletes the parent row first and cascades.
 
-## Sync project (in progress, in steps)
+## Write-path conventions
 
-Dairum (phone) syncs with a self-hosted server app, Kith, over an HTTPS Tailscale URL.
+- Repository writes that touch several rows (a parent plus its links) run in one
+  `database.withTransaction { }`, so a failure leaves the old data. `setTagsForEntry`,
+  `setPeopleForEntry` and `setTrackerValues` also bump the parent entry's `updatedAt` in the same
+  transaction.
+- Take time from the injected `java.time.Clock` (`di/ClockModule.kt`), not `System.currentTimeMillis()`,
+  in code that stamps `updatedAt`/`deletedAt`/`createdAt`, so tests can freeze it.
+- Anything that changes an entry (favorite, archive, pin, soft delete, restore) bumps
+  `journal_entries.updatedAt`. `updateEntry` never changes `deletedAt`; only `softDelete` and
+  `restoreEntry` do. A person's `createdAt` never changes on update.
+- Deleting an entry for good (`deleteEntry`, `emptyTrash`) also deletes its media files, after the
+  database commit.
+- Tests for these use in-memory Room (`InMemoryDatabaseRule`) and `TestClock` under `app/src/androidTest`.
 
-- The phone owns diary content; Kith owns people. Phone-created people are proposals to Kith and
-  quick-create must keep working offline.
-- Last-write-wins with a server-assigned cursor. Tombstones, never hard delete of synced rows.
-- Embeddings and all AI/chat data never sync. `locationData` and `weatherData` never sync.
-  Diary body text is optional in the protocol (metadata-only first).
-- Single write path via SQLite triggers (planned, not yet implemented).
+## Releases
+
+- Read `docs/release-checklist.md` before building or installing a release, and
+  `docs/release-keystore.md` for the signing key.
+- Never uninstall the app before updating it (that erases the diary); update with `adb install -r`.
+- The release keystore and its passphrase live outside the repo and must never be committed.
+- Release builds run R8: after adding a library that uses reflection or JNI, run the release build and
+  exercise that code; keep rules live in `app/proguard-rules.pro` with a reason next to each.
