@@ -1,7 +1,7 @@
 # Dairum recon (Room schema, data model, backup, network)
 
 Facts only, written from the Step 0 recon and brought up to date with the code at tag
-`pre-sync-baseline` (commit `520be228`). Decisions and the sync design are in `docs/sync-notes.md`.
+`pre-sync-baseline` (commit `520be228`). The sync project is paused; its notes are archived (`git show archive/sync-notes:docs/sync-notes.md`).
 
 ## 1. Room
 
@@ -124,7 +124,7 @@ assets directory for `androidTest`.
   the Trash screen says items are deleted after 30 days. `updateEntry` never changes `deletedAt`.
 - People, tags, categories, media, trackers and memories are hard-deleted with cascade, no tombstones.
 - `@Insert(onConflict = REPLACE)` is on almost every DAO; all current callers pass `id = 0`. See
-  `docs/sync-notes.md` for the REPLACE/CASCADE findings and the writer-by-method table.
+  the archived sync notes (`archive/sync-notes`) for the REPLACE/CASCADE findings and the writer-by-method table.
 - `withTransaction` is used by `JournalRepositoryImpl` for entry updates, hard deletes and the
   `set*ForEntry` methods; no other repository uses it.
 
@@ -175,7 +175,7 @@ Local counters that are derived and never sync: `tags.usageCount`, `people.menti
 
 ## 8. Sync / exclude
 
-Status after the decisions in `docs/sync-notes.md`.
+Status after the decisions in the archived sync notes (`archive/sync-notes`).
 
 | Table | v1 status | Reason |
 |---|---|---|
@@ -195,7 +195,7 @@ Status after the decisions in `docs/sync-notes.md`.
   foreign keys, dropping and recreating a parent can wipe children.
 - Room validates nullability and defaults against the entity, so a column added in SQL must match
   the entity declaration (declare `syncId` as `String?`).
-- Full-row `@Update` and REPLACE overwrite columns; see `docs/sync-notes.md`.
+- Full-row `@Update` and REPLACE overwrite columns; see the archived sync notes (`archive/sync-notes`).
 - Migration tests start from the frozen `5.json`. The recommended checks: a `MigrationTestHelper`
   run 5 -> 6 validated against `6.json`, plus a full-class test that opens a scrubbed real database
   with `createFromFile` and asserts row counts, `foreign_key_check` and `integrity_check` (helper
@@ -218,5 +218,5 @@ Status after the decisions in `docs/sync-notes.md`.
   removed in the manifest). Three unique periodic jobs set up in `NotificationRepositoryImpl`
   (`ReminderWorker` every 15 minutes, `SmartReminderWorker` daily, `MoodCheckInWorker`); their
   constraints are battery-not-low or none, and none requires the network.
-- Planned transport (see `docs/sync-notes.md`): HTTPS only, over the LAN with a pinned self-signed
+- Planned transport (see the archived sync notes (`archive/sync-notes`)): HTTPS only, over the LAN with a pinned self-signed
   certificate or over Tailscale.
