@@ -6,6 +6,18 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+// Release signing. Credentials come from ~/.gradle/gradle.properties (or -P / ORG_GRADLE_PROJECT_*),
+// never from this repo. See docs/release-keystore.md.
+val releaseSigningProperties = listOf(
+    "DAIRUM_RELEASE_STORE_FILE",
+    "DAIRUM_RELEASE_STORE_PASSWORD",
+    "DAIRUM_RELEASE_KEY_ALIAS",
+    "DAIRUM_RELEASE_KEY_PASSWORD"
+)
+fun releaseSigningProperty(name: String): String? =
+    providers.gradleProperty(name).orNull?.takeIf { it.isNotBlank() }
+val missingReleaseSigning = releaseSigningProperties.filter { releaseSigningProperty(it) == null }
+
 android {
     namespace = "com.dairum"
     compileSdk = libs.versions.compileSdk.get().toInt()
@@ -57,8 +69,22 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            // Left unset when a property is missing; verifyReleaseSigning then fails the build
+            // with a clear message before anything can be packaged unsigned.
+            if (missingReleaseSigning.isEmpty()) {
+                storeFile = file(releaseSigningProperty("DAIRUM_RELEASE_STORE_FILE")!!)
+                storePassword = releaseSigningProperty("DAIRUM_RELEASE_STORE_PASSWORD")
+                keyAlias = releaseSigningProperty("DAIRUM_RELEASE_KEY_ALIAS")
+                keyPassword = releaseSigningProperty("DAIRUM_RELEASE_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -178,3 +204,34 @@ dependencies {
 kapt {
     correctErrorTypes = true
 }
+
+// Fail loudly instead of producing an unsigned (or wrongly signed) release. A task, not a
+// taskGraph hook, so it still runs when the configuration cache is reused. Only the tasks that
+// sign or package a release depend on it: debug builds and release compilation are unaffected.
+val verifyReleaseSigning by tasks.registering {
+    val missing = missingReleaseSigning
+    val storePath = releaseSigningProperty("DAIRUM_RELEASE_STORE_FILE")
+    val repoRoot = rootDir.canonicalPath
+    doLast {
+        if (missing.isNotEmpty()) {
+            throw GradleException(
+                "Release signing is not configured: missing " + missing.joinToString(", ") + ".\n" +
+                    "Add them to ~/.gradle/gradle.properties (see docs/release-keystore.md). " +
+                    "Refusing to build an unsigned release APK."
+            )
+        }
+        val keystore = File(storePath!!)
+        if (!keystore.isFile) {
+            throw GradleException("DAIRUM_RELEASE_STORE_FILE does not point to a file: $storePath")
+        }
+        if (keystore.canonicalPath.startsWith(repoRoot + File.separator)) {
+            throw GradleException("The release keystore must live outside the repository: ${keystore.canonicalPath}")
+        }
+    }
+}
+tasks.matching {
+    it.name in setOf("validateSigningRelease", "packageRelease", "packageReleaseBundle", "signReleaseBundle")
+}.configureEach { dependsOn(verifyReleaseSigning) }
+// When verification is in the graph, run it before any release compilation so a missing property
+// fails in seconds instead of after the native build.
+tasks.matching { it.name == "preReleaseBuild" }.configureEach { mustRunAfter(verifyReleaseSigning) }
