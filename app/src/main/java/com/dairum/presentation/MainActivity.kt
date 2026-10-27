@@ -1,6 +1,7 @@
 package com.dairum.presentation
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -33,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -42,8 +44,10 @@ import com.dairum.data.security.AppLockManager
 import com.dairum.presentation.navigation.DairumNavGraph
 import com.dairum.presentation.navigation.Screen
 import com.dairum.presentation.screens.lock.LockScreen
+import com.dairum.domain.repository.ApiKeyRepository
 import com.dairum.presentation.theme.DairumTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -52,6 +56,9 @@ class MainActivity : AppCompatActivity() {
     
     @Inject
     lateinit var appLockManager: AppLockManager
+
+    @Inject
+    lateinit var apiKeyRepository: ApiKeyRepository
     
     private var keepSplashScreen = true
     
@@ -62,6 +69,17 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         
         Timber.d("MainActivity onCreate")
+
+        // Opening the key store resets it if it cannot be decrypted; tell the user once.
+        lifecycleScope.launch {
+            if (apiKeyRepository.consumeKeysResetNotice()) {
+                Toast.makeText(
+                    this@MainActivity,
+                    "Your saved API keys could not be read and were removed. Please enter them again in More > API Keys.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
         
         // Keep splash screen visible while app initializes
         splashScreen.setKeepOnScreenCondition { keepSplashScreen }

@@ -1,6 +1,7 @@
 package com.dairum.data.repository
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -15,31 +16,92 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.net.HttpURLConnection
 import java.net.URL
+import java.security.KeyStore
 import javax.inject.Inject
 import javax.inject.Singleton
 
 private val Context.apiKeyDataStore: DataStore<Preferences> by preferencesDataStore(name = "api_keys")
 
 @Singleton
-class ApiKeyRepositoryImpl @Inject constructor(
-    @ApplicationContext private val context: Context
+class ApiKeyRepositoryImpl internal constructor(
+    private val context: Context,
+    private val fileName: String,
+    private val stateFileName: String,
+    private val masterKeyAlias: String
 ) : ApiKeyRepository {
 
-    private val masterKey = MasterKey.Builder(context)
-        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-        .build()
+    /** Production constructor; the internal one lets tests use their own files and Keystore alias. */
+    @Inject
+    constructor(@ApplicationContext context: Context) :
+        this(context, FILE_NAME, STATE_FILE_NAME, MasterKey.DEFAULT_MASTER_KEY_ALIAS)
 
-    private val encryptedPrefs = EncryptedSharedPreferences.create(
-        context,
-        "encrypted_api_keys",
-        masterKey,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
+    private val encryptedPrefs: SharedPreferences = openEncryptedPrefs()
+
+    /**
+     * Opens the encrypted key store. If the file exists but cannot be decrypted (a restored backup, a
+     * reinstall or a new phone: the Android Keystore master key never travels, which surfaces as
+     * AEADBadTagException and friends), the file is deleted and recreated empty instead of crashing
+     * every screen that needs this repository. The user is told once to re-enter their keys.
+     */
+    private fun openEncryptedPrefs(): SharedPreferences {
+        try {
+            return createEncryptedPrefs()
+        } catch (e: Exception) { // GeneralSecurityException, IOException, Tink/protobuf runtime errors
+            Timber.w(e, "Encrypted API-key preferences are unreadable; resetting them")
+        }
+        context.deleteSharedPreferences(fileName)
+        stateStore().edit().putBoolean(KEY_RESET_NOTICE_PENDING, true).commit()
+        return try {
+            createEncryptedPrefs()
+        } catch (e: Exception) {
+            // The master key itself may be unusable: drop it too and start from nothing.
+            Timber.w(e, "Master key unusable; deleting it and starting over")
+            deleteMasterKey()
+            context.deleteSharedPreferences(fileName)
+            createEncryptedPrefs()
+        }
+    }
+
+    private fun createEncryptedPrefs(): SharedPreferences {
+        val masterKey = MasterKey.Builder(context, masterKeyAlias)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+        return EncryptedSharedPreferences.create(
+            context,
+            fileName,
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    }
+
+    private fun deleteMasterKey() {
+        try {
+            KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+                .deleteEntry(masterKeyAlias)
+        } catch (e: Exception) {
+            Timber.w(e, "Could not delete the master key")
+        }
+    }
+
+    /** Plain (not encrypted) flag file: it holds no secrets and must survive a key reset. */
+    private fun stateStore(): SharedPreferences =
+        context.getSharedPreferences(stateFileName, Context.MODE_PRIVATE)
+
+    override suspend fun consumeKeysResetNotice(): Boolean = withContext(Dispatchers.IO) {
+        val pending = stateStore().getBoolean(KEY_RESET_NOTICE_PENDING, false)
+        if (pending) stateStore().edit().putBoolean(KEY_RESET_NOTICE_PENDING, false).commit()
+        pending
+    }
 
     companion object {
+        /** File names under shared_prefs/ (without ".xml"); both are excluded from every backup. */
+        const val FILE_NAME = "encrypted_api_keys"
+        const val STATE_FILE_NAME = "api_key_state"
+        private const val KEY_RESET_NOTICE_PENDING = "reset_notice_pending"
         private const val KEY_GOOGLE_MAPS = "google_maps_api_key"
         private const val KEY_WEATHER = "weather_api_key"
         private const val KEY_GOOGLE_CALENDAR = "google_calendar_api_key"

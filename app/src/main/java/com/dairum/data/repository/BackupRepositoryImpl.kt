@@ -88,7 +88,7 @@ class BackupRepositoryImpl @Inject constructor(
     private fun writeConfigEntries(zipOut: ZipOutputStream) {
         val prefsDir = File(context.filesDir.parent ?: context.filesDir.absolutePath, "shared_prefs")
         if (prefsDir.exists()) {
-            prefsDir.listFiles()?.filter { it.isFile && it.name.endsWith(".xml") }?.forEach { prefFile ->
+            prefsDir.listFiles()?.filter { it.isFile && it.name.endsWith(".xml") && !isExcludedPreferenceFile(it.name) }?.forEach { prefFile ->
                 zipOut.putNextEntry(ZipEntry("config/preferences/${prefFile.name}"))
                 FileInputStream(prefFile).use { it.copyTo(zipOut) }
                 zipOut.closeEntry()
@@ -112,7 +112,8 @@ class BackupRepositoryImpl @Inject constructor(
         if (prefsExtracted.exists()) {
             val prefsDir = File(context.filesDir.parent ?: context.filesDir.absolutePath, "shared_prefs")
             prefsDir.mkdirs()
-            prefsExtracted.listFiles()?.forEach { file ->
+            // Old backups may still contain the encrypted key file; never restore it (see isExcludedPreferenceFile).
+            prefsExtracted.listFiles()?.filter { !isExcludedPreferenceFile(it.name) }?.forEach { file ->
                 file.copyTo(File(prefsDir, file.name), overwrite = true)
             }
         }
@@ -643,6 +644,14 @@ class BackupRepositoryImpl @Inject constructor(
         }
 
     companion object {
+        /**
+         * Preference files that must never travel in a backup: the encrypted API keys are bound to this
+         * install's Android Keystore key, so a restored copy cannot be decrypted, and the notice flag
+         * belongs to that file.
+         */
+        internal fun isExcludedPreferenceFile(fileName: String): Boolean =
+            fileName == "${ApiKeyRepositoryImpl.FILE_NAME}.xml" || fileName == "${ApiKeyRepositoryImpl.STATE_FILE_NAME}.xml"
+
         private const val BACKUP_VERSION = 1
         private const val COMPLETE_EXPORT_VERSION = 1
     }

@@ -378,6 +378,12 @@ interface ApiKeyRepository {
     fun getGoogleCalendarApiKey(): Flow<String?>
     suspend fun setGoogleCalendarApiKey(key: String?)
     suspend fun validateGoogleCalendarKey(key: String): Boolean
+
+    /**
+     * True exactly once after the stored keys turned out to be unreadable and were reset, so the UI can
+     * ask the user to enter them again. Opening the store also performs the reset if it is needed.
+     */
+    suspend fun consumeKeysResetNotice(): Boolean
 }
 
 // ============ MEMORY REPOSITORY ============
