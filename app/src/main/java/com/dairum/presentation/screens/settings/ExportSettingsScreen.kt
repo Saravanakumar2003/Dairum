@@ -27,6 +27,9 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
+/** Scheduled export stores a schedule that never runs, so its settings are not shown. */
+private const val SCHEDULED_EXPORT_UI_ENABLED = false
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExportSettingsScreen(
@@ -137,90 +140,93 @@ fun ExportSettingsScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Auto Export Toggle
-            item {
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    ListItem(
-                        headlineContent = { Text("Automatic Export") },
-                        supportingContent = { Text("Automatically export journal entries on schedule") },
-                        trailingContent = {
-                            Switch(
-                                checked = uiState.autoExportEnabled,
-                                onCheckedChange = viewModel::setAutoExportEnabled
-                            )
-                        },
-                        modifier = Modifier.clickable {
-                            viewModel.setAutoExportEnabled(!uiState.autoExportEnabled)
-                        }
-                    )
-                }
-            }
-
-            // Schedule Section
-            if (uiState.autoExportEnabled) {
-                item {
-                    Text(
-                        text = "Schedule",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-
+            // Hidden: the schedule is stored but nothing ever runs it (see CLAUDE.md). Code kept.
+            if (SCHEDULED_EXPORT_UI_ENABLED) {
+                // Auto Export Toggle
                 item {
                     Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Export Time", style = MaterialTheme.typography.titleSmall)
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                OutlinedTextField(
-                                    value = uiState.scheduleHour.toString().padStart(2, '0'),
-                                    onValueChange = { 
-                                        it.toIntOrNull()?.let { h -> 
-                                            if (h in 0..23) viewModel.setScheduleHour(h)
-                                        }
-                                    },
-                                    label = { Text("Hour") },
-                                    modifier = Modifier.width(80.dp),
-                                    singleLine = true
+                        ListItem(
+                            headlineContent = { Text("Automatic Export") },
+                            supportingContent = { Text("Automatically export journal entries on schedule") },
+                            trailingContent = {
+                                Switch(
+                                    checked = uiState.autoExportEnabled,
+                                    onCheckedChange = viewModel::setAutoExportEnabled
                                 )
-                                Text(":", style = MaterialTheme.typography.headlineMedium)
-                                OutlinedTextField(
-                                    value = uiState.scheduleMinute.toString().padStart(2, '0'),
-                                    onValueChange = { 
-                                        it.toIntOrNull()?.let { m -> 
-                                            if (m in 0..59) viewModel.setScheduleMinute(m)
-                                        }
-                                    },
-                                    label = { Text("Minute") },
-                                    modifier = Modifier.width(80.dp),
-                                    singleLine = true
-                                )
+                            },
+                            modifier = Modifier.clickable {
+                                viewModel.setAutoExportEnabled(!uiState.autoExportEnabled)
                             }
-                        }
+                        )
                     }
                 }
 
-                item {
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Days", style = MaterialTheme.typography.titleSmall)
-                            Spacer(modifier = Modifier.height(8.dp))
+                // Schedule Section
+                if (uiState.autoExportEnabled) {
+                    item {
+                        Text(
+                            text = "Schedule",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
 
-                            val days = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                days.forEachIndexed { index, day ->
-                                    FilterChip(
-                                        selected = (index + 1) in uiState.scheduleDays,
-                                        onClick = { viewModel.toggleScheduleDay(index + 1) },
-                                        label = { Text(day) }
+                    item {
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text("Export Time", style = MaterialTheme.typography.titleSmall)
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    OutlinedTextField(
+                                        value = uiState.scheduleHour.toString().padStart(2, '0'),
+                                        onValueChange = { 
+                                            it.toIntOrNull()?.let { h -> 
+                                                if (h in 0..23) viewModel.setScheduleHour(h)
+                                            }
+                                        },
+                                        label = { Text("Hour") },
+                                        modifier = Modifier.width(80.dp),
+                                        singleLine = true
                                     )
+                                    Text(":", style = MaterialTheme.typography.headlineMedium)
+                                    OutlinedTextField(
+                                        value = uiState.scheduleMinute.toString().padStart(2, '0'),
+                                        onValueChange = { 
+                                            it.toIntOrNull()?.let { m -> 
+                                                if (m in 0..59) viewModel.setScheduleMinute(m)
+                                            }
+                                        },
+                                        label = { Text("Minute") },
+                                        modifier = Modifier.width(80.dp),
+                                        singleLine = true
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    item {
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text("Days", style = MaterialTheme.typography.titleSmall)
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                val days = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    days.forEachIndexed { index, day ->
+                                        FilterChip(
+                                            selected = (index + 1) in uiState.scheduleDays,
+                                            onClick = { viewModel.toggleScheduleDay(index + 1) },
+                                            label = { Text(day) }
+                                        )
+                                    }
                                 }
                             }
                         }

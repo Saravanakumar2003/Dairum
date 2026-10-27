@@ -57,3 +57,15 @@ Android journaling app (Kotlin, Compose, Room, Hilt). Package `com.dairum`; the 
 - The release keystore and its passphrase live outside the repo and must never be committed.
 - Release builds run R8: after adding a library that uses reflection or JNI, run the release build and
   exercise that code; keep rules live in `app/proguard-rules.pro` with a reason next to each.
+
+## Automation and export notes
+
+- **Scheduled export is hidden, not removed.** Nothing runs a stored export schedule. `ExportSettingsScreen`
+  (the "Automatic Export" toggle and schedule section) has no navigation route at the moment (the
+  `settings/export` route opens `ManualExportScreen`), and its schedule UI is also switched off by
+  `SCHEDULED_EXPORT_UI_ENABLED = false`. The settings, ViewModel and repository code are untouched; to
+  bring it back, add a worker that runs the schedule first, then flip the flag and add a route.
+- **Tasker/MacroDroid receivers need the automation token** (Settings > Automation Integration). They are
+  exported to every app, so with no token set, or a missing or wrong one, every request is rejected before
+  any work. Never log the intent extras or the token (`AutomationTokenTest` greps logcat for it).
+- "Metadata for Kith" export: see `docs/kith-metadata-export.md`.
