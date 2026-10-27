@@ -126,6 +126,18 @@ interface JournalEntryDao {
     """)
     suspend fun getEntriesInDateRangeSync(startTime: Long, endTime: Long): List<JournalEntryEntity>
 
+    /**
+     * Rows for the "Metadata for Kith" export: the same selection as the "All" export (no archived,
+     * draft or trashed entries), oldest first, and only the columns that export may use.
+     */
+    @Transaction
+    @Query("""
+        SELECT id, createdAt, title, categoryId, moodLevel FROM journal_entries
+        WHERE isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL
+        ORDER BY createdAt ASC, id ASC
+    """)
+    suspend fun getRowsForMetadataExport(): List<EntryMetadataRow>
+
     /** Same selection as getEntriesInDateRange, with category, tags, people, media and tracker values. */
     @Transaction
     @Query("""

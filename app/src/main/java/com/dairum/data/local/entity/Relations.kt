@@ -53,6 +53,41 @@ data class EntryWithDetails(
 )
 
 /**
+ * The few entry columns the "Metadata for Kith" export needs. Selecting only these keeps body text,
+ * formatting spans, location and weather out of the export code entirely.
+ */
+data class EntryMetaCore(
+    val id: Long,
+    val createdAt: Long,
+    val title: String?,
+    val categoryId: Long?,
+    val moodLevel: Int?
+)
+
+/** Entry metadata with its category, tags and people, for the Kith metadata export. */
+data class EntryMetadataRow(
+    @Embedded
+    val entry: EntryMetaCore,
+
+    @Relation(parentColumn = "categoryId", entityColumn = "id")
+    val category: CategoryEntity?,
+
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "id",
+        associateBy = Junction(value = EntryTagCrossRef::class, parentColumn = "entryId", entityColumn = "tagId")
+    )
+    val tags: List<TagEntity>,
+
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "id",
+        associateBy = Junction(value = EntryPersonCrossRef::class, parentColumn = "entryId", entityColumn = "personId")
+    )
+    val people: List<PersonEntity>
+)
+
+/**
  * Category with entry count
  */
 data class CategoryWithCount(

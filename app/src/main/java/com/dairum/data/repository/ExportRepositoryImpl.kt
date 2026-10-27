@@ -20,6 +20,7 @@ import android.util.Base64
 import com.dairum.data.local.dao.CategoryDao
 import com.dairum.data.local.dao.ExportDao
 import com.dairum.data.local.dao.GratiaDao
+import com.dairum.data.local.dao.JournalEntryDao
 import com.dairum.data.local.dao.MediaDao
 import com.dairum.data.local.dao.MemoryDao
 import com.dairum.data.local.dao.NotificationDao
@@ -33,15 +34,20 @@ import com.dairum.domain.model.ExportFormat
 import com.dairum.domain.model.ExportHistory
 import com.dairum.domain.model.JournalEntry
 import com.dairum.domain.model.MediaType
+import com.dairum.BuildConfig
+import com.dairum.data.export.KithMetadataJson
 import com.dairum.domain.repository.ExportRepository
+import com.dairum.domain.repository.SettingsRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.time.Clock
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -58,6 +64,9 @@ class ExportRepositoryImpl @Inject constructor(
     private val memoryDao: MemoryDao,
     private val notificationDao: NotificationDao,
     private val gratiaDao: GratiaDao,
+    private val journalEntryDao: JournalEntryDao,
+    private val settingsRepository: SettingsRepository,
+    private val clock: Clock,
     @ApplicationContext private val context: Context
 ) : ExportRepository {
 
@@ -215,8 +224,40 @@ class ExportRepositoryImpl @Inject constructor(
             ExportFormat.CSV -> exportToCsv(entries).map { filePath ->
                 createHistoryEntry(filePath, entries.size, format)
             }
+            // A full snapshot of its own: it ignores `entries` and uses the saved "Include titles" option.
+            ExportFormat.KITH_METADATA -> exportKithMetadata(settingsRepository.getKithIncludeTitlesFlow().first())
         }
     }
+
+    override suspend fun exportKithMetadata(includeTitles: Boolean): Result<ExportHistory> =
+        writeKithMetadata(includeTitles).map { (pathWithSize, count) ->
+            createHistoryEntry(pathWithSize, count, ExportFormat.KITH_METADATA)
+        }
+
+    /** Writes the metadata file through MediaStore like the other exports. Returns ("path|size", entry count). */
+    private suspend fun writeKithMetadata(includeTitles: Boolean): Result<Pair<String, Int>> =
+        withContext(Dispatchers.IO) {
+            try {
+                val rows = journalEntryDao.getRowsForMetadataExport()
+                val json = KithMetadataJson.render(
+                    rows = rows,
+                    includeTitles = includeTitles,
+                    exportedAtEpochMs = clock.millis(),
+                    zone = ZoneId.systemDefault(),
+                    appVersion = BuildConfig.VERSION_NAME
+                )
+                val timestamp = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
+                val fileName = "dairum_metadata_$timestamp.json"
+                val tempFile = File(internalExportDir, "temp_$fileName")
+                tempFile.writeText(json, Charsets.UTF_8)
+                val fileSize = tempFile.length()
+                val savedPath = saveToDocumentsDiarum(tempFile, fileName, "application/json")
+                tempFile.delete()
+                Result.success("$savedPath|$fileSize" to rows.size)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
 
     override suspend fun exportToTxt(entries: List<JournalEntry>): Result<String> = 
         withContext(Dispatchers.IO) {
@@ -1237,6 +1278,7 @@ class ExportRepositoryImpl @Inject constructor(
             com.dairum.data.local.entity.ExportFormat.PDF -> ExportFormat.PDF
             com.dairum.data.local.entity.ExportFormat.JSON -> ExportFormat.JSON
             com.dairum.data.local.entity.ExportFormat.CSV -> ExportFormat.CSV
+            com.dairum.data.local.entity.ExportFormat.KITH_METADATA -> ExportFormat.KITH_METADATA
         }
     }
 
@@ -1246,6 +1288,7 @@ class ExportRepositoryImpl @Inject constructor(
             ExportFormat.PDF -> com.dairum.data.local.entity.ExportFormat.PDF
             ExportFormat.JSON -> com.dairum.data.local.entity.ExportFormat.JSON
             ExportFormat.CSV -> com.dairum.data.local.entity.ExportFormat.CSV
+            ExportFormat.KITH_METADATA -> com.dairum.data.local.entity.ExportFormat.KITH_METADATA
         }
     }
     
@@ -1262,6 +1305,8 @@ class ExportRepositoryImpl @Inject constructor(
                 ExportFormat.PDF -> exportToPdf(entries, includeMedia)
                 ExportFormat.JSON -> exportToJson(entries)
                 ExportFormat.CSV -> exportToCsv(entries)
+                ExportFormat.KITH_METADATA ->
+                    writeKithMetadata(settingsRepository.getKithIncludeTitlesFlow().first()).map { it.first }
             }
             
             internalResult.fold(

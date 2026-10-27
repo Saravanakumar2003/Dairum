@@ -119,7 +119,9 @@ class DateRangeExportTest {
     @Test
     fun manualExportScreenWithACustomRange_exportsCategoryTagsAndPeople() = runBlocking {
         // The real caller: ManualExportViewModel over the real repositories.
-        val vm = ManualExportViewModel(ExportTestSupport.exportRepo(dbRule.db, context), journal)
+        val vm = ManualExportViewModel(
+            ExportTestSupport.exportRepo(dbRule.db, context), journal, ExportTestSupport.settingsRepository(context)
+        )
         vm.setStartDate(rangeStart)
         vm.setEndDate(rangeEnd)
         vm.setExportFormat(ExportFormat.JSON)

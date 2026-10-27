@@ -38,6 +38,7 @@ class SettingsRepositoryImpl @Inject constructor(
         val TASKER_DEFAULT_FORMAT = stringPreferencesKey("tasker_default_format")
         val TASKER_DEFAULT_PERIOD = stringPreferencesKey("tasker_default_period")
         val TASKER_DEFAULT_INCLUDE_MEDIA = booleanPreferencesKey("tasker_default_include_media")
+        val EXPORT_KITH_INCLUDE_TITLES = booleanPreferencesKey("export_kith_include_titles")
     }
 
     private val dataStore = context.dataStore
@@ -302,6 +303,18 @@ class SettingsRepositoryImpl @Inject constructor(
     override suspend fun setTaskerDefaultIncludeMedia(include: Boolean) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.TASKER_DEFAULT_INCLUDE_MEDIA] = include
+        }
+    }
+
+    override fun getKithIncludeTitlesFlow(): Flow<Boolean> {
+        return dataStore.data
+            .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+            .map { preferences -> preferences[PreferencesKeys.EXPORT_KITH_INCLUDE_TITLES] ?: true }
+    }
+
+    override suspend fun setKithIncludeTitles(include: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.EXPORT_KITH_INCLUDE_TITLES] = include
         }
     }
 }

@@ -132,7 +132,7 @@ fun TaskerIntegrationScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                ExportFormat.entries.forEach { format ->
+                                ExportFormat.entries.filter { it != ExportFormat.KITH_METADATA }.forEach { format ->
                                     FilterChip(
                                         selected = uiState.defaultFormat == format,
                                         onClick = { viewModel.setDefaultFormat(format) },
@@ -143,6 +143,7 @@ fun TaskerIntegrationScreen(
                                                     ExportFormat.PDF -> "PDF"
                                                     ExportFormat.JSON -> "JSON"
                                                     ExportFormat.CSV -> "CSV"
+                                                    ExportFormat.KITH_METADATA -> "Metadata"
                                                 }
                                             )
                                         }

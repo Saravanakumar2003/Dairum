@@ -396,7 +396,9 @@ data class ExportConfig(
 )
 
 enum class ExportFormat {
-    TXT, PDF, JSON, CSV
+    TXT, PDF, JSON, CSV,
+    /** Metadata only (no body, media, location or weather) as JSON, for importing into the Kith app. */
+    KITH_METADATA
 }
 
 /**

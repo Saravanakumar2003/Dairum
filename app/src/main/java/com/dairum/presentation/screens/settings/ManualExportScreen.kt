@@ -119,7 +119,8 @@ fun ManualExportScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Date Period Selection
+            // Date Period Selection (hidden for the Kith metadata export: it is always a full snapshot)
+            if (uiState.exportFormat != ExportFormat.KITH_METADATA) {
             item {
                 Text(
                     text = "Date Period",
@@ -234,6 +235,7 @@ fun ManualExportScreen(
                     }
                 }
             }
+            }
 
             // Export Format
             item {
@@ -267,6 +269,7 @@ fun ManualExportScreen(
                                             ExportFormat.PDF -> "PDF Document (.pdf)"
                                             ExportFormat.JSON -> "JSON (.json)"
                                             ExportFormat.CSV -> "CSV Spreadsheet (.csv)"
+                                            ExportFormat.KITH_METADATA -> "Metadata for Kith (.json)"
                                         },
                                         style = MaterialTheme.typography.bodyLarge
                                     )
@@ -276,6 +279,7 @@ fun ManualExportScreen(
                                             ExportFormat.PDF -> "Beautiful formatted document with photos, weather, mood, location, and all details"
                                             ExportFormat.JSON -> "Structured data, ideal for import/export"
                                             ExportFormat.CSV -> "Spreadsheet compatible, tabular data"
+                                            ExportFormat.KITH_METADATA -> "Titles, mood, category, tags and people only: no text, photos, location or weather. Always everything, never a date range."
                                         },
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -306,6 +310,27 @@ fun ManualExportScreen(
                             },
                             modifier = Modifier.clickable {
                                 viewModel.setIncludeMedia(!uiState.includeMedia)
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Include titles (Kith metadata export)
+            if (uiState.exportFormat == ExportFormat.KITH_METADATA) {
+                item {
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        ListItem(
+                            headlineContent = { Text("Include titles") },
+                            supportingContent = { Text("Turn off to leave entry titles out of the file") },
+                            trailingContent = {
+                                Switch(
+                                    checked = uiState.includeTitles,
+                                    onCheckedChange = viewModel::setIncludeTitles
+                                )
+                            },
+                            modifier = Modifier.clickable {
+                                viewModel.setIncludeTitles(!uiState.includeTitles)
                             }
                         )
                     }
@@ -369,6 +394,7 @@ fun ManualExportScreen(
                                         ExportFormat.TXT -> Icons.Default.Description
                                         ExportFormat.JSON -> Icons.Default.DataObject
                                         ExportFormat.CSV -> Icons.Default.TableChart
+                                        ExportFormat.KITH_METADATA -> Icons.Default.DataObject
                                     },
                                     contentDescription = null
                                 )

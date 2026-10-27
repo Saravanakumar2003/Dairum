@@ -51,6 +51,7 @@ fun ExportSettingsScreen(
                 ExportFormat.TXT -> "text/plain"
                 ExportFormat.JSON -> "application/json"
                 ExportFormat.CSV -> "text/csv"
+                ExportFormat.KITH_METADATA -> "application/json"
             }
         )
     ) { uri: Uri? ->
@@ -76,6 +77,7 @@ fun ExportSettingsScreen(
                             ExportFormat.TXT -> "text/plain"
                             ExportFormat.JSON -> "application/json"
                             ExportFormat.CSV -> "text/csv"
+                            ExportFormat.KITH_METADATA -> "application/json"
                         }
                         putExtra(Intent.EXTRA_STREAM, uri)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -110,6 +112,7 @@ fun ExportSettingsScreen(
             ExportFormat.TXT -> "txt"
             ExportFormat.JSON -> "json"
             ExportFormat.CSV -> "csv"
+            ExportFormat.KITH_METADATA -> "json"
         }
         return "dairum_export_$timestamp.$extension"
     }
@@ -237,7 +240,7 @@ fun ExportSettingsScreen(
             item {
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        ExportFormat.values().forEach { format ->
+                        ExportFormat.values().filter { it != ExportFormat.KITH_METADATA }.forEach { format ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -257,6 +260,7 @@ fun ExportSettingsScreen(
                                             ExportFormat.PDF -> "PDF Document (.pdf)"
                                             ExportFormat.JSON -> "JSON (.json)"
                                             ExportFormat.CSV -> "CSV Spreadsheet (.csv)"
+                                            ExportFormat.KITH_METADATA -> "Metadata for Kith (.json)"
                                         },
                                         style = MaterialTheme.typography.bodyLarge
                                     )
@@ -266,6 +270,7 @@ fun ExportSettingsScreen(
                                             ExportFormat.PDF -> "Includes photos and formatting"
                                             ExportFormat.JSON -> "Structured data, ideal for import/export"
                                             ExportFormat.CSV -> "Spreadsheet compatible, tabular data"
+                                            ExportFormat.KITH_METADATA -> "Metadata only, for Kith"
                                         },
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant

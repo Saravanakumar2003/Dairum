@@ -290,7 +290,8 @@ enum class ExportFormat {
     TXT,  // Plain text without images
     PDF,  // Formatted with images
     JSON, // Structured JSON export
-    CSV   // Spreadsheet-compatible CSV
+    CSV,  // Spreadsheet-compatible CSV
+    KITH_METADATA // Metadata only (titles, mood, category, tags, people) as JSON for the Kith app
 }
 
 /**

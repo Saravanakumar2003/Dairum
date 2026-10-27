@@ -6,6 +6,7 @@ import com.dairum.domain.model.ExportFormat
 import com.dairum.domain.model.ExportHistory
 import com.dairum.domain.repository.ExportRepository
 import com.dairum.domain.repository.JournalRepository
+import com.dairum.domain.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -15,7 +16,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ManualExportViewModel @Inject constructor(
     private val exportRepository: ExportRepository,
-    private val journalRepository: JournalRepository
+    private val journalRepository: JournalRepository,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ManualExportUiState())
@@ -23,6 +25,24 @@ class ManualExportViewModel @Inject constructor(
 
     init {
         loadExportHistory()
+        loadSavedOptions()
+    }
+
+    /** Set once the user flips the switch, so a slow first read of the saved value cannot undo it. */
+    private var includeTitlesTouched = false
+
+    /** "Include titles" for the Kith metadata export is remembered between visits (DataStore, no schema). */
+    private fun loadSavedOptions() {
+        viewModelScope.launch {
+            val saved = settingsRepository.getKithIncludeTitlesFlow().first()
+            if (!includeTitlesTouched) _uiState.update { it.copy(includeTitles = saved) }
+        }
+    }
+
+    fun setIncludeTitles(include: Boolean) {
+        includeTitlesTouched = true
+        _uiState.update { it.copy(includeTitles = include) }
+        viewModelScope.launch { settingsRepository.setKithIncludeTitles(include) }
     }
 
     private fun loadExportHistory() {
@@ -110,7 +130,27 @@ class ManualExportViewModel @Inject constructor(
             _uiState.update { it.copy(isExporting = true) }
             try {
                 val state = _uiState.value
-                
+
+                // The Kith metadata export is always a full snapshot: no date range, no entry list.
+                if (state.exportFormat == ExportFormat.KITH_METADATA) {
+                    exportRepository.exportKithMetadata(state.includeTitles).fold(
+                        onSuccess = { history ->
+                            _uiState.update {
+                                it.copy(
+                                    isExporting = false,
+                                    exportSuccess = true,
+                                    lastExportPath = history.filePath,
+                                    lastExportEntryCount = history.entriesCount
+                                )
+                            }
+                        },
+                        onFailure = { e ->
+                            _uiState.update { it.copy(isExporting = false, error = e.message ?: "Export failed") }
+                        }
+                    )
+                    return@launch
+                }
+
                 // Get entries based on date range
                 val entries = if (state.startDate != null && state.endDate != null) {
                     journalRepository.getEntriesInDateRangeWithDetails(state.startDate, state.endDate)
@@ -195,6 +235,7 @@ data class ManualExportUiState(
     val endDate: Long? = null,
     val exportFormat: ExportFormat = ExportFormat.PDF,
     val includeMedia: Boolean = true,
+    val includeTitles: Boolean = true,
     val exportDestination: String? = null,
     val isExporting: Boolean = false,
     val exportSuccess: Boolean = false,

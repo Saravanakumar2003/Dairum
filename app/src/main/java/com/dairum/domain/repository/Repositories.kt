@@ -190,6 +190,13 @@ interface ExportRepository {
     suspend fun exportToPdf(entries: List<JournalEntry>, includeMedia: Boolean): Result<String>
     suspend fun exportToJson(entries: List<JournalEntry>): Result<String>
     suspend fun exportToCsv(entries: List<JournalEntry>): Result<String>
+
+    /**
+     * "Metadata for Kith": a full snapshot (never a date range) of titles, mood, category, tags and
+     * people as compact JSON, with the same entry selection as the "All" export. Titles can be left out.
+     */
+    suspend fun exportKithMetadata(includeTitles: Boolean): Result<ExportHistory>
+
     suspend fun triggerImmediateExport()
     
     // Export to external storage (user-selected folder via SAF)
@@ -267,6 +274,10 @@ interface SettingsRepository {
     
     fun getTaskerDefaultIncludeMediaFlow(): Flow<Boolean>
     suspend fun setTaskerDefaultIncludeMedia(include: Boolean)
+
+    // "Metadata for Kith" export: whether entry titles are included (default on)
+    fun getKithIncludeTitlesFlow(): Flow<Boolean>
+    suspend fun setKithIncludeTitles(include: Boolean)
 }
 
 // Tasker period enum for automation
