@@ -516,7 +516,7 @@ class ExportRepositoryImpl @Inject constructor(
                         append("      \"wordCount\": ${memory.wordCount},\n")
                         append("      \"photoCount\": ${memory.photoCount},\n")
                         append("      \"videoCount\": ${memory.videoCount},\n")
-                        append("      \"peopleInvolved\": ${memory.peopleInvolved ?: "null"},\n")
+                        append("      \"peopleInvolved\": ${peopleIdsJson(memory.peopleInvolved)},\n")
                         append("      \"highlights\": ${memory.highlights ?: "null"},\n")
                         append("      \"trackerSummary\": ${memory.trackerSummary ?: "null"},\n")
 
@@ -702,6 +702,14 @@ class ExportRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+
+    /**
+     * memories.peopleInvolved is stored as a comma-separated id list ("1,4"). It used to be written
+     * into the JSON verbatim, which is not valid JSON for two or more people. Always a JSON array now
+     * ("[]" when empty); a "[1,4]" stored form is accepted too.
+     */
+    private fun peopleIdsJson(raw: String?): String =
+        Regex("-?\\d+").findAll(raw.orEmpty()).map { it.value }.joinToString(prefix = "[", postfix = "]", separator = ",")
 
     private fun escapeJson(value: String?): String {
         if (value == null) return "null"
