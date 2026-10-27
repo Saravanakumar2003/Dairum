@@ -77,7 +77,7 @@ fun TrashScreen(
             ) {
                 item {
                     Text(
-                        text = "Items in trash are permanently deleted after 30 days",
+                        text = "Items stay in Trash until you delete them permanently or empty the Trash",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp)

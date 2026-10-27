@@ -50,6 +50,14 @@ class TrashScreenTest {
         }
     }
 
+    // Nothing purges the Trash automatically, so the screen must not promise that.
+    @Test
+    fun theNotice_saysItemsStayUntilDeleted_andDoesNotPromiseAnAutoPurge() {
+        composeRule.onNodeWithText("Items stay in Trash until you delete them", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("30 days", substring = true).assertDoesNotExist()
+        composeRule.onNodeWithText("automatically", substring = true, ignoreCase = true).assertDoesNotExist()
+    }
+
     @Test
     fun deletePermanently_asksFirst_andCancelKeepsTheEntry() {
         composeRule.onNodeWithContentDescription("Delete permanently").performClick()
