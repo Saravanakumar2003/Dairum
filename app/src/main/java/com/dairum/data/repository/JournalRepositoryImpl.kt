@@ -132,6 +132,10 @@ class JournalRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getEntriesInDateRangeWithDetails(startTime: Long, endTime: Long): List<JournalEntry> {
+        return entryDao.getEntriesInDateRangeWithDetails(startTime, endTime).map { it.toDomain() }
+    }
+
     override suspend fun getEntriesInDateRange(startDate: Long, endDate: Long): List<JournalEntry> {
         return entryDao.getEntriesInDateRangeSync(startDate, endDate).map { it.toDomainBasic() }
     }

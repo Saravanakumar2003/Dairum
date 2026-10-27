@@ -133,7 +133,7 @@ class AutomationReceiver : BroadcastReceiver() {
         
         // Get entries
         val entries = if (startDate != null && endDate != null) {
-            journalRepository.getEntriesInDateRangeFlow(startDate, endDate).first()
+            journalRepository.getEntriesInDateRangeWithDetails(startDate, endDate)
         } else {
             journalRepository.getAllEntries().first()
         }

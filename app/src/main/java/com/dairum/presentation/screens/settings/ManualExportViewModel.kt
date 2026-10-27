@@ -112,13 +112,11 @@ class ManualExportViewModel @Inject constructor(
                 val state = _uiState.value
                 
                 // Get entries based on date range
-                val entriesFlow = if (state.startDate != null && state.endDate != null) {
-                    journalRepository.getEntriesInDateRangeFlow(state.startDate, state.endDate)
+                val entries = if (state.startDate != null && state.endDate != null) {
+                    journalRepository.getEntriesInDateRangeWithDetails(state.startDate, state.endDate)
                 } else {
-                    journalRepository.getAllEntries()
+                    journalRepository.getAllEntries().first()
                 }
-                
-                val entries = entriesFlow.first()
                 
                 if (entries.isEmpty()) {
                     _uiState.update { 

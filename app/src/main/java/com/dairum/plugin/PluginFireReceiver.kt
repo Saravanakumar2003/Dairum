@@ -216,7 +216,7 @@ class PluginFireReceiver : BroadcastReceiver() {
         try {
             val entries = if (startDate != null && endDate != null) {
                 Log.d(TAG, "Getting entries in date range")
-                journalRepository.getEntriesInDateRangeFlow(startDate, endDate).first()
+                journalRepository.getEntriesInDateRangeWithDetails(startDate, endDate)
             } else {
                 Log.d(TAG, "Getting all entries")
                 journalRepository.getAllEntries().first()

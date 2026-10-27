@@ -128,13 +128,11 @@ class ExportSettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isExporting = true) }
             try {
-                val entriesFlow = if (startDate != null && endDate != null) {
-                    journalRepository.getEntriesInDateRangeFlow(startDate, endDate)
+                val entries = if (startDate != null && endDate != null) {
+                    journalRepository.getEntriesInDateRangeWithDetails(startDate, endDate)
                 } else {
-                    journalRepository.getAllEntries()
+                    journalRepository.getAllEntries().first()
                 }
-                
-                val entries = entriesFlow.first()
                 
                 if (entries.isEmpty()) {
                     _uiState.update { 
@@ -193,13 +191,11 @@ class ExportSettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isExporting = true) }
             try {
-                val entriesFlow = if (startDate != null && endDate != null) {
-                    journalRepository.getEntriesInDateRangeFlow(startDate, endDate)
+                val entries = if (startDate != null && endDate != null) {
+                    journalRepository.getEntriesInDateRangeWithDetails(startDate, endDate)
                 } else {
-                    journalRepository.getAllEntries()
+                    journalRepository.getAllEntries().first()
                 }
-                
-                val entries = entriesFlow.first()
                 
                 if (entries.isEmpty()) {
                     _uiState.update { 

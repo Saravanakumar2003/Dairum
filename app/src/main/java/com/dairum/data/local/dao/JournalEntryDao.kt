@@ -125,6 +125,16 @@ interface JournalEntryDao {
         ORDER BY createdAt DESC
     """)
     suspend fun getEntriesInDateRangeSync(startTime: Long, endTime: Long): List<JournalEntryEntity>
+
+    /** Same selection as getEntriesInDateRange, with category, tags, people, media and tracker values. */
+    @Transaction
+    @Query("""
+        SELECT * FROM journal_entries
+        WHERE createdAt >= :startTime AND createdAt < :endTime
+        AND isArchived = 0 AND isDraft = 0 AND deletedAt IS NULL
+        ORDER BY createdAt DESC
+    """)
+    suspend fun getEntriesInDateRangeWithDetails(startTime: Long, endTime: Long): List<EntryWithDetails>
     
     // Story view - "On This Day" queries
     @Query("""

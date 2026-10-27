@@ -30,6 +30,12 @@ interface JournalRepository {
     // Date range
     fun getEntriesInDateRangeFlow(startTime: Long, endTime: Long): Flow<List<JournalEntry>>
     suspend fun getEntriesInDateRange(startDate: Long, endDate: Long): List<JournalEntry>
+
+    /**
+     * Entries in the range with category, tags, people, media and tracker values (the plain range
+     * queries return basic entries without them). Use this for anything that exports entries.
+     */
+    suspend fun getEntriesInDateRangeWithDetails(startTime: Long, endTime: Long): List<JournalEntry>
     
     // Story view ("On This Day")
     fun getEntriesOnThisDay(monthDay: String): Flow<List<JournalEntry>>
