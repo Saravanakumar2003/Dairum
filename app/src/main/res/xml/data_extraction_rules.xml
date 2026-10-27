@@ -1,14 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 12+ (API 31+). Policy:
+  - Cloud backup (Google Drive / Auto Backup): NOTHING leaves the phone. An empty <cloud-backup> would
+    mean "back up everything", so every domain is excluded explicitly.
+  - Device-to-device transfer (new phone, over cable or Wi-Fi): the diary comes along: the database,
+    the media directories and the DataStore files (settings, app-lock PIN hash, templates).
+  Never transferred: files/models (large AI models), files/exports, files/backups, cache, and the
+  encrypted API-key file (its Android Keystore key cannot move, so a copy is unreadable; keys are
+  re-entered on the new phone).
+  The database is listed together with its -wal file: Room runs SQLite in WAL mode and recent writes
+  live in dairum.db-wal until a checkpoint. -shm is a rebuildable index and is left out.
+-->
 <data-extraction-rules>
     <cloud-backup>
-        <include domain="database" path="dairum.db" />
-        <include domain="sharedpref" path="." />
-        <include domain="file" path="media/" />
-        <exclude domain="file" path="cache/" />
+        <exclude domain="root" path="." />
+        <exclude domain="file" path="." />
+        <exclude domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="external" path="." />
     </cloud-backup>
     <device-transfer>
         <include domain="database" path="dairum.db" />
+        <include domain="database" path="dairum.db-wal" />
+        <include domain="file" path="photo/" />
+        <include domain="file" path="video/" />
+        <include domain="file" path="voice/" />
+        <include domain="file" path="attachment/" />
+        <include domain="file" path="datastore/" />
+        <!-- Lint only accepts an exclusion inside an included path, so the shared_prefs directory is
+             included (the only other files there are small widget counters) and the key files are
+             carved out of it. -->
         <include domain="sharedpref" path="." />
-        <include domain="file" path="media/" />
+        <exclude domain="sharedpref" path="encrypted_api_keys.xml" />
+        <exclude domain="sharedpref" path="api_key_state.xml" />
     </device-transfer>
 </data-extraction-rules>

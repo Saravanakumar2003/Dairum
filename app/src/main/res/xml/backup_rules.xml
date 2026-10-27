@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 8-11 (API 26-30). These versions have ONE rule set for both cloud backup and device
+  transfer, so the policy "cloud backup excludes everything" can only be met by excluding everything
+  here; on these versions use the in-app Backup & Restore to move the diary. (Android 12+ uses
+  data_extraction_rules.xml, which separates the two.) The encrypted API-key file is excluded
+  everywhere regardless.
+-->
 <full-backup-content>
-    <include domain="database" path="dairum.db" />
-    <include domain="sharedpref" path="." />
-    <include domain="file" path="media/" />
-    <exclude domain="file" path="cache/" />
-    <exclude domain="database" path="dairum.db-journal" />
-    <exclude domain="database" path="dairum.db-wal" />
-    <exclude domain="database" path="dairum.db-shm" />
+    <exclude domain="root" path="." />
+    <exclude domain="file" path="." />
+    <exclude domain="database" path="." />
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="external" path="." />
 </full-backup-content>

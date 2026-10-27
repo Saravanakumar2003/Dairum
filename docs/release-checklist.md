@@ -99,40 +99,39 @@ behaviour, and a real LLM/embedding model on arm64 hardware.
 - After adding a library that uses reflection, JNI, or `Class.forName`, run the release build and
   exercise that code. Debug builds do not run R8, so they hide these failures.
 
-## 5. Known issues found while preparing the first release
+## 5. Backup behaviour and known issues
 
-- **Encrypted preferences crash the editor after a restore or reinstall.** If
-  `shared_prefs/encrypted_api_keys.xml` exists but its Android Keystore key does not (restored
-  backup, reinstall, new phone), `ApiKeyRepositoryImpl` throws `AEADBadTagException` when it is
-  created, and opening New Entry crashes. Reproduced by simulation on the debug build. The in-app
-  backup ZIP contains that file, and so do the auto-backup rules. A fix is queued as a separate task;
-  until it ships, delete the file (or clear the app's API keys) before restoring onto another
-  install, and do not restore a ZIP onto a freshly reinstalled app without testing it first.
-- **Auto-backup rules are wrong.** `backup_rules.xml` and `data_extraction_rules.xml` include `media/`,
-  which does not exist (media lives in `photo/`, `video/`, `voice/`, `attachment/`) and exclude
-  `cache/`, which lint reports as an error (made informational for now in `app/build.gradle.kts`).
-  See the full list below.
-- Dead dependencies with keep rules: iText, Vico and `maps-compose` are declared but never imported;
-  their keep rules and `-keep class androidx.compose.** { *; }` etc. stop R8 from shrinking. Release
-  APK is about 52 MB and the mapping 240 MB.
+### What Android backs up (policy, fixed after the first release test)
+
+`allowBackup="true"` (needed for device transfer). API 31+ uses `data_extraction_rules.xml`; API 26-30
+uses `backup_rules.xml`.
+
+| Data | Cloud backup (Android 12+) | Device-to-device transfer (Android 12+) | Android 8-11 (one rule set) |
+|---|---|---|---|
+| `databases/dairum.db` and `dairum.db-wal` | not backed up | transferred (`-shm` is rebuilt, so omitted) | not backed up |
+| `files/photo`, `video`, `voice`, `attachment` | not backed up | transferred | not backed up |
+| `files/datastore/*` (settings, app-lock PIN hash, templates, guardrails) | not backed up | transferred | not backed up |
+| other `shared_prefs` (widget counters) | not backed up | transferred | not backed up |
+| `encrypted_api_keys.xml`, `api_key_state.xml` | not backed up | **excluded** | not backed up |
+| `files/models`, `files/exports`, `files/backups`, cache | not backed up | not transferred | not backed up |
+
+On Android 8-11 the platform has a single rule set for cloud and transfer, so "cloud backup excludes
+everything" means nothing is transferred either; use the in-app Backup & Restore on those versions.
+The in-app backup ZIP also never contains the encrypted key file, and restoring an old ZIP skips it.
+
+Why the key file never travels: its Android Keystore key cannot move, so a copy is unreadable. The app
+now detects an unreadable file, deletes and recreates it empty, and shows a one-time message asking
+for the keys again (`ApiKeyRepositoryImpl`); before that fix it crashed the editor.
+
+The WAL file: Room runs SQLite in WAL mode, so recent writes sit in `dairum.db-wal` until a checkpoint.
+The transfer rules list the database together with its `-wal`. Whether the platform copies both at a
+consistent moment during a real device transfer could not be verified here (no Google D2D transport on
+the emulator).
+
+### Other known issues
+
+- Dead dependencies are being removed (see the commit history); `play-services-maps` is also unused.
 - Not exercised at runtime: the Retrofit weather call (needs a location fix), Media3 playback.
-
-### What Android auto-backup and device transfer copy (release)
-
-`allowBackup="true"`. API 31+ uses `data_extraction_rules.xml`; API 26-30 uses `backup_rules.xml`.
-
-| Data | Cloud backup / device transfer |
-|---|---|
-| `databases/dairum.db` | Copied (only the main file; `-wal`/`-shm` are not named, so writes not yet checkpointed may be missing) |
-| `shared_prefs/*` (all, `path="."`) | Copied, including the encrypted API-key file and widget prefs |
-| `files/media/` | Nothing: the directory does not exist |
-| `files/photo`, `video`, `voice`, `attachment` | Not copied: every photo/video/voice note is lost |
-| `files/datastore/*` (settings, **app lock PIN hash**, guardrails, templates) | Not copied: settings reset and the app lock is off after a restore |
-| `files/models/*` (AI models), `files/exports`, `files/backups` | Not copied |
-
-After a restore the entries come back, media rows point at files that no longer exist, the app lock
-is disabled, and the restored encrypted preferences cannot be decrypted without their Keystore key
-(see the crash above).
 
 ## 6. If the key is lost
 
