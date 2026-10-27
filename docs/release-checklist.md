@@ -14,7 +14,8 @@ phone before every update, and use the `dairum_test` emulator only (never `exers
 
 1. Create the keystore outside the repo and store it in two places: `scripts/release/create_keystore.sh`,
    then follow the storage checklist in `docs/release-keystore.md`.
-2. Add the four signing properties to `~/.gradle/gradle.properties` (never to the repo):
+2. Add the four signing properties to `~/.gradle/gradle.properties` (never to the repo); environment
+   variables with the same names are used when the file does not define them:
    `DAIRUM_RELEASE_STORE_FILE`, `DAIRUM_RELEASE_STORE_PASSWORD`, `DAIRUM_RELEASE_KEY_ALIAS`,
    `DAIRUM_RELEASE_KEY_PASSWORD`. If any is missing, `assembleRelease` fails in seconds with a message
    naming the missing ones; it never produces an unsigned APK. A keystore inside the repo is refused.

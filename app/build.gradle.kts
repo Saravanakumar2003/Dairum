@@ -6,8 +6,9 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
-// Release signing. Credentials come from ~/.gradle/gradle.properties (or -P / ORG_GRADLE_PROJECT_*),
-// never from this repo. See docs/release-keystore.md.
+// Release signing. Credentials come from ~/.gradle/gradle.properties first (Gradle properties, so a
+// -P flag works too), then from environment variables with the SAME names (useful in CI or a
+// one-off shell). Never from this repo. See docs/release-keystore.md.
 val releaseSigningProperties = listOf(
     "DAIRUM_RELEASE_STORE_FILE",
     "DAIRUM_RELEASE_STORE_PASSWORD",
@@ -15,7 +16,8 @@ val releaseSigningProperties = listOf(
     "DAIRUM_RELEASE_KEY_PASSWORD"
 )
 fun releaseSigningProperty(name: String): String? =
-    providers.gradleProperty(name).orNull?.takeIf { it.isNotBlank() }
+    (providers.gradleProperty(name).orNull ?: providers.environmentVariable(name).orNull)
+        ?.takeIf { it.isNotBlank() }
 val missingReleaseSigning = releaseSigningProperties.filter { releaseSigningProperty(it) == null }
 
 android {
@@ -216,8 +218,8 @@ val verifyReleaseSigning by tasks.registering {
         if (missing.isNotEmpty()) {
             throw GradleException(
                 "Release signing is not configured: missing " + missing.joinToString(", ") + ".\n" +
-                    "Add them to ~/.gradle/gradle.properties (see docs/release-keystore.md). " +
-                    "Refusing to build an unsigned release APK."
+                    "Set them in ~/.gradle/gradle.properties (checked first) or as environment variables with " +
+                    "the same names (see docs/release-keystore.md). Refusing to build an unsigned release APK."
             )
         }
         val keystore = File(storePath!!)

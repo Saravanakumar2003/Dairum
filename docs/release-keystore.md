@@ -68,7 +68,8 @@ Both must exist before you ship a release you care about. Tell me when each is d
 
 ## Gradle configuration
 
-Release builds read four properties from `~/.gradle/gradle.properties` (never from the repo):
+Release builds read four properties, looked up in this order: `~/.gradle/gradle.properties` first, then
+environment variables with the same names (handy for a one-off shell or CI). Never from the repo.
 
 ```
 DAIRUM_RELEASE_STORE_FILE=/Users/<you>/.dairum-release/dairum-release.p12
@@ -77,5 +78,7 @@ DAIRUM_RELEASE_KEY_ALIAS=dairum
 DAIRUM_RELEASE_KEY_PASSWORD=<passphrase>
 ```
 
-Keep that file readable only by you (`chmod 600 ~/.gradle/gradle.properties`). It already holds your
-JDK path. See `docs/release-checklist.md` for cutting a release.
+Keep `~/.gradle/gradle.properties` readable only by you (`chmod 600`). It already holds your JDK path.
+If any value is missing, the file does not exist, or it lives inside the repo, `assembleRelease` fails
+within seconds with a message naming the problem and never produces an unsigned APK. See
+`docs/release-checklist.md` for cutting a release.
