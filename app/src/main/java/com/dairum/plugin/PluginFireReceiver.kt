@@ -57,120 +57,46 @@ class PluginFireReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         appContext = context.applicationContext
         try {
-            Log.d(TAG, "========================================")
-            Log.d(TAG, "PluginFireReceiver.onReceive called")
-            Log.d(TAG, "Action: ${intent.action}")
-            Log.d(TAG, "Intent extras keys: ${intent.extras?.keySet()?.joinToString()}")
-            
-            // Log all extras for debugging
-            intent.extras?.let { extras ->
-                for (key in extras.keySet()) {
-                    val value = extras.get(key)
-                    Log.d(TAG, "  Extra: $key = $value (${value?.javaClass?.simpleName})")
-                }
-            }
-            
-            // Verify the intent action - support both standard and MacroDroid actions
+            // Never log extras: they carry the automation token.
             val action = intent.action
             if (action != ACTION_FIRE_SETTING && action != MACRODROID_ACTION_FIRE) {
                 Log.d(TAG, "Ignoring unknown action: $action")
                 return
             }
-            
-            Log.d(TAG, "Action recognized, proceeding with export...")
-            
-            // Try to get the bundle with our configuration
-            // First try the standard Locale/Tasker bundle extra
-            var bundle = intent.getBundleExtra(PluginEditActivity.EXTRA_BUNDLE)
-            Log.d(TAG, "Bundle from EXTRA_BUNDLE: ${bundle != null}")
-            
-            // If no bundle, try to extract values directly from intent extras (MacroDroid compatibility)
+
+            val bundle = bundleFrom(intent)
             if (bundle == null) {
-                Log.d(TAG, "No bundle found, checking direct extras for MacroDroid compatibility")
-                val extras = intent.extras
-                if (extras != null) {
-                    // MacroDroid may send with different key formats - try multiple approaches
-                    val hasAction = extras.containsKey(PluginEditActivity.BUNDLE_ACTION)
-                    val hasNestedBundle = extras.get(PluginEditActivity.EXTRA_BUNDLE) is Bundle
-                    
-                    Log.d(TAG, "Has direct action key: $hasAction, Has nested bundle: $hasNestedBundle")
-                    
-                    if (hasAction) {
-                        // Create a bundle from the direct extras
-                        bundle = Bundle().apply {
-                            putString(PluginEditActivity.BUNDLE_ACTION, extras.getString(PluginEditActivity.BUNDLE_ACTION))
-                            putString(PluginEditActivity.BUNDLE_FORMAT, extras.getString(PluginEditActivity.BUNDLE_FORMAT, "pdf"))
-                            putString(PluginEditActivity.BUNDLE_PERIOD, extras.getString(PluginEditActivity.BUNDLE_PERIOD, "all"))
-                            putBoolean(PluginEditActivity.BUNDLE_INCLUDE_MEDIA, extras.getBoolean(PluginEditActivity.BUNDLE_INCLUDE_MEDIA, true))
-                            extras.getString(PluginEditActivity.BUNDLE_EXPORT_PATH)?.let {
-                                putString(PluginEditActivity.BUNDLE_EXPORT_PATH, it)
-                            }
-                        }
-                        Log.d(TAG, "Created bundle from direct extras")
-                    } else {
-                        // Try to create a default export action if no config found
-                        Log.d(TAG, "No action key found, creating default export bundle")
-                        bundle = Bundle().apply {
-                            putString(PluginEditActivity.BUNDLE_ACTION, PluginEditActivity.ACTION_EXPORT)
-                            putString(PluginEditActivity.BUNDLE_FORMAT, "pdf")
-                            putString(PluginEditActivity.BUNDLE_PERIOD, "all")
-                            putBoolean(PluginEditActivity.BUNDLE_INCLUDE_MEDIA, true)
-                        }
-                    }
-                }
-            }
-            
-            if (bundle == null) {
-                Log.w(TAG, "Could not create bundle from intent - using default export config")
-                // Create default bundle for export
-                bundle = Bundle().apply {
-                    putString(PluginEditActivity.BUNDLE_ACTION, PluginEditActivity.ACTION_EXPORT)
-                    putString(PluginEditActivity.BUNDLE_FORMAT, "pdf")
-                    putString(PluginEditActivity.BUNDLE_PERIOD, "all")
-                    putBoolean(PluginEditActivity.BUNDLE_INCLUDE_MEDIA, true)
-                }
-            }
-            
-            // Validate the bundle
-            if (!isBundleValid(bundle)) {
-                Log.w(TAG, "Invalid bundle - missing required keys")
+                Log.w(TAG, "Rejected request: no configuration bundle with an action")
                 return
             }
-            
+
             val pendingResult = goAsync()
-            
+
             scope.launch {
                 try {
-                    // Check if dependencies are properly initialized
-                    if (!::settingsRepository.isInitialized || 
-                        !::exportRepository.isInitialized ||
-                        !::journalRepository.isInitialized ||
-                        !::backupRepository.isInitialized) {
-                        Log.e(TAG, "Dependencies not initialized")
-                        pendingResult.finish()
+                    // Authenticate first: nothing else runs for an unauthenticated caller.
+                    if (!settingsRepository.verifyAutomationToken(bundle.getString(PluginEditActivity.BUNDLE_TOKEN))) {
+                        Log.w(TAG, "Rejected request: automation token missing, wrong or not set")
+                        showToast("Diarum: automation request rejected (token)")
                         return@launch
                     }
-                    
+
                     // Check if automation is enabled in settings
                     val isEnabled = settingsRepository.getTaskerEnabledFlow().first()
                     if (!isEnabled) {
                         Log.d(TAG, "Automation is disabled in settings")
-                        pendingResult.finish()
                         return@launch
                     }
-                    
-                    val actionType = bundle.getString(PluginEditActivity.BUNDLE_ACTION) 
-                        ?: PluginEditActivity.ACTION_EXPORT
-                    
+
+                    val actionType = bundle.getString(PluginEditActivity.BUNDLE_ACTION)
                     Log.d(TAG, "Executing action: $actionType")
-                    
+
                     when (actionType) {
                         PluginEditActivity.ACTION_EXPORT -> handleExport(bundle)
                         PluginEditActivity.ACTION_BACKUP -> handleBackup(bundle)
+                        PluginEditActivity.ACTION_METADATA -> handleMetadata(bundle)
                         else -> Log.w(TAG, "Unknown action: $actionType")
                     }
-                    
-                    Log.d(TAG, "Action completed successfully")
                 } catch (e: Exception) {
                     Log.e(TAG, "Error executing automation action", e)
                 } finally {
@@ -181,14 +107,41 @@ class PluginFireReceiver : BroadcastReceiver() {
             Log.e(TAG, "Error in onReceive", e)
         }
     }
-    
-    private fun isBundleValid(bundle: Bundle): Boolean {
-        // Check that required keys exist
-        val hasAction = bundle.containsKey(PluginEditActivity.BUNDLE_ACTION)
-        Log.d(TAG, "Bundle validation - has action key: $hasAction, keys: ${bundle.keySet()}")
-        return hasAction
+
+    /** The Locale/Tasker bundle, or (MacroDroid) the same keys as direct extras. Null without an action key. */
+    private fun bundleFrom(intent: Intent): Bundle? {
+        intent.getBundleExtra(PluginEditActivity.EXTRA_BUNDLE)?.let { b ->
+            return b.takeIf { it.containsKey(PluginEditActivity.BUNDLE_ACTION) }
+        }
+        val extras = intent.extras ?: return null
+        if (!extras.containsKey(PluginEditActivity.BUNDLE_ACTION)) return null
+        return Bundle().apply {
+            putString(PluginEditActivity.BUNDLE_ACTION, extras.getString(PluginEditActivity.BUNDLE_ACTION))
+            putString(PluginEditActivity.BUNDLE_TOKEN, extras.getString(PluginEditActivity.BUNDLE_TOKEN))
+            putString(PluginEditActivity.BUNDLE_FORMAT, extras.getString(PluginEditActivity.BUNDLE_FORMAT, "pdf"))
+            putString(PluginEditActivity.BUNDLE_PERIOD, extras.getString(PluginEditActivity.BUNDLE_PERIOD, "all"))
+            putBoolean(PluginEditActivity.BUNDLE_INCLUDE_MEDIA, extras.getBoolean(PluginEditActivity.BUNDLE_INCLUDE_MEDIA, true))
+            if (extras.containsKey(PluginEditActivity.BUNDLE_TITLES)) {
+                putBoolean(PluginEditActivity.BUNDLE_TITLES, extras.getBoolean(PluginEditActivity.BUNDLE_TITLES, true))
+            }
+            extras.getString(PluginEditActivity.BUNDLE_EXPORT_PATH)?.let {
+                putString(PluginEditActivity.BUNDLE_EXPORT_PATH, it)
+            }
+        }
     }
-    
+
+    private suspend fun handleMetadata(bundle: Bundle) {
+        val includeTitles = if (bundle.containsKey(PluginEditActivity.BUNDLE_TITLES)) {
+            bundle.getBoolean(PluginEditActivity.BUNDLE_TITLES, true)
+        } else {
+            settingsRepository.getKithIncludeTitlesFlow().first()
+        }
+        exportRepository.exportKithMetadata(includeTitles).fold(
+            onSuccess = { showToast("Metadata export complete: ${it.fileName}") },
+            onFailure = { showToast("Metadata export failed: ${it.message}") }
+        )
+    }
+
     private suspend fun handleExport(bundle: Bundle) {
         Log.d(TAG, "handleExport started")
         

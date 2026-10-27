@@ -278,7 +278,18 @@ interface SettingsRepository {
     // "Metadata for Kith" export: whether entry titles are included (default on)
     fun getKithIncludeTitlesFlow(): Flow<Boolean>
     suspend fun setKithIncludeTitles(include: Boolean)
+
+    // Automation token (Tasker/MacroDroid receivers). Only a salted hash is stored; no way to read it back.
+    suspend fun isAutomationTokenSet(): Boolean
+    fun getAutomationTokenSetFlow(): Flow<Boolean>
+    /** Throws IllegalArgumentException when shorter than [MIN_AUTOMATION_TOKEN_LENGTH]. */
+    suspend fun setAutomationToken(token: String)
+    suspend fun clearAutomationToken()
+    /** False when no token is set, or [candidate] is null/blank/wrong. */
+    suspend fun verifyAutomationToken(candidate: String?): Boolean
 }
+
+const val MIN_AUTOMATION_TOKEN_LENGTH = 8
 
 // Tasker period enum for automation
 enum class TaskerPeriod(val label: String, val value: String) {

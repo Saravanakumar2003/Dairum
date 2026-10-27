@@ -41,6 +41,8 @@ class PluginEditActivity : ComponentActivity() {
         val initialPeriod = existingBundle?.getString(BUNDLE_PERIOD) ?: "all"
         val initialIncludeMedia = existingBundle?.getBoolean(BUNDLE_INCLUDE_MEDIA, true) ?: true
         val initialExportPath = existingBundle?.getString(BUNDLE_EXPORT_PATH) ?: ""
+        val initialToken = existingBundle?.getString(BUNDLE_TOKEN) ?: ""
+        val initialTitles = existingBundle?.getBoolean(BUNDLE_TITLES, true) ?: true
         
         setContent {
             DairumTheme {
@@ -50,8 +52,10 @@ class PluginEditActivity : ComponentActivity() {
                     initialPeriod = initialPeriod,
                     initialIncludeMedia = initialIncludeMedia,
                     initialExportPath = initialExportPath,
-                    onSave = { action, format, period, includeMedia, exportPath ->
-                        saveConfiguration(action, format, period, includeMedia, exportPath)
+                    initialToken = initialToken,
+                    initialTitles = initialTitles,
+                    onSave = { action, format, period, includeMedia, exportPath, token, titles ->
+                        saveConfiguration(action, format, period, includeMedia, exportPath, token, titles)
                     },
                     onCancel = {
                         setResult(Activity.RESULT_CANCELED)
@@ -67,11 +71,15 @@ class PluginEditActivity : ComponentActivity() {
         format: String,
         period: String,
         includeMedia: Boolean,
-        exportPath: String
+        exportPath: String,
+        token: String,
+        titles: Boolean
     ) {
         // Create the bundle that will be passed back to the automation app
         val resultBundle = Bundle().apply {
             putString(BUNDLE_ACTION, action)
+            putString(BUNDLE_TOKEN, token.trim())
+            if (action == ACTION_METADATA) putBoolean(BUNDLE_TITLES, titles)
             putString(BUNDLE_FORMAT, format)
             putString(BUNDLE_PERIOD, period)
             putBoolean(BUNDLE_INCLUDE_MEDIA, includeMedia)
@@ -81,7 +89,7 @@ class PluginEditActivity : ComponentActivity() {
         }
         
         // Generate the blurb (description shown in the automation app)
-        val blurb = generateBlurb(action, format, period, includeMedia, exportPath)
+        val blurb = generateBlurb(action, format, period, includeMedia, exportPath, titles)
         
         // Create the result intent
         val resultIntent = Intent().apply {
@@ -98,7 +106,8 @@ class PluginEditActivity : ComponentActivity() {
         format: String,
         period: String,
         includeMedia: Boolean,
-        exportPath: String
+        exportPath: String,
+        titles: Boolean
     ): String {
         return when (action) {
             ACTION_EXPORT -> {
@@ -118,6 +127,7 @@ class PluginEditActivity : ComponentActivity() {
                 val pathStr = if (exportPath.isNotBlank()) " → $exportPath" else ""
                 "Create backup$mediaStr$pathStr"
             }
+            ACTION_METADATA -> "Export metadata for Kith" + if (titles) "" else " (no titles)"
             else -> "Diarum Action"
         }
     }
@@ -133,10 +143,13 @@ class PluginEditActivity : ComponentActivity() {
         const val BUNDLE_PERIOD = "period"
         const val BUNDLE_INCLUDE_MEDIA = "include_media"
         const val BUNDLE_EXPORT_PATH = "export_path"
+        const val BUNDLE_TOKEN = "token"
+        const val BUNDLE_TITLES = "titles"
         
         // Actions
         const val ACTION_EXPORT = "export"
         const val ACTION_BACKUP = "backup"
+        const val ACTION_METADATA = "metadata"
     }
 }
 
@@ -148,7 +161,9 @@ fun PluginEditScreen(
     initialPeriod: String,
     initialIncludeMedia: Boolean,
     initialExportPath: String,
-    onSave: (action: String, format: String, period: String, includeMedia: Boolean, exportPath: String) -> Unit,
+    initialToken: String,
+    initialTitles: Boolean,
+    onSave: (action: String, format: String, period: String, includeMedia: Boolean, exportPath: String, token: String, titles: Boolean) -> Unit,
     onCancel: () -> Unit
 ) {
     var selectedAction by remember { mutableStateOf(initialAction) }
@@ -156,6 +171,8 @@ fun PluginEditScreen(
     var selectedPeriod by remember { mutableStateOf(initialPeriod) }
     var includeMedia by remember { mutableStateOf(initialIncludeMedia) }
     var exportPath by remember { mutableStateOf(initialExportPath) }
+    var token by remember { mutableStateOf(initialToken) }
+    var titles by remember { mutableStateOf(initialTitles) }
     
     Scaffold(
         topBar = {
@@ -168,7 +185,7 @@ fun PluginEditScreen(
                 },
                 actions = {
                     TextButton(
-                        onClick = { onSave(selectedAction, selectedFormat, selectedPeriod, includeMedia, exportPath) }
+                        onClick = { onSave(selectedAction, selectedFormat, selectedPeriod, includeMedia, exportPath, token, titles) }
                     ) {
                         Text("Save", color = MaterialTheme.colorScheme.primary)
                     }
@@ -209,6 +226,16 @@ fun PluginEditScreen(
                         icon = Icons.Default.Backup,
                         selected = selectedAction == PluginEditActivity.ACTION_BACKUP,
                         onClick = { selectedAction = PluginEditActivity.ACTION_BACKUP }
+                    )
+
+                    HorizontalDivider()
+
+                    ActionOption(
+                        title = "Metadata for Kith",
+                        description = "Titles, mood, category, tags and people only (no entry text)",
+                        icon = Icons.Default.FileDownload,
+                        selected = selectedAction == PluginEditActivity.ACTION_METADATA,
+                        onClick = { selectedAction = PluginEditActivity.ACTION_METADATA }
                     )
                 }
             }
@@ -334,24 +361,49 @@ fun PluginEditScreen(
             
             // Custom Export Path
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
-                text = "Export Location",
+                text = "Automation token",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary
             )
-            
+
             OutlinedTextField(
-                value = exportPath,
-                onValueChange = { exportPath = it },
-                label = { Text("Custom path (optional)") },
-                placeholder = { Text("e.g. /storage/emulated/0/Documents/MyExports") },
-                supportingText = { Text("Leave empty to use default (Documents/Data Exports/Dairum)") },
-                leadingIcon = { Icon(Icons.Default.Folder, contentDescription = null) },
+                value = token,
+                onValueChange = { token = it },
+                label = { Text("Token (required)") },
+                supportingText = { Text("The token set in Diarum Settings > Automation. Requests without the right token are rejected.") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
-            
+
+            if (selectedAction == PluginEditActivity.ACTION_METADATA) {
+                ListItem(
+                    headlineContent = { Text("Include titles") },
+                    supportingContent = { Text("Entry titles are the only free text in this export") },
+                    trailingContent = { Switch(checked = titles, onCheckedChange = { titles = it }) }
+                )
+            } else {
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Text(
+                    text = "Export Location",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                
+                OutlinedTextField(
+                    value = exportPath,
+                    onValueChange = { exportPath = it },
+                    label = { Text("Custom path (optional)") },
+                    placeholder = { Text("e.g. /storage/emulated/0/Documents/MyExports") },
+                    supportingText = { Text("Leave empty to use default (Documents/Data Exports/Dairum)") },
+                    leadingIcon = { Icon(Icons.Default.Folder, contentDescription = null) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
             // Preview Card
             Spacer(modifier = Modifier.height(16.dp))
             
@@ -378,7 +430,7 @@ fun PluginEditScreen(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = generatePreviewText(selectedAction, selectedFormat, selectedPeriod, includeMedia, exportPath),
+                        text = generatePreviewText(selectedAction, selectedFormat, selectedPeriod, includeMedia, exportPath, titles),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
@@ -471,9 +523,14 @@ private fun generatePreviewText(
     format: String,
     period: String,
     includeMedia: Boolean,
-    exportPath: String
+    exportPath: String,
+    titles: Boolean
 ): String {
     return when (action) {
+        PluginEditActivity.ACTION_METADATA ->
+            "Write a metadata-only JSON file for Kith (no entry text)" +
+                (if (titles) ", with titles." else ", without titles.") +
+                "\nSaved to: Documents/Data Exports/Dairum"
         PluginEditActivity.ACTION_EXPORT -> {
             val formatStr = when (format) {
                 "pdf" -> "PDF"

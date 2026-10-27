@@ -3,6 +3,7 @@ package com.dairum.presentation.screens.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dairum.domain.model.ExportFormat
+import com.dairum.domain.repository.MIN_AUTOMATION_TOKEN_LENGTH
 import com.dairum.domain.repository.SettingsRepository
 import com.dairum.domain.repository.TaskerPeriod
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,6 +30,12 @@ class TaskerIntegrationViewModel @Inject constructor(
             }
         }
         
+        viewModelScope.launch {
+            settingsRepository.getAutomationTokenSetFlow().collect { set ->
+                _uiState.update { it.copy(tokenSet = set) }
+            }
+        }
+
         viewModelScope.launch {
             settingsRepository.getTaskerDefaultFormatFlow().collect { format ->
                 _uiState.update { it.copy(defaultFormat = format) }
@@ -76,6 +83,23 @@ class TaskerIntegrationViewModel @Inject constructor(
         }
     }
 
+    /** Returns an error message, or null when saved. */
+    fun saveToken(token: String, onResult: (String?) -> Unit) {
+        val trimmed = token.trim()
+        if (trimmed.length < MIN_AUTOMATION_TOKEN_LENGTH) {
+            onResult("At least $MIN_AUTOMATION_TOKEN_LENGTH characters")
+            return
+        }
+        viewModelScope.launch {
+            settingsRepository.setAutomationToken(trimmed)
+            onResult(null)
+        }
+    }
+
+    fun clearToken() {
+        viewModelScope.launch { settingsRepository.clearAutomationToken() }
+    }
+
     fun setCopySuccess() {
         _uiState.update { it.copy(copySuccess = true) }
     }
@@ -90,5 +114,6 @@ data class TaskerIntegrationUiState(
     val defaultFormat: ExportFormat = ExportFormat.PDF,
     val defaultPeriod: TaskerPeriod = TaskerPeriod.ALL,
     val defaultIncludeMedia: Boolean = true,
+    val tokenSet: Boolean = false,
     val copySuccess: Boolean = false
 )

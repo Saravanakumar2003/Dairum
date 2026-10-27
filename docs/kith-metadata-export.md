@@ -60,3 +60,19 @@ favorite/pinned/archived/draft flags, word counts, update times, contact details
   different entries. Using the pair (`createdAtEpochMs`, `id`) avoids false merges but treats a re-dated or
   re-numbered entry as new (a duplicate, never an overwrite).
 - Do not use `createdAtLocal` as a key: it shifts with the phone's timezone.
+
+## Triggering the export from Tasker / MacroDroid
+
+The export can be started by automation, but only with the **automation token** set in
+Settings > Automation Integration (stored as a salted PBKDF2 hash, at least 8 characters; "Generate"
+makes a random one). The receivers are exported to every app on the phone, so the token is the gate:
+
+- No token set: every request is rejected. Wrong or missing token: rejected, before any work happens.
+- "Enable Automation" must also be on.
+- Intent: action `com.dairum.action.METADATA`, extras `token` (String, required) and `titles`
+  (Boolean, optional, default = the saved "Include titles" setting). Package `com.dairum`, broadcast
+  receiver. The result comes back as `com.dairum.action.RESULT` to Dairum's own package only.
+- Plugin (Tasker/Locale/MacroDroid "Configure Diarum Action"): action "Metadata for Kith", with a
+  token field and an Include titles switch. A bundle (or MacroDroid direct extras) must contain
+  `action=metadata` and `token`.
+- The token is never logged. The same token is required by the EXPORT and BACKUP actions.

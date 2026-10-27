@@ -10,7 +10,13 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import android.util.Base64
+import kotlinx.coroutines.flow.first
 import java.io.IOException
+import java.security.MessageDigest
+import java.security.SecureRandom
+import javax.crypto.SecretKeyFactory
+import javax.crypto.spec.PBEKeySpec
 import javax.inject.Inject
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -38,6 +44,8 @@ class SettingsRepositoryImpl @Inject constructor(
         val TASKER_DEFAULT_FORMAT = stringPreferencesKey("tasker_default_format")
         val TASKER_DEFAULT_PERIOD = stringPreferencesKey("tasker_default_period")
         val TASKER_DEFAULT_INCLUDE_MEDIA = booleanPreferencesKey("tasker_default_include_media")
+        val AUTOMATION_TOKEN_SALT = stringPreferencesKey("automation_token_salt")
+        val AUTOMATION_TOKEN_HASH = stringPreferencesKey("automation_token_hash")
         val EXPORT_KITH_INCLUDE_TITLES = booleanPreferencesKey("export_kith_include_titles")
     }
 
@@ -316,5 +324,57 @@ class SettingsRepositoryImpl @Inject constructor(
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.EXPORT_KITH_INCLUDE_TITLES] = include
         }
+    }
+
+    // ============ AUTOMATION TOKEN ============
+
+    override suspend fun isAutomationTokenSet(): Boolean = getAutomationTokenSetFlow().first()
+
+    override fun getAutomationTokenSetFlow(): Flow<Boolean> {
+        return dataStore.data
+            .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+            .map { it[PreferencesKeys.AUTOMATION_TOKEN_HASH] != null && it[PreferencesKeys.AUTOMATION_TOKEN_SALT] != null }
+    }
+
+    override suspend fun setAutomationToken(token: String) {
+        require(token.length >= MIN_AUTOMATION_TOKEN_LENGTH) { "Token must be at least $MIN_AUTOMATION_TOKEN_LENGTH characters" }
+        val salt = ByteArray(16).also { SecureRandom().nextBytes(it) }
+        val hash = hashToken(token, salt)
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.AUTOMATION_TOKEN_SALT] = Base64.encodeToString(salt, Base64.NO_WRAP)
+            preferences[PreferencesKeys.AUTOMATION_TOKEN_HASH] = Base64.encodeToString(hash, Base64.NO_WRAP)
+        }
+    }
+
+    override suspend fun clearAutomationToken() {
+        dataStore.edit { preferences ->
+            preferences.remove(PreferencesKeys.AUTOMATION_TOKEN_SALT)
+            preferences.remove(PreferencesKeys.AUTOMATION_TOKEN_HASH)
+        }
+    }
+
+    override suspend fun verifyAutomationToken(candidate: String?): Boolean {
+        if (candidate.isNullOrEmpty()) return false
+        val prefs = dataStore.data
+            .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+            .first()
+        val saltB64 = prefs[PreferencesKeys.AUTOMATION_TOKEN_SALT] ?: return false
+        val hashB64 = prefs[PreferencesKeys.AUTOMATION_TOKEN_HASH] ?: return false
+        return try {
+            val expected = Base64.decode(hashB64, Base64.NO_WRAP)
+            val actual = hashToken(candidate, Base64.decode(saltB64, Base64.NO_WRAP))
+            MessageDigest.isEqual(expected, actual)
+        } catch (e: IllegalArgumentException) {
+            false
+        }
+    }
+
+    private fun hashToken(token: String, salt: ByteArray): ByteArray {
+        val spec = PBEKeySpec(token.toCharArray(), salt, TOKEN_PBKDF2_ITERATIONS, 256)
+        return SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).encoded
+    }
+
+    private companion object {
+        const val TOKEN_PBKDF2_ITERATIONS = 100_000
     }
 }

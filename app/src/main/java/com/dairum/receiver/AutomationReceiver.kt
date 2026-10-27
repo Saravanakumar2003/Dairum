@@ -26,6 +26,11 @@ import javax.inject.Inject
  * Supported Actions:
  * - com.dairum.action.EXPORT: Trigger a journal export
  * - com.dairum.action.BACKUP: Create a full backup
+ * - com.dairum.action.METADATA: "Metadata for Kith" export (extra titles: Boolean, default = saved setting)
+ *
+ * Every request must carry the extra `token` (String) matching the automation token set in
+ * Settings. Until a token is set, and for a missing or wrong token, the request is rejected before
+ * any work happens. The token is never logged.
  * 
  * Export Extras:
  * - format (String): "txt" or "pdf"
@@ -74,6 +79,13 @@ class AutomationReceiver : BroadcastReceiver() {
                     return@launch
                 }
                 
+                // Authenticate first: nothing else runs for an unauthenticated caller.
+                if (!settingsRepository.verifyAutomationToken(intent.getStringExtra(EXTRA_TOKEN))) {
+                    Log.w(TAG, "Rejected request: automation token missing, wrong or not set")
+                    sendResultBroadcast(context, false, "Unauthorized: set an automation token in Diarum settings and send it as extra \"token\"")
+                    return@launch
+                }
+
                 // Check if automation is enabled
                 val isEnabled = settingsRepository.getTaskerEnabledFlow().first()
                 if (!isEnabled) {
@@ -87,6 +99,7 @@ class AutomationReceiver : BroadcastReceiver() {
                 when (intent.action) {
                     ACTION_EXPORT -> handleExport(context, intent)
                     ACTION_BACKUP -> handleBackup(context, intent)
+                    ACTION_METADATA -> handleMetadata(context, intent)
                     else -> sendResultBroadcast(context, false, "Unknown action: ${intent.action}")
                 }
             } catch (e: Exception) {
@@ -169,6 +182,25 @@ class AutomationReceiver : BroadcastReceiver() {
         )
     }
 
+    private suspend fun handleMetadata(context: Context, intent: Intent) {
+        val includeTitles = if (intent.hasExtra(EXTRA_TITLES)) {
+            intent.getBooleanExtra(EXTRA_TITLES, true)
+        } else {
+            settingsRepository.getKithIncludeTitlesFlow().first()
+        }
+        exportRepository.exportKithMetadata(includeTitles).fold(
+            onSuccess = { history ->
+                sendResultBroadcast(
+                    context,
+                    true,
+                    "Metadata export complete: ${history.fileName}",
+                    mapOf("file_path" to history.filePath, "file_name" to history.fileName)
+                )
+            },
+            onFailure = { e -> sendResultBroadcast(context, false, "Metadata export failed: ${e.message}") }
+        )
+    }
+
     private suspend fun handleBackup(context: Context, intent: Intent) {
         val includeMedia = intent.getBooleanExtra(EXTRA_INCLUDE_MEDIA, true)
         
@@ -246,24 +278,17 @@ class AutomationReceiver : BroadcastReceiver() {
             setPackage(context.packageName)
         }
         context.sendBroadcast(resultIntent)
-        
-        // Also send Tasker-compatible result
-        if (success) {
-            val taskerResultIntent = Intent("com.twofortyfouram.locale.intent.action.FIRE_SETTING")
-            taskerResultIntent.putExtra("com.twofortyfouram.locale.intent.extra.BUNDLE", android.os.Bundle().apply {
-                putString("message", message)
-                putBoolean("success", true)
-            })
-            context.sendBroadcast(taskerResultIntent)
-        }
     }
 
     companion object {
         private const val TAG = "AutomationReceiver"
         const val ACTION_EXPORT = "com.dairum.action.EXPORT"
         const val ACTION_BACKUP = "com.dairum.action.BACKUP"
+        const val ACTION_METADATA = "com.dairum.action.METADATA"
         const val ACTION_RESULT = "com.dairum.action.RESULT"
         
+        const val EXTRA_TOKEN = "token"
+        const val EXTRA_TITLES = "titles"
         const val EXTRA_FORMAT = "format"
         const val EXTRA_PERIOD = "period"
         const val EXTRA_INCLUDE_MEDIA = "include_media"

@@ -111,6 +111,14 @@ fun TaskerIntegrationScreen(
                 }
             }
             
+            item {
+                AutomationTokenCard(
+                    tokenSet = uiState.tokenSet,
+                    onSave = viewModel::saveToken,
+                    onClear = viewModel::clearToken
+                )
+            }
+
             if (uiState.isEnabled) {
                 // Default Export Settings
                 item {
@@ -300,6 +308,7 @@ fun TaskerIntegrationScreen(
                         action = "com.dairum.action.EXPORT",
                         description = "Triggers an export with specified parameters",
                         extras = listOf(
+                            IntentExtra("token", "String", "Your automation token (required)"),
                             IntentExtra("format", "String", "\"txt\" or \"pdf\" (default: your setting)"),
                             IntentExtra("period", "String", "\"all\", \"day\", \"week\", \"month\" (default: your setting)"),
                             IntentExtra("include_media", "Boolean", "true/false (default: your setting)"),
@@ -319,7 +328,24 @@ fun TaskerIntegrationScreen(
                         action = "com.dairum.action.BACKUP",
                         description = "Creates a full backup of all app data",
                         extras = listOf(
+                            IntentExtra("token", "String", "Your automation token (required)"),
                             IntentExtra("include_media", "Boolean", "true/false (default: true)")
+                        ),
+                        onCopy = { action ->
+                            clipboardManager.setText(AnnotatedString(action))
+                            viewModel.setCopySuccess()
+                        }
+                    )
+                }
+
+                item {
+                    IntentActionCard(
+                        title = "Metadata for Kith",
+                        action = "com.dairum.action.METADATA",
+                        description = "Writes the metadata-only JSON file for Kith (no entry text)",
+                        extras = listOf(
+                            IntentExtra("token", "String", "Your automation token (required)"),
+                            IntentExtra("titles", "Boolean", "Include entry titles (default: your Include titles setting)")
                         ),
                         onCopy = { action ->
                             clipboardManager.setText(AnnotatedString(action))
@@ -350,11 +376,12 @@ fun TaskerIntegrationScreen(
 1. Add action: "Send Intent"
 2. Action: com.dairum.action.EXPORT
 3. Cat: None
-4. Extra: format:pdf
-5. Extra: period:week
-6. Extra: include_media:true
-7. Package: com.dairum
-8. Target: Broadcast Receiver
+4. Extra: token:<your token>
+5. Extra: format:pdf
+6. Extra: period:week
+7. Extra: include_media:true
+8. Package: com.dairum
+9. Target: Broadcast Receiver
                             """.trimIndent()
                             
                             SelectionContainer {
@@ -411,6 +438,7 @@ fun TaskerIntegrationScreen(
 1. Add action: "Intent" > "Send Broadcast"
 2. Intent Action: com.dairum.action.EXPORT
 3. Add extras as key-value pairs:
+   - token = <your token>
    - format = pdf
    - period = day
    - include_media = true
@@ -460,7 +488,7 @@ fun TaskerIntegrationScreen(
                                     color = MaterialTheme.colorScheme.onTertiaryContainer
                                 )
                                 Text(
-                                    text = "Only apps with explicit permission can send these intents. Exports are saved to app-private storage and can be shared via the app.",
+                                    text = "Any app on this phone can send these intents, so every request must carry your automation token (extra \"token\"). Without a token set, all requests are rejected. Anyone who has the token (for example inside a Tasker or MacroDroid profile) can trigger exports and backups.",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onTertiaryContainer
                                 )
@@ -562,3 +590,51 @@ private data class IntentExtra(
     val type: String,
     val description: String
 )
+
+@Composable
+private fun AutomationTokenCard(
+    tokenSet: Boolean,
+    onSave: (String, (String?) -> Unit) -> Unit,
+    onClear: () -> Unit
+) {
+    var token by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<String?>(null) }
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Automation token", style = MaterialTheme.typography.titleSmall)
+            Text(
+                text = if (tokenSet) "A token is set. Enter a new one to replace it."
+                else "No token set: all automation requests are rejected until you set one.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            OutlinedTextField(
+                value = token,
+                onValueChange = { token = it; error = null },
+                label = { Text("New token") },
+                isError = error != null,
+                supportingText = { Text(error ?: "At least 8 characters. Only a salted hash is stored; it cannot be shown again.") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = { token = generateToken() }) { Text("Generate") }
+                Button(onClick = {
+                    onSave(token) { result ->
+                        error = result
+                        if (result == null) token = ""
+                    }
+                }) { Text("Save token") }
+                if (tokenSet) {
+                    TextButton(onClick = onClear) { Text("Remove") }
+                }
+            }
+        }
+    }
+}
+
+private fun generateToken(): String {
+    val alphabet = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+    val random = java.security.SecureRandom()
+    return (1..24).map { alphabet[random.nextInt(alphabet.length)] }.joinToString("")
+}
