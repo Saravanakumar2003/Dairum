@@ -166,9 +166,6 @@ dependencies {
     // Maps
     implementation(libs.bundles.maps)
 
-    // Charts
-    implementation(libs.vico.compose.m3)
-
     // WorkManager
     implementation(libs.androidx.work.runtime.ktx)
 

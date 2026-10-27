@@ -148,12 +148,12 @@ Dairum is an Android application designed to provide users with a seamless and i
 - **Image Loading**: Coil
 - **Media**: Media3/ExoPlayer
 - **Maps**: Google Maps + OSMDroid
-- **Charts**: Vico
+- **Charts**: Compose UI
 - **Background Work**: WorkManager
 - **DataStore**: Preferences DataStore
 - **Security**: Biometric + EncryptedSharedPreferences
 - **Logging**: Timber
-- **PDF Generation**: iText 7
+- **PDF Generation**: Android `PdfDocument`
 - **AI/LLM**: llama.cpp (native JNI) + ONNX Runtime
 
 ### AI Architecture

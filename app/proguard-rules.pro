@@ -84,15 +84,6 @@
 -dontwarn androidx.room.paging.**
 
 #-----------------------------------------
-# iText PDF
-#-----------------------------------------
-
--keep class com.itextpdf.** { *; }
--dontwarn com.itextpdf.**
--dontwarn org.bouncycastle.**
--dontwarn org.slf4j.**
-
-#-----------------------------------------
 # Hilt / Dagger
 #-----------------------------------------
 
@@ -123,13 +114,6 @@
 -keep class coil.** { *; }
 
 #-----------------------------------------
-# Vico Charts
-#-----------------------------------------
-
--keep class com.patrykandpatrick.vico.** { *; }
--dontwarn com.patrykandpatrick.vico.**
-
-#-----------------------------------------
 # OSMDroid Maps
 #-----------------------------------------
 
@@ -141,7 +125,6 @@
 #-----------------------------------------
 
 -keep class com.google.android.gms.maps.** { *; }
--keep class com.google.maps.android.** { *; }
 
 #-----------------------------------------
 # Timber Logging

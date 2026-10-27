@@ -41,14 +41,7 @@ exoplayer = "1.2.1"
 # Maps
 playServicesMaps = "18.2.0"
 playServicesLocation = "21.1.0"
-mapsCompose = "4.3.2"
 osmdroid = "6.1.18"
-
-# Charts
-vico = "1.14.0"
-
-# PDF
-itext = "7.2.5"
 
 # WorkManager
 workManager = "2.9.0"
@@ -137,14 +130,7 @@ androidx-media3-ui = { group = "androidx.media3", name = "media3-ui", version.re
 # Maps
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
-maps-compose = { group = "com.google.maps.android", name = "maps-compose", version.ref = "mapsCompose" }
 osmdroid = { group = "org.osmdroid", name = "osmdroid-android", version.ref = "osmdroid" }
-
-# Charts
-vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
-
-# PDF
-itext-core = { group = "com.itextpdf", name = "itext7-core", version.ref = "itext" }
 
 # WorkManager
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workManager" }
@@ -234,6 +220,5 @@ media = [
 maps = [
     "play-services-maps",
     "play-services-location",
-    "maps-compose",
     "osmdroid"
 ]

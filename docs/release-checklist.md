@@ -131,7 +131,9 @@ the emulator).
 
 ### Other known issues
 
-- Dead dependencies are being removed (see the commit history); `play-services-maps` is also unused.
+- iText, Vico and `maps-compose` were unused and are removed (no source, XML, manifest or reflection use);
+  the release APK shrank by about 0.3 MB. `play-services-maps` (and its manifest API-key placeholder and
+  keep rule) is also unused and was left in place; remove it separately if wanted.
 - Not exercised at runtime: the Retrofit weather call (needs a location fix), Media3 playback.
 
 ## 6. If the key is lost
